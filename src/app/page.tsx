@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
-import { HardHat } from 'lucide-react'
+import Image from 'next/image'
 
 export default function LandingPage() {
   const { data: session, status } = useSession()
@@ -12,7 +12,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {session && (
           <div className="pt-4 text-center">
@@ -32,7 +32,7 @@ export default function LandingPage() {
         
         <div className="pt-20 pb-16 text-center lg:pt-32">
           <div className="flex justify-center mb-4">
-            <HardHat className="h-24 w-24 text-yellow-500 sm:h-40 sm:w-40" />
+            <Image src="/forma_logo.png" alt="Forma" width={200} height={80} className="h-20 w-auto sm:h-28 sm:w-auto" priority />
           </div>
           <h1 className="mx-auto max-w-4xl font-display text-5xl font-medium tracking-tight text-slate-900 sm:text-7xl">
             <span className="text-blue-600">Forma</span>

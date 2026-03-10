@@ -2,7 +2,9 @@
 
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Clock, User, LogOut, Menu } from 'lucide-react'
+import Link from 'next/link'
+import { User, LogOut, Menu } from 'lucide-react'
+import Image from 'next/image'
 import { es } from '@/lib/translations/es'
 
 // Vercel logging function
@@ -61,12 +63,9 @@ export function Header({ onMobileMenuClick }: HeaderProps) {
               <Menu className="h-6 w-6 text-gray-600" />
             </button>
             
-            <div className="flex items-center">
-              <Clock className="h-8 w-8 text-blue-600 mr-3" />
-              <h1 className="text-xl font-semibold text-gray-900">
-                Forma
-              </h1>
-            </div>
+            <Link href="/dashboard" className="flex items-center">
+              <Image src="/forma_logo.png" alt="Forma" width={120} height={40} className="h-8 w-auto" priority />
+            </Link>
           </div>
           
           {/* Desktop user info and logout */}

@@ -46,19 +46,19 @@ export const metadata: Metadata = {
     siteName: 'Forma',
     images: [
       {
-        url: '/forma_logo_small.png',
-        width: 120,
-        height: 120,
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
         alt: 'Forma',
       },
     ],
     type: 'website',
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'Forma - Gestión de Productividad en Construcción',
     description: 'Plataforma integral de gestión de productividad para el sector de la construcción, con seguimiento de tiempo, gestión de usuarios y colaboración en tiempo real.',
-    images: ['/forma_logo_small.png'],
+    images: ['/og-image.png'],
   },
 }
 

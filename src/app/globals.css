@@ -5,6 +5,12 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Trust palette (navy from logo #0f172a) */
+  --forma-navy: #0f172a;
+  --forma-primary: #1e40af;
+  --forma-primary-hover: #1e3a8a;
+  --forma-primary-light: #dbeafe;
+  --forma-primary-muted: #f0f7ff;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -94,8 +100,8 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--forma-primary);
+  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.15);
 }
 
 .form-wrapper {
@@ -128,7 +134,7 @@ textarea:focus {
 }
 
 .mobile-nav-item.active {
-  color: #3b82f6;
+  color: var(--forma-primary);
 }
 
 .mobile-nav-item svg {

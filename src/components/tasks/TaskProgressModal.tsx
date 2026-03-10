@@ -235,7 +235,7 @@ export default function TaskProgressModal({ task, open, onOpenChange, onSuccess 
           </div>
 
           {/* Note: Materials are tracked at project level, not task level */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+          <div className="bg-gradient-to-r from-blue-50 to-slate-50 p-4 rounded-lg border border-blue-200">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                 <span className="text-blue-600 text-sm">ℹ️</span>

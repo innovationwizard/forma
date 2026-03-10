@@ -11,6 +11,19 @@ const config: Config = {
       colors: {
         background: 'var(--background)',
         foreground: 'var(--foreground)',
+        // Trust palette: navy-based blues (logo #0f172a)
+        blue: {
+          50: '#f0f7ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: '#1e40af',
+          600: '#1e40af',
+          700: '#1e3a8a',
+          800: '#1e3a8a',
+          900: '#0f172a',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans', 'sans-serif'],

@@ -3,7 +3,8 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { HardHat, Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff } from 'lucide-react'
+import Image from 'next/image'
 
 function InvitationForm() {
   const router = useRouter()
@@ -87,11 +88,11 @@ function InvitationForm() {
 
   if (!token || !email) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
         <div className="max-w-md w-full mx-auto p-6">
           <div className="bg-white rounded-lg shadow-lg p-8">
             <div className="text-center">
-              <HardHat className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+              <Image src="/forma_logo.png" alt="Forma" width={120} height={48} className="h-12 w-auto mx-auto mb-4" />
               <h1 className="text-2xl font-bold text-gray-900 mb-2">Enlace Inválido</h1>
               <p className="text-gray-600 mb-6">
                 El enlace de invitación no es válido o ha expirado.
@@ -110,11 +111,11 @@ function InvitationForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
       <div className="max-w-md w-full mx-auto p-6">
         <div className="bg-white rounded-lg shadow-lg p-8">
           <div className="text-center mb-6">
-            <HardHat className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+            <Image src="/forma_logo.png" alt="Forma" width={120} height={48} className="h-12 w-auto mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Bienvenido a Forma</h1>
             <p className="text-gray-600">
               Establezca su contraseña para continuar.
@@ -222,11 +223,11 @@ function InvitationForm() {
 
 function LoadingFallback() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
       <div className="max-w-md w-full mx-auto p-6">
         <div className="bg-white rounded-lg shadow-lg p-8">
           <div className="text-center">
-            <HardHat className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+            <Image src="/forma_logo.png" alt="Forma" width={120} height={48} className="h-12 w-auto mx-auto mb-4" />
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
             <p className="text-gray-600 mt-4">Cargando...</p>
           </div>

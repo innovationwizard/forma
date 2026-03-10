@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { signIn, useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { HardHat } from 'lucide-react'
+import Image from 'next/image'
 import { es } from '@/lib/translations/es'
 
 export default function LoginPage() {
@@ -75,7 +75,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="pt-8 pb-4">
@@ -86,7 +86,7 @@ export default function LoginPage() {
 
         <div className="pt-8 pb-8 text-center lg:pt-12">
           <div className="flex justify-center mb-4">
-            <HardHat className="h-24 w-24 text-yellow-500 sm:h-40 sm:w-40" />
+            <Image src="/forma_logo.png" alt="Forma" width={200} height={80} className="h-20 w-auto sm:h-28 sm:w-auto" priority />
           </div>
           <h1 className="mx-auto max-w-4xl font-display text-5xl font-medium tracking-tight text-slate-900 sm:text-7xl">
             <span className="text-blue-600">Forma</span>

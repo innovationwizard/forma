@@ -34,7 +34,7 @@ export default function DashboardLayout({ children, }: { children: React.ReactNo
   if (status === 'loading') {
     console.log('Dashboard Layout - Loading...')
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
     )
@@ -56,7 +56,7 @@ export default function DashboardLayout({ children, }: { children: React.ReactNo
 
   console.log('Dashboard Layout - Rendering dashboard with session:', session.user?.name)
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       {/* Mobile Header */}
       <Header onMobileMenuClick={handleMobileMenuToggle} />
       

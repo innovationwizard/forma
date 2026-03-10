@@ -154,7 +154,7 @@ export default function Sidebar({ isMobileOpen = false, onMobileClose }: Sidebar
       {/* Mobile Sidebar */}
       <div className={`sidebar-mobile md:hidden ${isMobileOpen ? 'open' : ''}`}>
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h1 className="text-lg font-bold text-gray-900">Forma</h1>
+          <img src="/forma_logo.png" alt="Forma" className="h-8 w-auto" />
           <button
             onClick={handleMobileClose}
             className="p-2 rounded-md hover:bg-gray-100"
@@ -226,7 +226,7 @@ export default function Sidebar({ isMobileOpen = false, onMobileClose }: Sidebar
       {/* Desktop Sidebar */}
       <div className="hidden md:flex w-64 bg-white text-gray-900 fixed top-0 left-0 h-screen flex-col border-r border-gray-200 z-30">
         <div className="p-4 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-900">Forma</h1>
+          <img src="/forma_logo.png" alt="Forma" className="h-8 w-auto" />
           <p className="text-sm text-gray-600">{session?.user?.name}</p>
           <p className="text-xs text-gray-500">{userRole}</p>
           
