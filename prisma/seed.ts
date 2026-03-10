@@ -20,15 +20,63 @@ async function main() {
     },
   });
 
-  // Hash password for demo users
+  // Create Forma company
+  const formaCompany = await prisma.companies.upsert({
+    where: { slug: 'forma' },
+    update: {},
+    create: {
+      name: 'Forma',
+      nameEs: 'Forma',
+      slug: 'forma',
+      status: 'ACTIVE',
+    },
+  });
+
+  // Hash passwords
   const hashedPassword = await bcrypt.hash('password123', 12);
+  const formaPassword = await bcrypt.hash('Forma2026', 12);
+
+  // Primary user: ffranco@forma.gt
+  await prisma.people.upsert({
+    where: { email: 'ffranco@forma.gt' },
+    update: { password: formaPassword },
+    create: {
+      email: 'ffranco@forma.gt',
+      name: 'ffranco',
+      password: formaPassword,
+      role: 'ADMIN',
+      status: 'ACTIVE',
+      companyId: formaCompany.id,
+    },
+  });
+
+  // PersonTenant for ffranco
+  const ffranco = await prisma.people.findUnique({ where: { email: 'ffranco@forma.gt' } });
+  if (ffranco) {
+    await prisma.personTenants.upsert({
+      where: {
+        personId_companyId_startDate: {
+          personId: ffranco.id,
+          companyId: formaCompany.id,
+          startDate: new Date(new Date().setHours(0, 0, 0, 0)),
+        },
+      },
+      update: {},
+      create: {
+        personId: ffranco.id,
+        companyId: formaCompany.id,
+        startDate: new Date(),
+        status: 'ACTIVE',
+      },
+    });
+  }
 
   // Create demo users with all required fields
   const demoUsers = [
     {
       id: 'demo-worker',
       email: 'worker@demo.com',
-      name: 'Juan Pérez',
+      name: 'Juan Ejemplo',
       password: hashedPassword,
       role: 'WORKER' as const,
       status: 'ACTIVE' as const,
@@ -37,7 +85,7 @@ async function main() {
     {
       id: 'demo-supervisor',
       email: 'supervisor@demo.com',
-      name: 'María González',
+      name: 'María Ejemplo',
       password: hashedPassword,
       role: 'SUPERVISOR' as const,
       status: 'ACTIVE' as const,
@@ -46,7 +94,7 @@ async function main() {
     {
       id: 'demo-admin',
       email: 'admin@demo.com',
-      name: 'Carlos Rodríguez',
+      name: 'Carlos Ejemplo',
       password: hashedPassword,
       role: 'ADMIN' as const,
       status: 'ACTIVE' as const,
@@ -55,7 +103,7 @@ async function main() {
     {
       id: 'demo-superuser',
       email: 'superuser@demo.com',
-      name: 'Ana Superuser',
+      name: 'Ana Ejemplo',
       password: hashedPassword,
       role: 'SUPERUSER' as const,
       status: 'ACTIVE' as const,
@@ -66,7 +114,7 @@ async function main() {
   for (const userData of demoUsers) {
     await prisma.people.upsert({
       where: { id: userData.id },
-      update: {},
+      update: { name: userData.name },
       create: userData,
     });
   }

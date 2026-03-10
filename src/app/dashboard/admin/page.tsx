@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Users, Settings, BarChart3, Building } from 'lucide-react'
+import { Users, Settings, BarChart3 } from 'lucide-react'
 
 export default function AdminPage() {
   const { data: session } = useSession()
@@ -19,15 +19,8 @@ export default function AdminPage() {
       title: 'Gestión de Usuarios',
       description: 'Crear, editar y eliminar usuarios del sistema',
       icon: Users,
-              href: '/dashboard/admin/people',
+      href: '/dashboard/admin/people',
       color: 'bg-blue-500',
-    },
-    {
-      title: 'Gestión de Empresas',
-      description: 'Administrar empresas y organizaciones',
-      icon: Building,
-      href: '/dashboard/admin/tenants',
-      color: 'bg-green-500',
     },
     {
       title: 'Configuración del Sistema',
@@ -77,20 +70,13 @@ export default function AdminPage() {
 
       <div className="bg-white rounded-lg shadow-sm border p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Acceso Rápido</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <button
             onClick={() => router.push('/dashboard/admin/people')}
             className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <Users className="h-5 w-5 text-blue-600" />
             <span className="font-medium">Gestión de Usuarios</span>
-          </button>
-          <button
-            onClick={() => router.push('/dashboard/admin/tenants')}
-            className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <Building className="h-5 w-5 text-green-600" />
-            <span className="font-medium">Gestión de Empresas</span>
           </button>
           <button
             onClick={() => router.push('/dashboard/admin/settings')}

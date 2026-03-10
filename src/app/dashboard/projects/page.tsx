@@ -451,11 +451,13 @@ export default function ProjectsPage() {
     })
     
     setIsEditMode(false)
+    // Single tenant: auto-use first (only) company
+    const defaultCompanyId = companies?.length > 0 ? companies[0].id : ''
     setFormData({
       id: '',
       name: '',
       description: '',
-      companyId: '',
+      companyId: defaultCompanyId,
       status: 'ACTIVE'
     })
     setIsModalOpen(true)
@@ -640,10 +642,6 @@ export default function ProjectsPage() {
 
               <div className="space-y-2 mb-4">
                 <div className="flex items-center text-sm text-gray-600">
-                  <Building2 className="w-4 h-4 mr-2" />
-                  {project.company.name}
-                </div>
-                <div className="flex items-center text-sm text-gray-600">
                   <Target className="w-4 h-4 mr-2" />
                   <span className={`px-2 py-1 rounded-full text-xs ${
                     project.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
@@ -796,23 +794,8 @@ export default function ProjectsPage() {
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Empresa</label>
-                  <select
-                    required
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                    value={formData.companyId}
-                    onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
-                  >
-                    <option value="">Seleccionar empresa</option>
-                    {companies && companies.length > 0 ? companies.map(company => (
-                      <option key={company.id} value={company.id}>
-                        {company.name}
-                      </option>
-                    )) : (
-                      <option value="" disabled>No hay empresas disponibles</option>
-                    )}
-                  </select>
+                <div className="hidden">
+                  <input type="hidden" value={formData.companyId} readOnly />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Estado</label>

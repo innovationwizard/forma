@@ -133,7 +133,7 @@ export function RecentWorkLogs() {
                   </div>
                   {log.project && (
                     <div className="text-xs text-gray-400 truncate">
-                      {log.project.name} ({log.project.company.name})
+                      {log.project.name}
                     </div>
                   )}
                 </div>

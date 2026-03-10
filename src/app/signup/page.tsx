@@ -21,8 +21,8 @@ export default function SignupPage() {
   const [success, setSuccess] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [formData, setFormData] = useState<FormData>({
-    companyName: '',
-    companySlug: '',
+    companyName: 'Forma',
+    companySlug: 'forma',
     adminName: '',
     adminEmail: '',
     adminPassword: '',
@@ -139,63 +139,9 @@ export default function SignupPage() {
                   </div>
                 )}
 
-                {/* Company Information */}
-                <div>
-                  <h3 className="text-lg text-center font-semibold text-slate-900 mb-4">
-                    Información de la Empresa
-                  </h3>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Nombre de la Empresa
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        disabled={isLoading || isSuccess}
-                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:opacity-50"
-                        value={formData.companyName}
-                        onChange={(e) => {
-                          const name = e.target.value
-                          const slug = name.toLowerCase()
-                            .replace(/[^a-z0-9\s]/g, '')
-                            .replace(/\s+/g, '-')
-                          
-                          setFormData({
-                            ...formData,
-                            companyName: name,
-                            companySlug: slug
-                          })
-                        }}
-                        placeholder="Nombre de la empresa"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        URL de la Empresa
-                      </label>
-                      <div className="flex rounded-lg shadow-sm">
-                        <span className="inline-flex items-center px-4 rounded-l-lg border border-r-0 border-slate-300 bg-slate-50 text-slate-500 text-sm">
-                          forma.app/
-                        </span>
-                        <input
-                          type="text"
-                          required
-                          disabled={isLoading || isSuccess}
-                          className="flex-1 block w-full px-4 py-3 border border-slate-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:opacity-50"
-                          value={formData.companySlug}
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            companySlug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')
-                          })}
-                          placeholder="nombre-empresa"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                {/* Company: Forma (single tenant - hidden) */}
+                <input type="hidden" value="Forma" readOnly />
+                <input type="hidden" value="forma" readOnly />
 
                 {/* Admin User Information */}
                 <div>

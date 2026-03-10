@@ -330,8 +330,6 @@ export default function WorkLogsPage() {
                     <div className="mt-3 flex items-center space-x-2 text-sm text-gray-600">
                       <Building className="h-4 w-4" />
                       <span>{log.project.name}</span>
-                      <span>•</span>
-                      <span>{log.project.company.name}</span>
                     </div>
                   )}
                   

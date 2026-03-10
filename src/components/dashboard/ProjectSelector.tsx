@@ -136,11 +136,6 @@ export function ProjectSelector() {
                   {currentProject.description}
                 </div>
               )}
-              {currentProject?.company && (
-                <div className="text-xs text-gray-400 truncate">
-                  {currentProject.company.name}
-                </div>
-              )}
             </div>
           </div>
           <ChevronDown className="h-4 w-4 text-gray-400 flex-shrink-0" />
@@ -156,8 +151,9 @@ export function ProjectSelector() {
                   className="w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
                 >
                   <div className="font-medium text-gray-900 truncate">{project.name}</div>
-                  <div className="text-sm text-gray-500 truncate">{project.description}</div>
-                  <div className="text-xs text-gray-400 truncate">{project.company.name}</div>
+                  {project.description && (
+                    <div className="text-sm text-gray-500 truncate">{project.description}</div>
+                  )}
                 </button>
               ))
             ) : (

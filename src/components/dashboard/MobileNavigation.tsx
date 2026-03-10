@@ -10,7 +10,6 @@ import {
   Package,
   Users,
   FolderOpen,
-  Building,
   BarChart3,
   Settings
 } from 'lucide-react'
@@ -65,12 +64,6 @@ export function MobileNavigation() {
       href: '/dashboard/projects',
       icon: FolderOpen,
       roles: ['SUPERVISOR', 'ADMIN', 'SUPERUSER']
-    },
-    {
-      name: 'Empresas',
-      href: '/dashboard/admin/tenants',
-      icon: Building,
-      roles: ['ADMIN', 'SUPERUSER']
     },
     {
       name: 'Análisis',

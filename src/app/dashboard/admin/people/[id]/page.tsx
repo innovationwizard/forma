@@ -303,47 +303,6 @@ export default function PersonDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Current Assignments */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Companies */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-                <Building className="h-5 w-5 mr-2" />
-                Empresas Actuales
-              </h2>
-              <button
-                onClick={handleOpenAssignCompanyModal}
-                className="bg-blue-600 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-700"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="space-y-3">
-              {person.currentAssignments.companies.length > 0 ? (
-                person.currentAssignments.companies.map((company) => (
-                  <div key={company.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <div className="font-medium">{company.name}</div>
-                      <div className="text-sm text-gray-500">Rol: {person.role}</div>
-                      <div className="text-xs text-gray-400">
-                        Desde: {new Date(company.startDate).toLocaleDateString('es-ES')}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleEndAssignment('company', company.id)}
-                      className="text-red-600 hover:text-red-800 text-sm"
-                    >
-                      Terminar
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500 text-center py-4">No hay empresas asignadas</p>
-              )}
-            </div>
-          </div>
-
-
-
           {/* Projects */}
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <div className="flex items-center justify-between mb-4">
@@ -364,7 +323,6 @@ export default function PersonDetailPage() {
                   <div key={project.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div>
                       <div className="font-medium">{project.name}</div>
-                      <div className="text-sm text-gray-500">Empresa: {project.company}</div>
                       <div className="text-xs text-gray-400">
                         Desde: {new Date(project.startDate).toLocaleDateString('es-ES')}
                       </div>
@@ -417,8 +375,8 @@ export default function PersonDetailPage() {
         </div>
       )}
 
-      {/* Assign Company Modal */}
-      {isAssignCompanyModalOpen && (
+      {/* Assign Company Modal - hidden for single tenant */}
+      {false && isAssignCompanyModalOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
@@ -481,7 +439,7 @@ export default function PersonDetailPage() {
                     <option value="">Seleccionar proyecto</option>
                     {availableProjects.map(project => (
                       <option key={project.id} value={project.id}>
-                        {project.name} ({project.company.name})
+                        {project.name}
                       </option>
                     ))}
                   </select>

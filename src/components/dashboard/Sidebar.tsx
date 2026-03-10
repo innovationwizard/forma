@@ -132,12 +132,6 @@ export default function Sidebar({ isMobileOpen = false, onMobileClose }: Sidebar
       roles: ['SUPERVISOR', 'ADMIN', 'SUPERUSER']
     },
     {
-      name: 'Gestión de Empresas',
-      href: '/dashboard/admin/tenants',
-      icon: Building,
-      roles: ['ADMIN', 'SUPERUSER']
-    },
-    {
       name: 'Análisis',
       href: '/dashboard/analysis',
       icon: BarChart3,

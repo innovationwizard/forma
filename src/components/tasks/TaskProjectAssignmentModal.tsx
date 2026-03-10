@@ -254,9 +254,6 @@ export default function TaskProjectAssignmentModal({
                           <span className="font-medium text-sm text-gray-900 leading-tight">
                             {project.name}
                           </span>
-                          <span className="text-xs text-gray-500 mt-1 leading-tight">
-                            {project.company.name}
-                          </span>
                         </div>
                       </SelectItem>
                     ))}
@@ -267,10 +264,6 @@ export default function TaskProjectAssignmentModal({
                   <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                     <h4 className="font-medium text-sm mb-2">Información del Proyecto</h4>
                     <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-gray-500">Empresa:</span>
-                        <p>{selectedProject.company.name}</p>
-                      </div>
                       <div>
                         <span className="text-gray-500">Nombre:</span>
                         <p>{selectedProject.nameEs || selectedProject.name}</p>
