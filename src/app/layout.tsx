@@ -46,10 +46,11 @@ export const metadata: Metadata = {
     siteName: 'Forma',
     images: [
       {
-        url: '/og-image.png',
+        url: 'https://forma.app/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Forma',
+        alt: 'Forma - Gestión de Productividad en Construcción',
+        type: 'image/png',
       },
     ],
     type: 'website',
@@ -58,7 +59,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Forma - Gestión de Productividad en Construcción',
     description: 'Plataforma integral de gestión de productividad para el sector de la construcción, con seguimiento de tiempo, gestión de usuarios y colaboración en tiempo real.',
-    images: ['/og-image.png'],
+    images: ['https://forma.app/og-image.png'],
   },
 }
 
@@ -67,10 +68,9 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
+  minimumScale: 1,
   userScalable: true,
   viewportFit: 'cover',
-  userScalable: true,
-  minimumScale: 1,
 }
 
 // Force dynamic rendering to prevent static generation issues in Next.js 15
