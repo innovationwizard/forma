@@ -60,7 +60,6 @@ export async function GET(request: NextRequest) {
         people: ut.company._count.people,
         projects: ut.company._count.projects,
         workLogs: ut.company._count.workLogs,
-        role: ut.role
       }))
 
       return NextResponse.json({ companies })
