@@ -6,12 +6,6 @@ import { getPrisma } from '@/lib/prisma'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-// Health metrics cache TTL (5 minutes)
-const HEALTH_CACHE_TTL = 300 // 5 minutes (300 seconds)
-
-    // Health computation interval (30 seconds) - production optimized
-    const HEALTH_COMPUTE_INTERVAL = 30000
-
 // System health metrics interface
 interface SystemHealthMetrics {
   uptime: number
@@ -25,14 +19,11 @@ interface SystemHealthMetrics {
   version: string
 }
 
-// Global health metrics cache
+// Global health metrics cache (per serverless instance)
 let healthMetricsCache: SystemHealthMetrics | null = null
-let lastComputationTime = 0
 
 // Compute system health metrics
 async function computeSystemHealth(): Promise<SystemHealthMetrics> {
-  const startTime = Date.now()
-  
   try {
     const prisma = await getPrisma()
     
@@ -91,14 +82,14 @@ async function computeSystemHealth(): Promise<SystemHealthMetrics> {
     
     // Cache the metrics
     healthMetricsCache = metrics
-    lastComputationTime = Date.now()
-    
-    // Redis caching removed - using in-memory cache only
     
     return metrics
     
   } catch (error) {
-    console.error('Error computing system health:', error)
+    // Log only in development; avoid noisy Vercel logs on DB connection issues
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error computing system health:', error)
+    }
     
     // Return cached metrics if available, otherwise fallback
     if (healthMetricsCache) {
@@ -119,19 +110,6 @@ async function computeSystemHealth(): Promise<SystemHealthMetrics> {
     }
   }
 }
-
-    // Start production health computation scheduler
-    if (typeof global !== 'undefined' && !global.healthSchedulerStarted) {
-      global.healthSchedulerStarted = true
-      
-      // Initial computation for production
-      computeSystemHealth()
-      
-      // Schedule regular computation every 30 seconds for production monitoring
-      setInterval(() => {
-        computeSystemHealth()
-      }, HEALTH_COMPUTE_INTERVAL)
-    }
 
 // GET - Get system health metrics with ETag support
 export async function GET(request: NextRequest) {
