@@ -76,7 +76,7 @@ export default function DashboardLayout({ children, }: { children: React.ReactNo
       
       {/* Main Content */}
       <main className="md:ml-64 min-h-screen-safe pb-20 md:pb-0">
-        <div className="p-4 md:p-6">
+        <div className="pt-2 md:pt-4 px-4 md:px-6 pb-4 md:pb-6">
           {children}
         </div>
       </main>
