@@ -40,16 +40,20 @@ export async function GET(req: NextRequest) {
       } catch (error: any) {
         // If personTenants query fails (e.g., permission denied), log and continue with session companyId
         console.warn('Could not query personTenants in stats, using session companyId:', error?.code || error?.message);
-        // If we don't have any companyIds yet, return empty results
-        if (companyIds.length === 0) {
-          return NextResponse.json({ projectStats: [] });
-        }
+      }
+      
+      // Single-tenant fallback: use Forma company when no context available
+      if (companyIds.length === 0) {
+        const formaCompany = await prisma.companies.findFirst({
+          where: { slug: 'forma' },
+          select: { id: true }
+        });
+        if (formaCompany) companyIds = [formaCompany.id];
       }
       
       if (companyIds.length > 0) {
         whereClause.companyId = { in: companyIds };
       } else {
-        // No company context available, return empty results
         return NextResponse.json({ projectStats: [] });
       }
     } else if (session.user.role === 'SUPERVISOR') {

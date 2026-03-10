@@ -13,14 +13,14 @@ export const runtime = 'nodejs'
 const createProjectSchema = z.object({
   name: z.string().min(1, 'Project name is required'),
   description: z.string().optional(),
-  companyId: z.string().min(1, 'Company ID is required'),
+  companyId: z.string().optional().transform(s => (s && s.trim().length > 0) ? s.trim() : undefined),
   status: z.enum(['ACTIVE', 'INACTIVE', 'COMPLETED']).default('ACTIVE')
 })
 
 const updateProjectSchema = z.object({
   name: z.string().min(1, 'Project name is required'),
   description: z.string().optional(),
-  companyId: z.string().min(1, 'Company ID is required'),
+  companyId: z.string().optional().transform(s => (s && s.trim().length > 0) ? s.trim() : undefined),
   status: z.enum(['ACTIVE', 'INACTIVE', 'COMPLETED'])
 })
 
@@ -58,10 +58,14 @@ export async function GET(req: NextRequest) {
       } catch (error: any) {
         // If personTenants query fails (e.g., permission denied), log and continue with session companyId
         console.warn('Could not query personTenants, using session companyId:', error?.code || error?.message);
-        // If we don't have any companyIds yet, this is a problem
-        if (companyIds.length === 0) {
-          console.error('No company context available for ADMIN user');
-        }
+      }
+      // Single-tenant fallback: use Forma company when no context available
+      if (companyIds.length === 0) {
+        const formaCompany = await prisma.companies.findFirst({
+          where: { slug: 'forma' },
+          select: { id: true }
+        });
+        if (formaCompany) companyIds = [formaCompany.id];
       }
     } else {
       // SUPERVISOR/WORKER sees projects from their companies
@@ -85,10 +89,14 @@ export async function GET(req: NextRequest) {
       } catch (error: any) {
         // If personTenants query fails (e.g., permission denied), log and continue with session companyId
         console.warn('Could not query personTenants, using session companyId:', error?.code || error?.message);
-        // If we don't have any companyIds yet, this is a problem
-        if (companyIds.length === 0) {
-          console.error('No company context available for user');
-        }
+      }
+      // Single-tenant fallback: use Forma company when no context available
+      if (companyIds.length === 0) {
+        const formaCompany = await prisma.companies.findFirst({
+          where: { slug: 'forma' },
+          select: { id: true }
+        });
+        if (formaCompany) companyIds = [formaCompany.id];
       }
     }
     
@@ -230,8 +238,16 @@ export async function POST(request: NextRequest) {
       } catch (error: any) {
         // If personTenants query fails, log and use session companyId if available
         console.warn('Could not query personTenants in POST, using session companyId:', error?.code || error?.message);
-        // If we still don't have a companyId, we'll error out below
       }
+    }
+
+    // Single-tenant fallback: use Forma company when no context available
+    if (!currentCompanyId || currentCompanyId === 'unknown' || currentCompanyId === 'system') {
+      const formaCompany = await prisma.companies.findFirst({
+        where: { slug: 'forma' },
+        select: { id: true }
+      })
+      currentCompanyId = formaCompany?.id || currentCompanyId || undefined
     }
     
     // Step 2: Get user's role from session
@@ -247,7 +263,7 @@ export async function POST(request: NextRequest) {
     
     if (!targetCompanyId) {
       return NextResponse.json(
-        { error: 'No company context available' },
+        { error: 'No company context available. Ensure Forma company exists (run supabase-prod-seed.sql).' },
         { status: 400 }
       )
     }
@@ -406,9 +422,13 @@ export async function PUT(request: NextRequest) {
       }
     }
 
+    const updatePayload = Object.fromEntries(
+      Object.entries(validatedData).filter(([_, v]) => v !== undefined)
+    )
+
     const updatedProject = await prisma.projects.update({
       where: { id },
-      data: validatedData,
+      data: updatePayload,
       include: {
         company: true
       }
