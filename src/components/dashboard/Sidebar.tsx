@@ -40,7 +40,7 @@ export default function Sidebar({ isMobileOpen = false, onMobileClose }: Sidebar
   
   if (status === 'loading') {
     return (
-      <div className="hidden md:flex w-64 bg-white text-gray-900 h-full flex-col border-r border-gray-200">
+      <div className="hidden md:flex w-64 bg-white text-gray-900 fixed top-0 left-0 h-screen flex-col border-r border-gray-200 z-30">
         <div className="p-4">Cargando...</div>
       </div>
     )
@@ -224,7 +224,7 @@ export default function Sidebar({ isMobileOpen = false, onMobileClose }: Sidebar
       </div>
 
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex w-64 bg-white text-gray-900 h-full flex-col border-r border-gray-200">
+      <div className="hidden md:flex w-64 bg-white text-gray-900 fixed top-0 left-0 h-screen flex-col border-r border-gray-200 z-30">
         <div className="p-4 border-b border-gray-200">
           <h1 className="text-xl font-bold text-gray-900">Forma</h1>
           <p className="text-sm text-gray-600">{session?.user?.name}</p>
