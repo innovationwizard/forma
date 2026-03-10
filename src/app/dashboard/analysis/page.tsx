@@ -164,7 +164,7 @@ export default function AnalysisPage() {
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Análisis</h1>
         <p className="text-gray-600 mt-2 text-sm sm:text-base">
-          Análisis avanzado y recomendaciones de inteligencia artificial para tus proyectos
+          Análisis avanzado y recomendaciones de Inteligencia Artificial para tus proyectos
         </p>
       </div>
 
