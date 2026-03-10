@@ -343,7 +343,7 @@ graph LR
 ## Infrastructure as Code
 \`\`\`yaml
 # Vercel Configuration
-name: ingepro
+name: forma
 version: 2
 builds:
   - src: package.json
@@ -355,21 +355,8 @@ env:
   NEXTAUTH_SECRET: @nextauth-secret
 
 
-# AWS Infrastructure
-Resources:
-  DatabaseInstance:
-    Type: AWS::RDS::DBInstance
-    Properties:
-      Engine: postgres
-      DBInstanceClass: db.t3.micro
-      AllocatedStorage: 20
-      
-  S3Bucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: ingepro-storage
-      VersioningConfiguration:
-        Status: Enabled
+# Supabase Infrastructure
+# Create project at supabase.com, configure DATABASE_URL, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 \`\`\`
 
 ## Deployment Commands
@@ -422,8 +409,8 @@ graph TB
     end
     
     subgraph "Infrastructure Layer"
-        E[AWS RDS] --> F[Database Monitoring]
-        G[AWS S3] --> H[Storage Monitoring]
+        E[Supabase PostgreSQL] --> F[Database Monitoring]
+        G[Supabase Storage] --> H[Storage Monitoring]
         I[Vercel] --> J[Platform Monitoring]
     end
     
@@ -456,7 +443,7 @@ export async function GET() {
     services: {
       database: await checkDatabase(),
       
-      aws: await checkAWS(),
+      supabase: await checkSupabase(),
       external: await checkExternalServices()
     }
   };

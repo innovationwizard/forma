@@ -1,4 +1,4 @@
-# IngePro System Architecture
+# Forma System Architecture
 
 ## High-Level System Overview
 ```mermaid
@@ -21,8 +21,8 @@ graph TB
     end
     
     subgraph "Infrastructure"
-        L[AWS RDS] --> M[Vercel Deployment]
-        L --> N[AWS S3]
+        L[Supabase PostgreSQL] --> M[Vercel Deployment]
+        L --> N[Supabase Storage]
     end
     
     A --> E
@@ -183,7 +183,7 @@ graph TB
     
     subgraph "Infrastructure Security"
         M[HTTPS Only] --> N[Environment Variables]
-        N --> O[AWS IAM Roles]
+        N --> O[Supabase RLS]
         O --> P[Database Encryption]
     end
     
@@ -209,7 +209,7 @@ graph TB
     subgraph "Production Environment"
         H[Vercel Platform] --> I[Edge Functions]
         I --> J[Global CDN]
-        J --> K[AWS Services]
+        J --> K[Supabase Services]
     end
     
     subgraph "Monitoring"
@@ -245,7 +245,7 @@ graph LR
     end
     
     subgraph "Infrastructure"
-        M[AWS RDS] --> N[AWS S3]
+        M[Supabase PostgreSQL] --> N[Supabase Storage]
         N --> P[Vercel]
     end
     

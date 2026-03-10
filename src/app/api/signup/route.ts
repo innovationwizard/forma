@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     
     const validatedData = signupSchema.parse(body);
-    // Get Prisma client with AWS Proxy
+    // Get Prisma client (Supabase)
     const prisma = await getPrisma();
     // Check if company slug already exists
     const existingCompany = await prisma.companies.findUnique({

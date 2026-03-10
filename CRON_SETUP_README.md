@@ -81,7 +81,7 @@ spec:
                   name: cron-secrets
                   key: cron-secret
             - name: API_URL
-              value: "https://ingepro.app"
+              value: "https://forma.app"
           restartPolicy: OnFailure
 ```
 
@@ -98,7 +98,7 @@ curl -X GET http://localhost:3000/api/cron/rate-limit-cleanup
 # Test the cleanup endpoint (Vercel cron calls this automatically)
 curl -X POST \
   -H "Content-Type: application/json" \
-  "https://ingepro.app/api/cron/rate-limit-cleanup"
+  "https://forma.app/api/cron/rate-limit-cleanup"
 ```
 
 ### Vercel Cron Monitoring
@@ -164,7 +164,7 @@ vercel ls
 vercel logs
 
 # Test endpoint manually
-curl -X POST https://ingepro.app/api/cron/rate-limit-cleanup
+curl -X POST https://forma.app/api/cron/rate-limit-cleanup
 
 # Check Vercel dashboard for cron execution logs
 ```

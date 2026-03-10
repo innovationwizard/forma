@@ -12,8 +12,8 @@ import PWAInstallPrompt from '@/components/PWAInstallPrompt'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://ingepro.app'),
-  title: 'IngePro - Gestión de Productividad en Construcción',
+  metadataBase: new URL('https://forma.app'),
+  title: 'Forma - Gestión de Productividad en Construcción',
   description: 'Plataforma integral de gestión de productividad para el sector de la construcción, con seguimiento de tiempo, gestión de usuarios y colaboración en tiempo real.',
   manifest: '/manifest.json',
   icons: {
@@ -28,37 +28,37 @@ export const metadata: Metadata = {
       { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
     ],
   },
-  keywords: ['construcción', 'productividad', 'gestión', 'proyectos', 'seguimiento de tiempo', 'IngePro', 'PWA', 'app'],
-  authors: [{ name: 'IngePro' }],
-  applicationName: 'IngePro',
+  keywords: ['construcción', 'productividad', 'gestión', 'proyectos', 'seguimiento de tiempo', 'Forma', 'PWA', 'app'],
+  authors: [{ name: 'Forma' }],
+  applicationName: 'Forma',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'IngePro',
+    title: 'Forma',
   },
   formatDetection: {
     telephone: false,
   },
   openGraph: {
-    title: 'IngePro - Gestión de Productividad en Construcción',
+    title: 'Forma - Gestión de Productividad en Construcción',
     description: 'Plataforma integral de gestión de productividad para el sector de la construcción, con seguimiento de tiempo, gestión de usuarios y colaboración en tiempo real.',
-    url: 'https://ingepro.app',
-    siteName: 'IngePro',
+    url: 'https://forma.app',
+    siteName: 'Forma',
     images: [
       {
-        url: '/ingepro_logo_small.png',
+        url: '/forma_logo_small.png',
         width: 120,
         height: 120,
-        alt: 'IngePro',
+        alt: 'Forma',
       },
     ],
     type: 'website',
   },
   twitter: {
     card: 'summary',
-    title: 'IngePro - Gestión de Productividad en Construcción',
+    title: 'Forma - Gestión de Productividad en Construcción',
     description: 'Plataforma integral de gestión de productividad para el sector de la construcción, con seguimiento de tiempo, gestión de usuarios y colaboración en tiempo real.',
-    images: ['/ingepro_logo_small.png'],
+    images: ['/forma_logo_small.png'],
   },
 }
 

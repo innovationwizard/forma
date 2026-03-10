@@ -1,4 +1,4 @@
-# IngePro - Gestión de Productividad en Construcción
+# Forma - Gestión de Productividad en Construcción
 
 Una plataforma integral de gestión de productividad para el sector de la construcción, con seguimiento de tiempo, gestión de usuarios y colaboración en tiempo real.
 
@@ -23,8 +23,8 @@ Una plataforma integral de gestión de productividad para el sector de la constr
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/innovationwizard/ingepro.git
-cd ingepro
+git clone https://github.com/innovationwizard/forma.git
+cd forma
 ```
 
 2. Install dependencies:
@@ -46,7 +46,7 @@ Automated architecture diagrams are available in the [docs/architecture](./docs/
 - **Component Dependencies** - React component hierarchy and relationships
 - **API Documentation** - Endpoint structure and authentication flow
 - **Security Architecture** - Authentication and authorization patterns
-- **Infrastructure Setup** - Deployment and AWS services configuration
+- **Infrastructure Setup** - Deployment and Supabase configuration
 
 ### Generate Architecture Diagrams
 

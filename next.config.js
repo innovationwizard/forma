@@ -33,12 +33,12 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/aws-rds',
-        destination: '/api/aws-rds',
+        source: '/api/supabase-db',
+        destination: '/api/supabase-db',
       },
       {
-        source: '/api/aws-s3',
-        destination: '/api/aws-s3',
+        source: '/api/supabase-storage',
+        destination: '/api/supabase-storage',
       },
     ];
   },

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getPrisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -12,7 +12,7 @@ export async function GET() {
     const result = await prisma.$queryRaw`SELECT 1 as test`;
     
     return Response.json({ 
-      message: 'Database connection successful',
+      message: 'Database connection successful (Supabase)',
       result: result
     });
   } catch (error) {

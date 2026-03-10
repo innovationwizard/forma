@@ -52,7 +52,7 @@ export default function PWAInstallGuide() {
       case 'firefox':
         return [
           'Toca el icono de instalación (🏠) en la barra de direcciones',
-          'Selecciona "Instalar IngePro"',
+          'Selecciona "Instalar Forma"',
           'Toca "Instalar" para confirmar',
           'La aplicación se instalará en tu computadora'
         ]
@@ -114,7 +114,7 @@ export default function PWAInstallGuide() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-900 flex items-center">
               <Smartphone className="h-5 w-5 mr-2 text-blue-600" />
-              Instalar IngePro
+              Instalar Forma
             </h2>
             <Button
               onClick={handleClose}
@@ -131,7 +131,7 @@ export default function PWAInstallGuide() {
               Detectamos que estás usando: <strong>{platformNames[currentPlatform as keyof typeof platformNames]}</strong>
             </p>
             <p className="text-sm text-gray-600">
-              Sigue estos pasos para instalar IngePro como aplicación:
+              Sigue estos pasos para instalar Forma como aplicación:
             </p>
           </div>
 

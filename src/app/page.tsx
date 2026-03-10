@@ -35,7 +35,7 @@ export default function LandingPage() {
             <HardHat className="h-24 w-24 text-yellow-500 sm:h-40 sm:w-40" />
           </div>
           <h1 className="mx-auto max-w-4xl font-display text-5xl font-medium tracking-tight text-slate-900 sm:text-7xl">
-            <span className="text-blue-600">IngePro</span>
+            <span className="text-blue-600">Forma</span>
             <br />
             <span className="text-black-400 text-4xl">Gestión de Productividad en Construcción</span>
           </h1>

@@ -28,7 +28,7 @@ export async function sendUsageLogsEmail(logs: UsageLogEntry[]): Promise<boolean
       `${log.timestamp} | ${log.user} | ${log.action}`
     ).join('\n')
     
-    const emailContent = `IngePro Usage Logs - ${timestamp}
+    const emailContent = `Forma Usage Logs - ${timestamp}
 ---
 
 ${logLines}
@@ -41,7 +41,7 @@ This is an automated report for adoption monitoring.
     const mailOptions = {
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: 'jorgeluiscontrerasherrera@gmail.com',
-      subject: `IngePro Usage Logs - ${timestamp}`,
+      subject: `Forma Usage Logs - ${timestamp}`,
       text: emailContent,
     }
 

@@ -10,7 +10,8 @@ export async function GET() {
     const rows = await prisma.$queryRaw<any[]>`SELECT current_database() AS db, current_user AS user, inet_server_addr() AS host`;
 
     const info = Array.isArray(rows) && rows[0] ? rows[0] : { db: null, user: null, host: null }
-    const isOk = info.db === 'ingepro'
+    // Supabase default db is 'postgres'; accept forma if migrated
+    const isOk = info.db === 'forma' || info.db === 'postgres'
 
     const body = {
       ok: isOk,

@@ -64,7 +64,7 @@ export function Header({ onMobileMenuClick }: HeaderProps) {
             <div className="flex items-center">
               <Clock className="h-8 w-8 text-blue-600 mr-3" />
               <h1 className="text-xl font-semibold text-gray-900">
-                IngePro
+                Forma
               </h1>
             </div>
           </div>

@@ -259,7 +259,7 @@ export default function WorklogEntryForm({
       const file = files[i]
       if (file.type.startsWith('image/')) {
         try {
-          // In a real app, you'd upload to S3/cloud storage
+          // In a real app, you'd upload to Supabase Storage
           // For now, we'll create a local URL
           const url = URL.createObjectURL(file)
           const photo = {

@@ -16,7 +16,7 @@ if (!fs.existsSync(archDir)) {
 }
 
 // Generate system architecture diagram
-const systemArchitecture = `# IngePro System Architecture
+const systemArchitecture = `# Forma System Architecture
 
 ## High-Level System Overview
 \`\`\`mermaid
@@ -39,8 +39,8 @@ graph TB
     end
     
     subgraph "Infrastructure"
-        L[AWS RDS] --> M[Vercel Deployment]
-        L --> N[AWS S3]
+        L[Supabase PostgreSQL] --> M[Vercel Deployment]
+        L --> N[Supabase Storage]
     end
     
     A --> E
@@ -201,7 +201,7 @@ graph TB
     
     subgraph "Infrastructure Security"
         M[HTTPS Only] --> N[Environment Variables]
-        N --> O[AWS IAM Roles]
+        N --> O[Supabase RLS]
         O --> P[Database Encryption]
     end
     
@@ -227,7 +227,7 @@ graph TB
     subgraph "Production Environment"
         H[Vercel Platform] --> I[Edge Functions]
         I --> J[Global CDN]
-        J --> K[AWS Services]
+        J --> K[Supabase Services]
     end
     
     subgraph "Monitoring"
@@ -263,7 +263,7 @@ graph LR
     end
     
     subgraph "Infrastructure"
-        M[AWS RDS] --> N[AWS S3]
+        M[Supabase PostgreSQL] --> N[Supabase Storage]
         N --> P[Vercel]
     end
     
@@ -545,9 +545,8 @@ DATABASE_URL="postgresql://..."
 NEXTAUTH_SECRET="your-secret"
 NEXTAUTH_URL="https://your-domain.com"
 
-AWS_ACCESS_KEY_ID="..."
-AWS_SECRET_ACCESS_KEY="..."
-AWS_REGION="us-east-1"
+NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
+SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
 \`\`\`
 
 ## Database Setup
@@ -572,8 +571,8 @@ vercel --prod               # Deploy to Vercel production
 // Health check endpoints
 GET /api/health             // Basic health status
 GET /api/system-health      // Detailed system health
-GET /api/aws-rds           // Database connection status
-GET /api/aws-s3            // S3 connection status
+GET /api/supabase-db        // Database connection status (Supabase)
+GET /api/supabase-storage   // Supabase storage connection status
 \`\`\`
 `;
 
@@ -592,9 +591,9 @@ files.forEach(file => {
 });
 
 // Generate README for architecture docs
-const architectureReadme = `# IngePro Architecture Documentation
+const architectureReadme = `# Forma Architecture Documentation
 
-This directory contains automatically generated architecture documentation for the IngePro construction management platform.
+This directory contains automatically generated architecture documentation for the Forma construction management platform.
 
 ## Files
 

@@ -263,7 +263,7 @@ export default function ProgressHistory({ projects, tasks, personRole }: Progres
     const pdfOptions: PDFExportOptions = {
       title: 'Reporte de Historial de Progreso',
       subtitle: 'Seguimiento de Tareas y Materiales',
-      companyName: companyName || 'IngePro - Gestión de Construcción',
+      companyName: companyName || 'Forma - Gestión de Construcción',
       dateRange: dateRange || undefined,
       isAnonymized: isAnonymized
     }

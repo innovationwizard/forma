@@ -33,7 +33,7 @@ graph LR
 ## Infrastructure as Code
 ```yaml
 # Vercel Configuration
-name: ingepro
+name: forma
 version: 2
 builds:
   - src: package.json
@@ -45,21 +45,11 @@ env:
   NEXTAUTH_SECRET: @nextauth-secret
 
 
-# AWS Infrastructure
-Resources:
-  DatabaseInstance:
-    Type: AWS::RDS::DBInstance
-    Properties:
-      Engine: postgres
-      DBInstanceClass: db.t3.micro
-      AllocatedStorage: 20
-      
-  S3Bucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: ingepro-storage
-      VersioningConfiguration:
-        Status: Enabled
+# Supabase Infrastructure
+# Create project at supabase.com, then configure:
+# - DATABASE_URL from Project Settings > Database
+# - NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY from Project Settings > API
+# - Storage buckets created in Supabase Dashboard > Storage
 ```
 
 ## Deployment Commands

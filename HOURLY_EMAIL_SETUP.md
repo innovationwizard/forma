@@ -44,7 +44,7 @@ SMTP_FROM=your-email@gmail.com
 ## Email Format
 
 ```
-IngePro Usage Logs - 2025-01-27 10:00:00
+Forma Usage Logs - 2025-01-27 10:00:00
 
 2025-01-27 09:45:00 | John Doe | log in
 2025-01-27 09:50:00 | John Doe | added new project
@@ -82,12 +82,12 @@ curl -X GET http://localhost:3000/api/cron/usage-logs-email
 
 ### Manual Trigger (Production)
 ```bash
-curl -X GET https://ingepro.app/api/cron/usage-logs-email
+curl -X GET https://forma.app/api/cron/usage-logs-email
 ```
 
 ### External Bot Usage
 You can set up external monitoring systems to hit this endpoint:
-- **URL**: `https://ingepro.app/api/cron/usage-logs-email`
+- **URL**: `https://forma.app/api/cron/usage-logs-email`
 - **Method**: GET
 - **Frequency**: As needed (no longer automated)
 

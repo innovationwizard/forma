@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ingepro-v1.0.0';
+const CACHE_NAME = 'forma-v1.0.0';
 const urlsToCache = [
   '/',
   '/dashboard',
@@ -75,7 +75,7 @@ async function doBackgroundSync() {
 // Push notification handling
 self.addEventListener('push', (event) => {
   const options = {
-    body: event.data ? event.data.text() : 'Nueva notificación de IngePro',
+    body: event.data ? event.data.text() : 'Nueva notificación de Forma',
     icon: '/icon-192x192.png',
     badge: '/favicon-32x32.png',
     vibrate: [100, 50, 100],
@@ -98,7 +98,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification('IngePro', options)
+    self.registration.showNotification('Forma', options)
   );
 });
 

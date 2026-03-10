@@ -10,8 +10,8 @@ graph TB
     end
     
     subgraph "Infrastructure Layer"
-        E[AWS RDS] --> F[Database Monitoring]
-        G[AWS S3] --> H[Storage Monitoring]
+        E[Supabase PostgreSQL] --> F[Database Monitoring]
+        G[Supabase Storage] --> H[Storage Monitoring]
         I[Vercel] --> J[Platform Monitoring]
     end
     
@@ -44,7 +44,7 @@ export async function GET() {
     services: {
       database: await checkDatabase(),
       
-      aws: await checkAWS(),
+      supabase: await checkSupabase(),
       external: await checkExternalServices()
     }
   };

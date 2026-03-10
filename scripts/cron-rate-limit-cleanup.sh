@@ -5,7 +5,7 @@
 
 # Configuration
 CRON_SECRET="${CRON_SECRET}"
-API_URL="${API_URL:-https://ingepro.app}/api/cron/rate-limit-cleanup"
+API_URL="${API_URL:-https://forma.app}/api/cron/rate-limit-cleanup"
 
 # Log function
 log() {

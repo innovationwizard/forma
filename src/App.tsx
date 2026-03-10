@@ -5,7 +5,7 @@ import ProjectCard from './components/ProjectCard';
 const projects = [
   {
     id: 1,
-    name: "IngePro",
+    name: "Forma",
     logo: "IP",
     description: "A comprehensive project management platform with time tracking, user management, and real-time collaboration features. Built with Next.js, TypeScript, and Prisma."
   },
@@ -25,9 +25,9 @@ function App() {
         <div className="container">
           <div className="header-content">
             <div className="logo">
-              <img src="/ingepro_logo.png" alt="IngePro Logo" width="80" height="80" />
+              <img src="/forma_logo.png" alt="Forma Logo" width="80" height="80" />
             </div>
-            <h1 className="title">IngePro - Gestión de Productividad en Construcción</h1>
+            <h1 className="title">Forma - Gestión de Productividad en Construcción</h1>
           </div>
         </div>
       </header>
@@ -47,7 +47,7 @@ function App() {
       <footer className="footer">
         <div className="container">
           <div className="footer-content">
-            <p>&copy; 2024 IngePro. All rights reserved.</p>
+            <p>&copy; 2026 Forma. All rights reserved.</p>
           </div>
         </div>
       </footer>

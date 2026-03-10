@@ -11,7 +11,7 @@ let prismaClient: PrismaClient | null = null;
 
 export async function getPrisma() {
   if (!prismaClient) {
-    const url = await getDbUrl(); // builds from Secrets Manager
+    const url = await getDbUrl(); // from DATABASE_URL (Supabase)
     prismaClient = new PrismaClient({ datasources: { db: { url } } });
   }
   

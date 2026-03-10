@@ -1,10 +1,10 @@
 module.exports = {
   // Project metadata
   project: {
-    name: 'IngePro',
+    name: 'Forma',
     description: 'Construction Management Platform',
     version: '1.0.0',
-    repository: 'https://github.com/innovationwizard/ingepro'
+    repository: 'https://github.com/innovationwizard/forma'
   },
 
   // Diagram generation settings
@@ -84,7 +84,7 @@ module.exports = {
     }
   },
 
-  // Custom rules for IngePro
+  // Custom rules for Forma
   rules: {
     // Construction-specific terminology
     terminology: {
@@ -110,7 +110,7 @@ module.exports = {
       'Frontend': ['Next.js', 'React', 'TypeScript', 'Tailwind CSS'],
       'Backend': ['Node.js', 'Prisma', 'PostgreSQL'],
       'Authentication': ['NextAuth.js', 'JWT', 'bcryptjs'],
-      'Infrastructure': ['AWS RDS', 'AWS S3', 'Vercel'],
+      'Infrastructure': ['Supabase PostgreSQL', 'Supabase Storage', 'Vercel'],
       'Development': ['ESLint', 'Prettier', 'Prisma Studio']
     }
   },

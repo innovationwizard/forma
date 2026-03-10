@@ -117,7 +117,7 @@ export default function SignupPage() {
             <HardHat className="h-24 w-24 text-yellow-500 sm:h-40 sm:w-40" />
           </div>
           <h1 className="mx-auto max-w-4xl font-display text-5xl font-medium tracking-tight text-slate-900 sm:text-7xl">
-            <span className="text-blue-600">IngePro</span>
+            <span className="text-blue-600">Forma</span>
             <br />
             <span className="text-black-400 text-4xl">Crear Cuenta</span>
           </h1>
@@ -178,7 +178,7 @@ export default function SignupPage() {
                       </label>
                       <div className="flex rounded-lg shadow-sm">
                         <span className="inline-flex items-center px-4 rounded-l-lg border border-r-0 border-slate-300 bg-slate-50 text-slate-500 text-sm">
-                          ingepro.app/
+                          forma.app/
                         </span>
                         <input
                           type="text"

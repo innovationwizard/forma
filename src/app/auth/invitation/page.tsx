@@ -115,7 +115,7 @@ function InvitationForm() {
         <div className="bg-white rounded-lg shadow-lg p-8">
           <div className="text-center mb-6">
             <HardHat className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Bienvenido a IngePro</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Bienvenido a Forma</h1>
             <p className="text-gray-600">
               Establezca su contraseña para continuar.
             </p>

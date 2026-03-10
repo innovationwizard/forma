@@ -73,7 +73,7 @@ Photos are not required.
 
   - Should photos be **stored locally** or in cloud storage?
 
-We have an AWS S3 for this purpose. 
+We have Supabase Storage for this purpose. 
 
 ### **8. Productivity Calculation**
 - For productivity metrics:

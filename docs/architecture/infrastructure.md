@@ -7,9 +7,8 @@ DATABASE_URL="postgresql://..."
 NEXTAUTH_SECRET="your-secret"
 NEXTAUTH_URL="https://your-domain.com"
 
-AWS_ACCESS_KEY_ID="..."
-AWS_SECRET_ACCESS_KEY="..."
-AWS_REGION="us-east-1"
+NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
+SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
 ```
 
 ## Database Setup
@@ -34,6 +33,6 @@ vercel --prod               # Deploy to Vercel production
 // Health check endpoints
 GET /api/health             // Basic health status
 GET /api/system-health      // Detailed system health
-GET /api/aws-rds           // Database connection status
-GET /api/aws-s3            // S3 connection status
+GET /api/supabase-db        // Database connection status (Supabase)
+GET /api/supabase-storage   // Supabase storage connection status
 ```

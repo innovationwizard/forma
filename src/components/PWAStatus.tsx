@@ -71,7 +71,7 @@ export default function PWAStatus() {
               Aplicación Instalada
             </h3>
             <p className="text-sm text-green-700">
-              IngePro está funcionando como aplicación nativa
+              Forma está funcionando como aplicación nativa
             </p>
           </div>
         </div>
@@ -85,10 +85,10 @@ export default function PWAStatus() {
         <Info className="h-5 w-5 text-blue-600 mt-0.5" />
         <div className="flex-1">
           <h3 className="text-sm font-medium text-blue-800">
-            Instalar IngePro
+            Instalar Forma
           </h3>
           <p className="text-sm text-blue-700 mb-3">
-            Para una mejor experiencia, instala IngePro como aplicación en tu dispositivo
+            Para una mejor experiencia, instala Forma como aplicación en tu dispositivo
           </p>
           
                       <div className="space-y-2">

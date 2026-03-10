@@ -82,7 +82,7 @@ export default function PWAInstallPrompt() {
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-medium text-gray-900">
-            Instalar IngePro
+            Instalar Forma
           </h3>
           <p className="text-sm text-gray-500 mt-1">
             Instala la aplicación para acceder más rápido y trabajar sin conexión

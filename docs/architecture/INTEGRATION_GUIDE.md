@@ -1,8 +1,8 @@
-# IngePro Architecture Integration Guide
+# Forma Architecture Integration Guide
 
 ## 🎯 Overview
 
-This guide explains how to integrate automated architecture diagram generation into your IngePro development workflow. The system automatically generates comprehensive architecture documentation using Mermaid diagrams and Markdown.
+This guide explains how to integrate automated architecture diagram generation into your Forma development workflow. The system automatically generates comprehensive architecture documentation using Mermaid diagrams and Markdown.
 
 ## 🚀 Quick Start
 
@@ -32,7 +32,7 @@ npm run update-architecture
 - **System Overview**: High-level system design and technology stack
 - **Component Dependencies**: React component hierarchy and relationships
 - **API Documentation**: Endpoint structure and authentication flow
-- **Infrastructure**: Deployment and AWS services configuration
+- **Infrastructure**: Deployment and Supabase configuration
 
 ### Enhanced Diagrams
 - **Database Schema**: Detailed ERD with constraints and indexes
@@ -242,7 +242,7 @@ Support multiple output formats:
 - [Lucidchart](https://www.lucidchart.com/) - Professional diagrams
 
 ### Community
-- [GitHub Discussions](https://github.com/innovationwizard/ingepro/discussions)
+- [GitHub Discussions](https://github.com/innovationwizard/forma/discussions)
 - [Architecture Patterns](https://martinfowler.com/articles/architecture.html)
 - [Software Architecture](https://www.reddit.com/r/softwarearchitecture/)
 
