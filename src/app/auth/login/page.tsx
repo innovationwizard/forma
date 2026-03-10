@@ -89,8 +89,6 @@ export default function LoginPage() {
             <Image src="/forma_logo.png" alt="Forma" width={200} height={80} className="h-20 w-auto sm:h-28 sm:w-auto" priority />
           </div>
           <h1 className="mx-auto max-w-4xl font-display text-5xl font-medium tracking-tight text-slate-900 sm:text-7xl">
-            <span className="text-blue-600">Forma</span>
-            <br />
             <span className="text-black-400 text-4xl">Iniciar Sesión</span>
           </h1>
 

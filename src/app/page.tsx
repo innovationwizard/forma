@@ -32,7 +32,7 @@ export default function LandingPage() {
         
         <div className="pt-20 pb-16 text-center lg:pt-32">
           <div className="flex justify-center mb-4">
-            <Image src="/forma_logo.png" alt="Forma" width={200} height={80} className="h-20 w-auto sm:h-28 sm:w-auto rounded-xl" priority />
+            <Image src="/forma_logo.png" alt="Forma" width={300} height={120} className="h-[7.5rem] w-auto sm:h-[10.5rem] sm:w-auto rounded-xl" priority />
           </div>
           <h1 className="mx-auto max-w-4xl font-display text-5xl font-medium tracking-tight text-slate-900 sm:text-7xl">
             <span className="text-black-400 text-4xl">Gestión de Productividad en Construcción</span>
