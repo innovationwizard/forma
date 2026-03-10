@@ -13,6 +13,8 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>
 }
 
+const HIDE_PWA_PROMPT = true
+
 export default function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [showInstallPrompt, setShowInstallPrompt] = useState(false)
@@ -69,8 +71,8 @@ export default function PWAInstallPrompt() {
     setShowInstallPrompt(false)
   }
 
-  // Don't show if already installed or no prompt available
-  if (isInstalled || !showInstallPrompt || !deferredPrompt) {
+  // Don't show if already installed or no prompt available, or hidden
+  if (HIDE_PWA_PROMPT || isInstalled || !showInstallPrompt || !deferredPrompt) {
     return null
   }
 

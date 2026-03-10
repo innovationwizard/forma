@@ -5,6 +5,8 @@ import { Smartphone, Download, CheckCircle, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import PWAInstallGuide from './PWAInstallGuide'
 
+const HIDE_PWA_PROMPT = true
+
 export default function PWAStatus() {
   const [isPWA, setIsPWA] = useState(false)
   const [isOnline, setIsOnline] = useState(true)
@@ -59,6 +61,10 @@ export default function PWAStatus() {
     }
 
     setDeferredPrompt(null)
+  }
+
+  if (HIDE_PWA_PROMPT) {
+    return null
   }
 
   if (isPWA) {

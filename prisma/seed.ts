@@ -71,6 +71,40 @@ async function main() {
     });
   }
 
+  // Admin user: jorge@forma.gt
+  await prisma.people.upsert({
+    where: { email: 'jorge@forma.gt' },
+    update: { password: formaPassword },
+    create: {
+      email: 'jorge@forma.gt',
+      name: 'jorge',
+      password: formaPassword,
+      role: 'ADMIN',
+      status: 'ACTIVE',
+      companyId: formaCompany.id,
+    },
+  });
+
+  const jorge = await prisma.people.findUnique({ where: { email: 'jorge@forma.gt' } });
+  if (jorge) {
+    await prisma.personTenants.upsert({
+      where: {
+        personId_companyId_startDate: {
+          personId: jorge.id,
+          companyId: formaCompany.id,
+          startDate: new Date(new Date().setHours(0, 0, 0, 0)),
+        },
+      },
+      update: {},
+      create: {
+        personId: jorge.id,
+        companyId: formaCompany.id,
+        startDate: new Date(),
+        status: 'ACTIVE',
+      },
+    });
+  }
+
   // Create demo users with all required fields
   const demoUsers = [
     {
