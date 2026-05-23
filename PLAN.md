@@ -82,20 +82,26 @@ Total: **19 batches**. Each sized so a single session can plausibly finish it. G
 
 ### Batch 3 — Auth + centralized RBAC matrix
 
-- **Goal:** Supabase Auth wired with email/password + magic-link, protected-route middleware, and an enterprise-grade centralized RBAC matrix (per saved memory: feedback_rbac_approach — no inline role checks).
+- **Goal:** Supabase Auth wired via the SSR pattern (`@supabase/ssr`), a Next 16-compliant **Data Access Layer** that gates `/(app)/*` routes, and an enterprise-grade centralized RBAC matrix (4 roles: MASTER / CEO / ANALISTA / AUXILIAR per D14) — no inline role checks.
 - **Inputs / Gates:** Batch 2 done.
+- **Pattern note:** Next 16 deprecated `middleware.ts` (renamed to `proxy.ts`) and explicitly recommends against using proxy/middleware for auth gates. The Next 16 canonical pattern is a **Data Access Layer** invoked at the top of route-group layouts + Server Actions + Route Handlers, memoized via React's `cache()`. See `feedback_nextjs16_auth_pattern` memory and `node_modules/next/dist/docs/01-app/02-guides/authentication.md`.
 - **Deliverables:**
-  - `lib/auth/server.ts` — server-side Supabase client (cookies), `getUser()`, `requireUser()`, `requireRole()`
-  - `lib/auth/client.ts` — browser Supabase client
-  - `lib/rbac/matrix.ts` — single source of truth: `Role × Resource × Action → allow|deny`, exhaustive over enums; **all** authorization decisions route through `can(user, action, resource)`
-  - `lib/rbac/policies.ts` — Postgres RLS policy generator (so the matrix is mirrored at the DB layer)
-  - `middleware.ts` — protects all routes except `/login`, `/api/health`
-  - `app/login/page.tsx` — minimal email + password form using real Supabase Auth (no mock users)
-  - `app/(app)/layout.tsx` — server-side `requireUser()` gate; renders nothing until auth resolved
-- **Acceptance:** Unauthenticated GET of any `/(app)/*` route 302s to `/login`. Logged-in user lands at `/(app)`. `can()` returns deterministic results for every (role, resource, action) tuple — proven by Batch 4's RLS tests.
+  - `src/lib/supabase/server.ts` — server-side Supabase client built with `createServerClient` from `@supabase/ssr`. Reads/writes cookies via Next 16's async `cookies()` API.
+  - `src/lib/supabase/client.ts` — browser Supabase client built with `createBrowserClient` from `@supabase/ssr`.
+  - `src/lib/dal.ts` — Data Access Layer. Exports `verifySession()` (redirects to `/login` if no user) and `getUser()` (returns user or null). Both wrapped in React `cache()`. Uses `supabase.auth.getUser()` (server-verified JWT), **never** `getSession()`. Marked with `import 'server-only'` so accidental client imports crash the build.
+  - `src/lib/rbac/matrix.ts` — single source of truth: `Role × Resource × Action → allow|deny`, exhaustive over the 4 roles + all resources. **All** authorization decisions route through `can(role, action, resource)`. See `feedback_rbac_approach` memory.
+  - `src/lib/rbac/policies.ts` — Postgres RLS policy generator (so the matrix is mirrored at the DB layer; applied via migration in Batch 4).
+  - `src/app/login/page.tsx` — minimal email-and-password sign-in form using real Supabase Auth Server Action. No mock users; first user invited via Supabase dashboard at launch (Gate 19.2).
+  - `src/app/(app)/layout.tsx` — server-side `await verifySession()` at the top; renders nothing until auth resolved.
+  - **Optional**, only if cookie-only optimistic redirect is wanted as a UX polish: `src/proxy.ts` that redirects unauthed users away from `/(app)/*` before render. Skipped by default — the DAL gate is sufficient, and proxy adds a check on every prefetched route. Revisit if there's a visible flash of unauth content.
+- **Acceptance:**
+  - Unauthenticated GET of `/(app)/*` → 307 redirect to `/login` via `redirect()` (Next's helper, not a proxy 302).
+  - Authenticated user lands at `/(app)` and renders.
+  - `can()` returns deterministic results for every (role, resource, action) tuple — proven by Batch 4's RLS test suite.
+  - DAL is called exactly once per render pass (verified by inspecting Supabase request logs during a multi-component page render) — proves `cache()` memoization works.
 - **Risks / Open:**
-  - **Gate 3.1** (deferred to launch): Real user identities (CEO + analyst + admin emails + full names). Not blocking — Batch 3 ships with no seeded users; first user is created post-deploy via Supabase dashboard invitation.
-  - **Gate 3.2** (deferred): Microsoft tenant ID for future SSO. Recorded in `lib/auth/README.md` as a known migration path; no work done now.
+  - **Gate 3.1** (deferred to launch): Real user identities (full names, emails) for the 4 roles. Not blocking — Batch 3 ships with no seeded users; first user invited via Supabase dashboard at Batch 19.
+  - **Gate 3.2** (deferred): Microsoft tenant ID for future SSO. Recorded in `src/lib/supabase/README.md` as a known migration path; no work done now.
 
 ---
 
