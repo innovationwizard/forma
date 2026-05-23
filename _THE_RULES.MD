@@ -263,3 +263,12 @@ Verification before action. You have "read attachments first" but nothing about 
 Diff awareness. When editing existing files, models sometimes return the entire file when you needed a surgical change, or vice versa. Worth specifying your preference.
 Those are the real holes. The existing rules are solid — they just assume good faith interpretation. Tighten them to be adversarially robust against a model that's optimizing for appearing helpful.
 
+ADDENDUM ABOUT SUPABASE:
+DO NOT ASK ME FOR THE FOLLOWING BECAUSE THEY ARE DEPRECATED, USING THEM **IS** TECHNICAL DEBT:
+    SUPABASE_ANON_KEY
+    SUPABASE_SERVICE_ROLE_KEY
+
+These are the SUPABASE options available now: 
+Direct connection: NOT IPv4 compatible
+Transaction pooler: NOT IPv4 compatible
+Session pooler: Only use on a IPv4 network

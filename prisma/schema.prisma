@@ -1,0 +1,31 @@
+// Prisma schema for the FORMA Santa Elena pilot.
+//
+// Batch 2 scope (this file): datasource + generator + a single placeholder
+// model used solely to validate the DB round-trip via /api/health. The full
+// schema (Project, BudgetCategory, rv_units, rv_reservations, rv_freeze_requests,
+// Expenditure, MonthlyProjection, CreditFacility, AuditLog, User, …) lands in
+// Batch 4 per PLAN.md.
+//
+// The `HealthCheck` model maps to a table prefixed `_health_check` to mark its
+// temporary status at the DB layer. It is dropped in Batch 4's migration.
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")     // pooled, used by the app at runtime
+  directUrl = env("DIRECT_URL")        // direct, used by `prisma migrate`
+}
+
+/// Temporary one-row table. Lets the healthcheck route prove the DB round-trip
+/// works end-to-end (driver, network, RLS bypass for service role, schema
+/// migration pipeline). Dropped in Batch 4's migration.
+model HealthCheck {
+  id       Int      @id @default(1)
+  pingedAt DateTime @default(now())
+
+  @@map("_health_check")
+}

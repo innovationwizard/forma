@@ -10,22 +10,26 @@ import { z } from "zod";
  *  - `serverEnv` — full env including secrets. Server-only; importing from a
  *    client component crashes the build (good — that's the boundary).
  *
- * Batch 1 keeps Supabase + Prisma vars `.optional()` so the scaffold boots
- * without secrets. Batch 2 flips them to `.min(1)` once wiring lands.
+ * Supabase + Prisma vars are required since Batch 2. The app refuses to boot
+ * if any of them is missing or malformed. The names and intent are documented
+ * in `.env.example`; `.env.local` is gitignored.
  */
 
 const clientSchema = z.object({
   NEXT_PUBLIC_APP_NAME: z.string().min(1).default("FORMA — Santa Elena"),
+  NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().startsWith("sb_publishable_"),
 });
 
 const serverSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 
-  SUPABASE_URL: z.string().url().optional(),
-  SUPABASE_ANON_KEY: z.string().min(1).optional(),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
-  DATABASE_URL: z.string().url().optional(),
-  DIRECT_URL: z.string().url().optional(),
+  // Supabase secret key (legacy `SUPABASE_SERVICE_ROLE_KEY` is deprecated and
+  // must not be reintroduced — see feedback_supabase_keys memory).
+  SUPABASE_SECRET_KEY: z.string().startsWith("sb_secret_"),
+
+  DATABASE_URL: z.string().url(),
+  DIRECT_URL: z.string().url(),
 });
 
 function parseOrThrow<T>(schema: z.ZodType<T>, source: unknown, label: string): T {
@@ -43,6 +47,8 @@ export const clientEnv = parseOrThrow(
   clientSchema,
   {
     NEXT_PUBLIC_APP_NAME: process.env["NEXT_PUBLIC_APP_NAME"],
+    NEXT_PUBLIC_SUPABASE_URL: process.env["NEXT_PUBLIC_SUPABASE_URL"],
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env["NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"],
   },
   "client",
 );
