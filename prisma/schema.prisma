@@ -1,13 +1,30 @@
 // Prisma schema for the FORMA Santa Elena pilot.
 //
-// Batch 2 scope (this file): datasource + generator + a single placeholder
-// model used solely to validate the DB round-trip via /api/health. The full
-// schema (Project, BudgetCategory, rv_units, rv_reservations, rv_freeze_requests,
-// Expenditure, MonthlyProjection, CreditFacility, AuditLog, User, …) lands in
-// Batch 4 per PLAN.md.
+// Batch 4 scope: the full domain model. Replaces the Batch 2 `HealthCheck`
+// placeholder. Decisions baked in (cross-reference PROGRESS.md §2):
+//   - D9/D10/D12: phase-1 unit lifecycle uses the PA DB taxonomy verbatim,
+//     under the `rv_*` namespace. Phase 2 (enganche installments) and phase 3
+//     (buyer mortgages) are deferred — no SE data yet.
+//   - D11: single-project schema. Santa Elena is hard-coded; entities do not
+//     carry a `project_id` FK. A future second FORMA project requires a non-
+//     destructive migration to add the column.
+//   - D13: Odoo v19 alignment where free. `Partner` ≈ `res.partner` (one
+//     entity for vendors + buyers + counterparties, with role flags).
+//   - D14: 4 roles — MASTER / CEO / ANALISTA / AUXILIAR.
+//   - D17: Supabase publishable + secret key system (no role storage on
+//     `User`-the-table is the source of truth; `app_metadata.role` is.
+//     The denormalized `User.role` column exists for query performance and
+//     join-friendly display).
+//   - N1: credit facility is a development-drawdown loan with revaluation
+//     cycles, NOT revolving. Modeled via `CreditFacility` + per-cycle
+//     `Appraisal` + `Disbursement` + `CapAdjustment` audit.
+//   - N4: budget categorization has THREE levels — `BudgetExecutionPartition`
+//     (L1, PARTIDA EJECUCIÓN PRESUPUESTARIA), `BudgetCategory` (L2, the
+//     11 SDD categories = PARTIDA GENERAL), `BudgetSubItem` (L3, PARTIDA
+//     INTERNA / Ppto Inversion line items).
 //
-// The `HealthCheck` model maps to a table prefixed `_health_check` to mark its
-// temporary status at the DB layer. It is dropped in Batch 4's migration.
+// Monetary fields use Decimal(18,2). Exchange rates and percentages use
+// tighter precision noted per-field.
 
 generator client {
   provider      = "prisma-client-js"
@@ -16,16 +33,662 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")     // pooled, used by the app at runtime
-  directUrl = env("DIRECT_URL")        // direct, used by `prisma migrate`
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-/// Temporary one-row table. Lets the healthcheck route prove the DB round-trip
-/// works end-to-end (driver, network, RLS bypass for service role, schema
-/// migration pipeline). Dropped in Batch 4's migration.
-model HealthCheck {
-  id       Int      @id @default(1)
-  pingedAt DateTime @default(now())
+// ═══════════════════════════════════════════════════════════════════════════
+// ENUMS
+// ═══════════════════════════════════════════════════════════════════════════
 
-  @@map("_health_check")
+/// The 4 roles per D14. Source of truth at the DB layer is
+/// `auth.jwt() -> app_metadata -> role`; this enum mirrors that for the
+/// denormalized `User.role` column.
+enum Role {
+  MASTER
+  CEO
+  ANALISTA
+  AUXILIAR
+}
+
+enum Currency {
+  USD
+  GTQ
+}
+
+enum PartnerType {
+  COMPANY
+  INDIVIDUAL
+  GOVERNMENT
+}
+
+enum ExpenditureSource {
+  BANK_STATEMENT
+  CHECK
+  INVOICE
+  MANUAL
+  XLSX_IMPORT
+}
+
+enum ExpenditureStatus {
+  VERIFIED
+  PENDING
+  FLAGGED
+  VOIDED
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  VOID
+  IMPORT
+}
+
+enum ExchangeRateSource {
+  BANGUAT
+  XLSX_HISTORICAL
+  MANUAL
+}
+
+/// rv_unit_status — adopted verbatim from PA DB per D9.
+/// Allowed transitions (see CanonicalTaxonomy.md):
+///   AVAILABLE → SOFT_HOLD     (salesperson submits reservation)
+///   AVAILABLE → FROZEN        (salesperson submits freeze request)
+///   SOFT_HOLD → RESERVED      (admin confirms)
+///   SOFT_HOLD → AVAILABLE     (admin rejects)
+///   FROZEN    → AVAILABLE     (admin releases)
+///   FROZEN    → SOFT_HOLD     (salesperson submits reservation on frozen)
+///   RESERVED  → SOLD          (admin confirms)
+///   RESERVED  → AVAILABLE     (admin confirms desistimiento)
+enum RvUnitStatus {
+  AVAILABLE
+  SOFT_HOLD
+  RESERVED
+  FROZEN
+  SOLD
+}
+
+/// rv_reservation_status — adopted verbatim from PA DB per D9.
+enum RvReservationStatus {
+  PENDING_REVIEW
+  CONFIRMED
+  REJECTED
+  DESISTED
+}
+
+/// rv_freeze_request_status — adopted verbatim from PA DB per D9.
+enum RvFreezeRequestStatus {
+  ACTIVE
+  RELEASED
+}
+
+enum CreditFacilityType {
+  BANK_DEVELOPMENT_LOAN
+  PRIVATE
+}
+
+/// Per N1: SE's credit facility is a development-drawdown loan with
+/// revaluation cycles, NOT revolving. SDD §3.2.7's REVOLVING_HYBRID label
+/// is incorrect for SE and survives here only so the schema can model
+/// other FORMA projects that ARE revolving.
+enum CreditFacilityMechanism {
+  REVOLVING_HYBRID
+  DEVELOPMENT_DRAWDOWN_WITH_REVALUATION
+}
+
+enum CapAdjustmentReason {
+  UNITS_SOLD
+  MARKET_REVALUATION
+  LEGAL_REQUEST_OTHER
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SINGLETON CONFIG: project-level constants
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Singleton row holding project-level configuration. There is exactly one
+/// row in this table (Santa Elena). Per D11, other entities do not carry a
+/// `project_id` FK — the schema is single-project until a second FORMA
+/// project arrives.
+model Project {
+  id                  String   @id @default(uuid()) @db.Uuid
+  name                String // "Condominio Santa Elena"
+  legalEntityName     String   @map("legal_entity_name") // "Condominio Antigua Panorama, S.A."
+  company             String // "FORMA Capital Inmobiliario"
+  location            String // "Antigua Guatemala"
+  currencyPrimary     Currency @default(USD) @map("currency_primary")
+  currencySecondary   Currency @default(GTQ) @map("currency_secondary")
+  /// Locked TC for budget comparisons (D6). Field exists for the SDD's 7.7;
+  /// the TC=7.8 reference in Ppto Inversion is flagged as N2 advisory.
+  lockedExchangeRate  Decimal  @db.Decimal(10, 6) @map("locked_exchange_rate")
+  ivaRate             Decimal  @db.Decimal(5, 4) @map("iva_rate") // 0.12 (12% Guatemala IVA)
+  /// SDD §3.2.1 says 0.18. Unusual for Guatemalan RE developers; flagged Q1.
+  /// Field exists; no calculation consumes it until Q1 is resolved.
+  isrRate             Decimal  @db.Decimal(5, 4) @map("isr_rate")
+  startDate           DateTime @db.Date @map("start_date")
+  projectedEndDate    DateTime @db.Date @map("projected_end_date")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+  /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([deletedAt])
+  @@map("project")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// IDENTITY: users (mirror of Supabase Auth) and partners (res.partner-aligned)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Mirror of `auth.users` from Supabase Auth. `id` matches `auth.users.id`.
+///
+/// `role` is denormalized from `app_metadata.role`. The auth gate (DAL) reads
+/// from `app_metadata` — `User.role` exists for query convenience and joins
+/// (e.g., showing "Action by: Jorge (MASTER)" in the audit log). The two
+/// MUST be kept in sync; in practice this is enforced by routing all role
+/// changes through the Settings → User Management UI (Batch 17), which
+/// updates both `auth.users.app_metadata.role` and `users.role` atomically.
+model User {
+  id        String   @id @db.Uuid // matches auth.users.id
+  email     String   @unique
+  fullName  String   @map("full_name")
+  role      Role
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
+  deletedAt DateTime? @map("deleted_at")
+
+  expendituresCreated    Expenditure[]     @relation("ExpenditureCreatedBy")
+  reservationsCreated    RvReservation[]   @relation("RvReservationCreatedBy")
+  reservationsDecided    RvReservation[]   @relation("RvReservationDecidedBy")
+  freezeRequestsCreated  RvFreezeRequest[] @relation("RvFreezeRequestCreatedBy")
+  freezeRequestsReleased RvFreezeRequest[] @relation("RvFreezeRequestReleasedBy")
+  capAdjustments         CapAdjustment[]
+  auditLogs              AuditLog[]
+
+  @@index([deletedAt])
+  @@map("users") // plural to avoid PG `user` reserved keyword
+}
+
+/// Partner ≈ Odoo `res.partner` (D13). A single entity for every external
+/// party FORMA transacts with — vendors, buyers, governments, banks.
+/// `isVendor` and `isBuyer` flags mirror Odoo's `supplier_rank` / `customer_rank`
+/// pattern (simplified to boolean for the pilot).
+model Partner {
+  id        String      @id @default(uuid()) @db.Uuid
+  name      String
+  taxId     String?     @map("tax_id") // NIT in Guatemala
+  type      PartnerType
+  isVendor  Boolean     @default(false) @map("is_vendor") // FORMA pays this entity
+  isBuyer   Boolean     @default(false) @map("is_buyer") // this entity pays FORMA
+  notes     String?     @db.Text
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+  /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
+  deletedAt DateTime? @map("deleted_at")
+
+  expenditures Expenditure[]
+  rvUnits      RvUnit[]        @relation("RvUnitBuyer")
+  reservations RvReservation[]
+
+  @@index([name])
+  @@index([deletedAt])
+  @@map("partner")
+}
+
+/// Bank accounts FORMA operates. Referenced by every Expenditure for
+/// reconciliation against bank-statement imports.
+model BankAccount {
+  id            String   @id @default(uuid()) @db.Uuid
+  bankName      String   @map("bank_name") // "G&T", "PROMERICA", "BAC", "INDUSTRIAL"
+  accountNumber String   @unique @map("account_number") // normalized: "002-9900597-5"
+  currency      Currency
+  displayName   String   @map("display_name") // "G&T (USD)", "PROMERICA (QTZ)"
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
+  deletedAt DateTime? @map("deleted_at")
+
+  expenditures Expenditure[]
+
+  @@index([deletedAt])
+  @@map("bank_account")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BUDGET HIERARCHY (3 levels per N4)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// L1 — PARTIDA EJECUCIÓN PRESUPUESTARIA. The top-level grouping from
+/// Detalle egresos and Ppto Inversion. Examples: "PLANIFICACION",
+/// "COMERCIALIZACION / VENTAS", "OTROS PAGOS".
+model BudgetExecutionPartition {
+  id        String   @id @default(uuid()) @db.Uuid
+  code      String   @unique
+  name      String
+  sortOrder Int      @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
+  deletedAt DateTime? @map("deleted_at")
+
+  categories   BudgetCategory[]
+  expenditures Expenditure[]
+
+  @@index([deletedAt])
+  @@map("budget_execution_partition")
+}
+
+/// L2 — PARTIDA GENERAL. The 11 SDD §3.2.2 budget categories with totals.
+/// Examples: "TERRENOS", "MERCADEO", "COMISIONES DE VENTA".
+model BudgetCategory {
+  id               String                   @id @default(uuid()) @db.Uuid
+  partitionId      String                   @db.Uuid @map("partition_id")
+  code             String                   @unique
+  name             String
+  budgetAmountUsd  Decimal                  @db.Decimal(18, 2) @map("budget_amount_usd")
+  budgetPercentage Decimal                  @db.Decimal(7, 4) @map("budget_percentage") // up to 999.9999%
+  /// Only set for COMISIONES DE VENTA per SDD §3.2.2 (5%).
+  commissionRate   Decimal?                 @db.Decimal(5, 4) @map("commission_rate")
+  /// Per SDD §2.1: dashboard is an anomaly detector, not a summary. Predictable
+  /// categories (IMPUESTOS, TRASLADOS) are hidden from Level 0.
+  dashboardVisible Boolean                  @default(true) @map("dashboard_visible")
+  sortOrder        Int                      @map("sort_order")
+  createdAt        DateTime                 @default(now()) @map("created_at")
+  updatedAt        DateTime                 @updatedAt @map("updated_at")
+  /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
+  deletedAt DateTime? @map("deleted_at")
+
+  partition    BudgetExecutionPartition @relation(fields: [partitionId], references: [id])
+  subItems     BudgetSubItem[]
+  expenditures Expenditure[]
+
+  @@index([deletedAt])
+  @@map("budget_category")
+}
+
+/// L3 — PARTIDA INTERNA / Ppto Inversion line items. Examples:
+/// "LICENCIA DE CONSTRUCCION", "MERCADO y PUBLICIDAD - Marketing".
+model BudgetSubItem {
+  id           String   @id @default(uuid()) @db.Uuid
+  categoryId   String   @db.Uuid @map("category_id")
+  code         String /// not globally unique; unique within category
+  description  String
+  unit         String?
+  quantity     Decimal? @db.Decimal(18, 4)
+  unitPriceUsd Decimal? @db.Decimal(18, 2) @map("unit_price_usd")
+  totalUsd     Decimal  @db.Decimal(18, 2) @map("total_usd")
+  totalGtq     Decimal  @db.Decimal(18, 2) @map("total_gtq")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
+  deletedAt DateTime? @map("deleted_at")
+
+  category     BudgetCategory @relation(fields: [categoryId], references: [id])
+  expenditures Expenditure[]
+
+  @@unique([categoryId, code])
+  @@index([deletedAt])
+  @@map("budget_sub_item")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EXPENDITURES (Detalle egresos)
+// ═══════════════════════════════════════════════════════════════════════════
+
+model Expenditure {
+  id               String            @id @default(uuid()) @db.Uuid
+  bankAccountId    String            @db.Uuid @map("bank_account_id")
+  /// Nullable: not all transactions are linked to a Partner yet (xlsx vendors
+  /// arrive as free-text strings). The reconciliation step in Batch 5/6 fills this.
+  partnerId        String?           @db.Uuid @map("partner_id")
+  /// The original vendor string from xlsx/CSV. Preserved for audit even after
+  /// `partnerId` is filled in. Lets us trace import provenance.
+  vendorRaw        String            @map("vendor_raw")
+  date             DateTime          @db.Date
+  amountConIva     Decimal           @db.Decimal(18, 2) @map("amount_con_iva")
+  amountSinIva     Decimal           @db.Decimal(18, 2) @map("amount_sin_iva")
+  ivaAmount        Decimal           @db.Decimal(18, 2) @map("iva_amount")
+  currency         Currency
+  /// Actual GTQ/USD rate on the transaction date. For USD transactions, stored
+  /// as 1.0. For GTQ transactions, the rate at the time of the transaction
+  /// (from xlsx historical or BANGUAT).
+  exchangeRate     Decimal           @db.Decimal(10, 6) @map("exchange_rate")
+  amountUsd        Decimal           @db.Decimal(18, 2) @map("amount_usd")
+  description      String            @db.Text
+  /// 3-level categorization per N4.
+  partitionId      String            @db.Uuid @map("partition_id") // L1
+  categoryId       String            @db.Uuid @map("category_id") // L2
+  /// L3 — nullable because some transactions are categorized only at L1+L2
+  /// (esp. IMPUESTOS and TRASLADOS-style entries with no sub-detail).
+  subItemId        String?           @db.Uuid @map("sub_item_id")
+  checkNumber      String?           @map("check_number")
+  invoiceReference String?           @map("invoice_reference")
+  source           ExpenditureSource
+  status           ExpenditureStatus @default(PENDING)
+  showOnDashboard  Boolean           @default(true) @map("show_on_dashboard")
+  createdByUserId  String            @db.Uuid @map("created_by_user_id")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
+  deletedAt DateTime? @map("deleted_at")
+
+  bankAccount   BankAccount              @relation(fields: [bankAccountId], references: [id])
+  partner       Partner?                 @relation(fields: [partnerId], references: [id])
+  partition     BudgetExecutionPartition @relation(fields: [partitionId], references: [id])
+  category      BudgetCategory           @relation(fields: [categoryId], references: [id])
+  subItem       BudgetSubItem?           @relation(fields: [subItemId], references: [id])
+  createdBy     User                     @relation("ExpenditureCreatedBy", fields: [createdByUserId], references: [id])
+  disbursements Disbursement[]
+
+  @@index([date])
+  @@index([categoryId, date])
+  @@index([partnerId])
+  @@index([status])
+  @@index([deletedAt])
+  @@map("expenditure")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// rv_* — Phase 1 (RESERVA) entities per D9, D10, D12
+// ═══════════════════════════════════════════════════════════════════════════
+
+model RvUnit {
+  id                 String       @id @default(uuid()) @db.Uuid
+  name               String       @unique // "Casa 1" .. "Casa 11"
+  type               String // "A" for Santa Elena
+  areaM2             Decimal      @db.Decimal(10, 2) @map("area_m2")
+  /// List price per m² (for available units). Null for units already sold at a different price point.
+  pricePerM2Usd      Decimal?     @db.Decimal(10, 2) @map("price_per_m2_usd")
+  /// Actual sale price for SOLD units. Null for unsold units.
+  salePriceSinIvaUsd Decimal?     @db.Decimal(18, 2) @map("sale_price_sin_iva_usd")
+  engancheRate       Decimal      @db.Decimal(5, 4) @default(0.25) @map("enganche_rate")
+  status             RvUnitStatus @default(AVAILABLE)
+  buyerId            String?      @db.Uuid @map("buyer_id")
+  /// Sales rep / agent name. Free-text for now; in a multi-tenant future
+  /// FORMA system this becomes a User reference.
+  vendedor           String?
+  saleMonth          Int?         @map("sale_month") // 1-36
+  deliveryMonth      Int?         @map("delivery_month") // 1-36
+  reservedAt         DateTime?    @map("reserved_at") @db.Date
+  soldAt             DateTime?    @map("sold_at") @db.Date
+  createdAt          DateTime     @default(now()) @map("created_at")
+  updatedAt          DateTime     @updatedAt @map("updated_at")
+  /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
+  deletedAt DateTime? @map("deleted_at")
+
+  buyer          Partner?          @relation("RvUnitBuyer", fields: [buyerId], references: [id])
+  reservations   RvReservation[]
+  freezeRequests RvFreezeRequest[]
+
+  @@index([status])
+  @@index([deletedAt])
+  @@map("rv_units")
+}
+
+model RvReservation {
+  id              String              @id @default(uuid()) @db.Uuid
+  unitId          String              @db.Uuid @map("unit_id")
+  partnerId       String              @db.Uuid @map("partner_id") // prospective buyer
+  status          RvReservationStatus @default(PENDING_REVIEW)
+  reservedAt      DateTime            @default(now()) @map("reserved_at")
+  decidedAt       DateTime?           @map("decided_at")
+  notes           String?             @db.Text
+  createdByUserId String              @db.Uuid @map("created_by_user_id")
+  decidedByUserId String?             @db.Uuid @map("decided_by_user_id")
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+  /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
+  deletedAt DateTime? @map("deleted_at")
+
+  unit      RvUnit  @relation(fields: [unitId], references: [id])
+  partner   Partner @relation(fields: [partnerId], references: [id])
+  createdBy User    @relation("RvReservationCreatedBy", fields: [createdByUserId], references: [id])
+  decidedBy User?   @relation("RvReservationDecidedBy", fields: [decidedByUserId], references: [id])
+
+  @@index([unitId])
+  @@index([partnerId])
+  @@index([status])
+  @@index([deletedAt])
+  @@map("rv_reservations")
+}
+
+model RvFreezeRequest {
+  id               String                @id @default(uuid()) @db.Uuid
+  unitId           String                @db.Uuid @map("unit_id")
+  status           RvFreezeRequestStatus @default(ACTIVE)
+  reason           String                @db.Text
+  requestedAt      DateTime              @default(now()) @map("requested_at")
+  releasedAt       DateTime?             @map("released_at")
+  createdByUserId  String                @db.Uuid @map("created_by_user_id")
+  releasedByUserId String?               @db.Uuid @map("released_by_user_id")
+  createdAt        DateTime              @default(now()) @map("created_at")
+  updatedAt        DateTime              @updatedAt @map("updated_at")
+  /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
+  deletedAt DateTime? @map("deleted_at")
+
+  unit       RvUnit @relation(fields: [unitId], references: [id])
+  createdBy  User   @relation("RvFreezeRequestCreatedBy", fields: [createdByUserId], references: [id])
+  releasedBy User?  @relation("RvFreezeRequestReleasedBy", fields: [releasedByUserId], references: [id])
+
+  @@index([unitId])
+  @@index([status])
+  @@index([deletedAt])
+  @@map("rv_freeze_requests")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MONTHLY PROJECTION (FCFCasas2 timeline)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// 36-month projection imported from the FCFCasas2 sheet. Per SDD §3.2.6,
+/// costs are stored as one column per category (denormalized). This matches
+/// the xlsx layout and the dashboard's rendering. The detailed per-house
+/// monthly revenue lives in `revenuePerHouse` JSONB.
+model MonthlyProjection {
+  id          String   @id @default(uuid()) @db.Uuid
+  monthNumber Int      @unique @map("month_number") // 1-36
+  monthDate   DateTime @db.Date @map("month_date")
+
+  // Per-category costs (USD sin IVA, monthly)
+  costTerrenos           Decimal @default(0) @db.Decimal(18, 2) @map("cost_terrenos")
+  costLicencias          Decimal @default(0) @db.Decimal(18, 2) @map("cost_licencias")
+  costPlanificacion      Decimal @default(0) @db.Decimal(18, 2) @map("cost_planificacion")
+  costConstruccionesComp Decimal @default(0) @db.Decimal(18, 2) @map("cost_construcciones_comp")
+  costConstruccion       Decimal @default(0) @db.Decimal(18, 2) @map("cost_construccion")
+  costMercadeo           Decimal @default(0) @db.Decimal(18, 2) @map("cost_mercadeo")
+  costComisiones         Decimal @default(0) @db.Decimal(18, 2) @map("cost_comisiones")
+  costHonorarios         Decimal @default(0) @db.Decimal(18, 2) @map("cost_honorarios")
+  costGastosLegales      Decimal @default(0) @db.Decimal(18, 2) @map("cost_gastos_legales")
+  costDevFee             Decimal @default(0) @db.Decimal(18, 2) @map("cost_dev_fee")
+  costImprevistos        Decimal @default(0) @db.Decimal(18, 2) @map("cost_imprevistos")
+
+  totalCostSinIva      Decimal @default(0) @db.Decimal(18, 2) @map("total_cost_sin_iva")
+  ivaOnCosts           Decimal @default(0) @db.Decimal(18, 2) @map("iva_on_costs")
+  totalCostConIva      Decimal @default(0) @db.Decimal(18, 2) @map("total_cost_con_iva")
+  cumulativeCostConIva Decimal @default(0) @db.Decimal(18, 2) @map("cumulative_cost_con_iva")
+
+  /// Per-house monthly revenue. Shape: `{ "Casa 1": 48719.12, "Casa 2": 49862.76, ... }`.
+  /// JSONB instead of a normalized table because (a) houses are a fixed set
+  /// of 11, (b) projections are imported as a snapshot and rarely edited, and
+  /// (c) the dashboard renders all 11 columns together.
+  revenuePerHouse Json @default("{}") @map("revenue_per_house")
+
+  totalRevenueSinIva Decimal @default(0) @db.Decimal(18, 2) @map("total_revenue_sin_iva")
+  cumulativeRevenue  Decimal @default(0) @db.Decimal(18, 2) @map("cumulative_revenue")
+
+  ebitdaConIva Decimal @default(0) @db.Decimal(18, 2) @map("ebitda_con_iva")
+  ebitda       Decimal @default(0) @db.Decimal(18, 2)
+
+  creditBalance    Decimal @default(0) @db.Decimal(18, 2) @map("credit_balance")
+  interestPayment  Decimal @default(0) @db.Decimal(18, 2) @map("interest_payment")
+  principalPayment Decimal @default(0) @db.Decimal(18, 2) @map("principal_payment")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([deletedAt])
+  @@map("monthly_projection")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CREDIT FACILITY — development-drawdown loan with revaluation cycles (N1)
+// ═══════════════════════════════════════════════════════════════════════════
+
+model CreditFacility {
+  id            String                  @id @default(uuid()) @db.Uuid
+  lenderName    String                  @map("lender_name")
+  facilityType  CreditFacilityType      @map("facility_type")
+  /// SE-specific: DEVELOPMENT_DRAWDOWN_WITH_REVALUATION (per N1).
+  mechanism     CreditFacilityMechanism @default(DEVELOPMENT_DRAWDOWN_WITH_REVALUATION)
+  /// Initial cap set at facility origination. For SE this is USD 7M.
+  initialCapUsd Decimal                 @db.Decimal(18, 2) @map("initial_cap_usd")
+  /// Current cap = initial + sum(CapAdjustment). Denormalized for fast reads;
+  /// trigger or app-layer recompute keeps it in sync.
+  currentCapUsd Decimal                 @db.Decimal(18, 2) @map("current_cap_usd")
+  annualRate    Decimal                 @db.Decimal(7, 6) @map("annual_rate") // 0.0725
+  ltvRatio      Decimal                 @db.Decimal(5, 4) @map("ltv_ratio") // 0.80
+  ltcCeiling    Decimal                 @db.Decimal(5, 4) @map("ltc_ceiling") // 0.90
+  isActive      Boolean                 @default(true) @map("is_active")
+  createdAt     DateTime                @default(now()) @map("created_at")
+  updatedAt     DateTime                @updatedAt @map("updated_at")
+  /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
+  deletedAt DateTime? @map("deleted_at")
+
+  appraisals     Appraisal[]
+  capAdjustments CapAdjustment[]
+
+  @@index([deletedAt])
+  @@map("credit_facility")
+}
+
+/// One row per revaluation cycle. The 1st appraisal values raw land; later
+/// appraisals incorporate construction progress and raise the available
+/// drawdown envelope.
+model Appraisal {
+  id                  String   @id @default(uuid()) @db.Uuid
+  facilityId          String   @db.Uuid @map("facility_id")
+  appraisalDate       DateTime @db.Date @map("appraisal_date")
+  appraiserName       String?  @map("appraiser_name")
+  appraisedValueUsd   Decimal  @db.Decimal(18, 2) @map("appraised_value_usd")
+  /// LTV applied to this appraisal (usually equals the facility's ltvRatio,
+  /// but stored per-cycle in case the bank adjusts).
+  ltvAtAppraisal      Decimal  @db.Decimal(5, 4) @map("ltv_at_appraisal")
+  /// Computed: appraisedValueUsd × ltvAtAppraisal − Σ(disbursements before this cycle).
+  /// Stored so the available envelope can be rendered without recomputation.
+  availableForDrawUsd Decimal  @db.Decimal(18, 2) @map("available_for_draw_usd")
+  /// 1, 2, 3 ... for this facility.
+  cycleNumber         Int      @map("cycle_number")
+  notes               String?  @db.Text
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+  /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
+  deletedAt DateTime? @map("deleted_at")
+
+  facility      CreditFacility @relation(fields: [facilityId], references: [id])
+  disbursements Disbursement[]
+
+  @@unique([facilityId, cycleNumber])
+  @@index([deletedAt])
+  @@map("appraisal")
+}
+
+/// Each drawdown event against an appraisal cycle. Optionally linked to the
+/// expenditure it funded so the full "credit → spend" chain is traceable.
+model Disbursement {
+  id            String   @id @default(uuid()) @db.Uuid
+  appraisalId   String   @db.Uuid @map("appraisal_id")
+  expenditureId String?  @db.Uuid @map("expenditure_id") // funds disbursement → spend
+  date          DateTime @db.Date
+  amountUsd     Decimal  @db.Decimal(18, 2) @map("amount_usd")
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
+  deletedAt DateTime? @map("deleted_at")
+
+  appraisal   Appraisal    @relation(fields: [appraisalId], references: [id])
+  expenditure Expenditure? @relation(fields: [expenditureId], references: [id])
+
+  @@index([date])
+  @@index([deletedAt])
+  @@map("disbursement")
+}
+
+/// Audit row recorded every time the cap is raised. Per N1: SE's cap can be
+/// raised by legal request based on (a) units sold or (b) market revaluation.
+model CapAdjustment {
+  id               String              @id @default(uuid()) @db.Uuid
+  facilityId       String              @db.Uuid @map("facility_id")
+  priorCapUsd      Decimal             @db.Decimal(18, 2) @map("prior_cap_usd")
+  newCapUsd        Decimal             @db.Decimal(18, 2) @map("new_cap_usd")
+  reason           CapAdjustmentReason
+  justification    String              @db.Text
+  adjustedAt       DateTime            @default(now()) @map("adjusted_at")
+  adjustedByUserId String              @db.Uuid @map("adjusted_by_user_id")
+  /// Soft-delete marker. Per project invariant: deletes are never hard.
+  deletedAt        DateTime?           @map("deleted_at")
+
+  facility   CreditFacility @relation(fields: [facilityId], references: [id])
+  adjustedBy User           @relation(fields: [adjustedByUserId], references: [id])
+
+  @@index([deletedAt])
+  @@map("cap_adjustment")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EXCHANGE RATE CACHE (BANGUAT daily fetch + xlsx historical)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Per D6: BANGUAT is the source for ongoing daily rates. Historical rates
+/// from xlsx transactions are stored with `source = XLSX_HISTORICAL` so seed
+/// fidelity is preserved (do not overwrite historical rows with BANGUAT
+/// re-fetches).
+model ExchangeRate {
+  id            String             @id @default(uuid()) @db.Uuid
+  date          DateTime           @unique @db.Date
+  rateGtqPerUsd Decimal            @db.Decimal(10, 6) @map("rate_gtq_per_usd")
+  source        ExchangeRateSource
+  fetchedAt     DateTime           @default(now()) @map("fetched_at")
+  /// True when BANGUAT was unreachable and the resolver fell back to the
+  /// nearest previous date. Lets the UI flag stale rates.
+  isStale       Boolean            @default(false) @map("is_stale")
+  /// Soft-delete marker. Per project invariant: deletes are never hard.
+  deletedAt     DateTime?          @map("deleted_at")
+
+  @@index([date])
+  @@index([deletedAt])
+  @@map("exchange_rate")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUDIT LOG (SDD §12)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Every mutation in the app writes one of these rows in the same transaction
+/// as the underlying change. For Batch 6 seed, all imported rows are
+/// attributed to the synthetic XLSX_IMPORT system user per D8.
+model AuditLog {
+  id         String      @id @default(uuid()) @db.Uuid
+  timestamp  DateTime    @default(now())
+  userId     String      @db.Uuid @map("user_id")
+  entityType String      @map("entity_type") // "Expenditure", "RvUnit", etc.
+  entityId   String      @db.Uuid @map("entity_id")
+  action     AuditAction
+  fieldName  String?     @map("field_name") // null for CREATE / DELETE / IMPORT
+  oldValue   String?     @db.Text @map("old_value") // JSON-serialized
+  newValue   String?     @db.Text @map("new_value") // JSON-serialized
+  context    String?     @db.Text // e.g., "Initial xlsx import 2026-05-22"
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([timestamp])
+  @@map("audit_log")
 }
