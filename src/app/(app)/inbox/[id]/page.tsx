@@ -41,11 +41,16 @@ export default async function InboxItemPage({ params }: PageProps) {
           href="/inbox"
           className="text-foreground/60 hover:text-foreground inline-flex items-center gap-1 text-xs"
         >
-          ← Back to inbox
+          ← Volver a la bandeja
         </Link>
-        <h1 className="text-foreground mt-2 text-2xl font-semibold tracking-tight">
-          Classify bank transaction
-        </h1>
+        <div className="mt-2">
+          <h1 className="text-foreground text-2xl font-semibold tracking-tight">
+            CLASIFICAR TRANSACCIÓN BANCARIA
+          </h1>
+          <p className="text-foreground/40 text-[10px] italic">
+            (Asignar movimiento a su categoría)
+          </p>
+        </div>
       </header>
 
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
@@ -59,10 +64,10 @@ export default async function InboxItemPage({ params }: PageProps) {
                   : "bg-zinc-100 text-zinc-700 ring-zinc-200",
               )}
             >
-              {tx.direction === "CREDIT" ? "Inflow" : "Outflow"}
+              {tx.direction === "CREDIT" ? "Ingreso" : "Egreso"}
             </span>
             <span className="text-foreground/40 ml-2 font-mono text-xs">
-              {tx.reference ?? "no ref"}
+              {tx.reference ?? "sin ref."}
             </span>
           </div>
           <span className="text-foreground text-2xl font-semibold tabular-nums">
@@ -75,15 +80,15 @@ export default async function InboxItemPage({ params }: PageProps) {
         <p className="text-foreground/70 mt-3 text-sm whitespace-pre-line">{tx.description}</p>
 
         <dl className="text-foreground mt-5 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
-          <Stat label="Date" value={formatIsoDate(tx.transactionDate)} />
-          <Stat label="Account" value={tx.bankAccount.displayName} />
-          <Stat label="Currency" value={tx.currency} />
+          <Stat label="Fecha" value={formatIsoDate(tx.transactionDate)} />
+          <Stat label="Cuenta" value={tx.bankAccount.displayName} />
+          <Stat label="Moneda" value={tx.currency} />
           <Stat label="USD est." value={formatUsd(tx.amountAbsUsd)} />
           {tx.agencia != null ? <Stat label="Agencia" value={tx.agencia} /> : null}
-          {tx.saldoAfter != null ? <Stat label="Saldo after" value={tx.saldoAfter} /> : null}
+          {tx.saldoAfter != null ? <Stat label="Saldo posterior" value={tx.saldoAfter} /> : null}
           <Stat
-            label="Source file"
-            value={`${tx.importFileName} · ${tx.sheetName} · row ${tx.sourceRowNumber}`}
+            label="Archivo origen"
+            value={`${tx.importFileName} · ${tx.sheetName} · fila ${tx.sourceRowNumber}`}
           />
         </dl>
       </section>
@@ -93,8 +98,8 @@ export default async function InboxItemPage({ params }: PageProps) {
       ) : (
         <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
           <p className="text-foreground/70 text-sm">
-            Your role ({role}) cannot classify bank transactions. The server
-            enforces this; the classification widgets are hidden.
+            Tu rol ({role}) no puede clasificar transacciones bancarias. El servidor lo
+            aplica; los widgets de clasificación están ocultos.
           </p>
         </section>
       )}

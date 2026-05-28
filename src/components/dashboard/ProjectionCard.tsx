@@ -34,12 +34,17 @@ export function ProjectionCard({ burnRate, totalBudgetUsd }: ProjectionCardProps
       aria-labelledby="projection-title"
       className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-5 shadow-sm"
     >
-      <h2
-        id="projection-title"
-        className="text-foreground/60 text-xs font-medium tracking-wider uppercase"
-      >
-        Projected completion
-      </h2>
+      <div>
+        <h2
+          id="projection-title"
+          className="text-foreground/60 text-xs font-medium tracking-wider uppercase"
+        >
+          CIERRE PROYECTADO
+        </h2>
+        <p className="text-foreground/40 text-[10px] italic">
+          (Pronóstico al final del proyecto)
+        </p>
+      </div>
 
       <div className="mt-3 flex items-baseline gap-2">
         <span
@@ -48,22 +53,22 @@ export function ProjectionCard({ burnRate, totalBudgetUsd }: ProjectionCardProps
             withinBudget ? "text-emerald-700" : "text-red-700",
           )}
         >
-          {withinBudget ? "YES" : "NO"}
+          {withinBudget ? "SÍ" : "NO"}
         </span>
-        <span className="text-foreground/60 text-xs">within budget</span>
+        <span className="text-foreground/60 text-xs">dentro del presupuesto</span>
       </div>
 
       <dl className="text-foreground/70 mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-        <dt className="text-foreground/50">Projected total</dt>
+        <dt className="text-foreground/50">Total proyectado</dt>
         <dd className="text-foreground text-right tabular-nums">
           {formatUsd(burnRate.projectedTotalUsd)}
         </dd>
-        <dt className="text-foreground/50">Budget</dt>
+        <dt className="text-foreground/50">Presupuesto</dt>
         <dd className="text-foreground text-right tabular-nums">
           {formatUsd(totalBudgetUsd)}
         </dd>
         <dt className="text-foreground/50">
-          {headroom >= 0 ? "Headroom" : "Overrun"}
+          {headroom >= 0 ? "Margen disponible" : "Sobregiro"}
         </dt>
         <dd
           className={cn(
@@ -81,8 +86,8 @@ export function ProjectionCard({ burnRate, totalBudgetUsd }: ProjectionCardProps
           confidenceClass(confidence),
         )}
       >
-        <span className="text-foreground/60">Confidence</span>
-        <span className="font-semibold uppercase">{confidence}</span>
+        <span className="text-foreground/60">Confianza</span>
+        <span className="font-semibold uppercase">{confidenceLabel(confidence)}</span>
       </div>
     </section>
   );
@@ -107,5 +112,16 @@ function confidenceClass(confidence: Confidence): string {
       return "bg-amber-50 text-amber-900 ring-amber-200";
     case "LOW":
       return "bg-red-50 text-red-900 ring-red-200";
+  }
+}
+
+function confidenceLabel(confidence: Confidence): string {
+  switch (confidence) {
+    case "HIGH":
+      return "ALTA";
+    case "MODERATE":
+      return "MEDIA";
+    case "LOW":
+      return "BAJA";
   }
 }

@@ -31,12 +31,17 @@ export function HealthHeader({ totalBudgetUsd, totalSpentUsd }: HealthHeaderProp
       className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm"
     >
       <div className="flex items-baseline justify-between gap-4">
-        <h2
-          id="health-header-title"
-          className="text-foreground/60 text-xs font-medium tracking-wider uppercase"
-        >
-          Budget health
-        </h2>
+        <div>
+          <h2
+            id="health-header-title"
+            className="text-foreground/60 text-xs font-medium tracking-wider uppercase"
+          >
+            PRESUPUESTO
+          </h2>
+          <p className="text-foreground/40 text-[10px] italic">
+            (Salud del presupuesto)
+          </p>
+        </div>
         <span className="text-foreground/60 text-xs">USD, sin IVA</span>
       </div>
 
@@ -44,7 +49,7 @@ export function HealthHeader({ totalBudgetUsd, totalSpentUsd }: HealthHeaderProp
         <span className="text-foreground text-5xl font-semibold tracking-tight tabular-nums">
           {formatPct(remainingFraction)}
         </span>
-        <span className="text-foreground/60 text-base">remaining</span>
+        <span className="text-foreground/60 text-base">restante</span>
       </div>
 
       <div
@@ -53,7 +58,7 @@ export function HealthHeader({ totalBudgetUsd, totalSpentUsd }: HealthHeaderProp
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Number((spentFraction * 100).toFixed(1))}
-        aria-label={`${formatPct(spentFraction)} of budget spent`}
+        aria-label={`${formatPct(spentFraction)} del presupuesto ejecutado`}
       >
         <div
           className="bg-foreground h-full"
@@ -63,10 +68,10 @@ export function HealthHeader({ totalBudgetUsd, totalSpentUsd }: HealthHeaderProp
 
       <div className="text-foreground/70 mt-3 flex flex-wrap items-baseline justify-between gap-2 text-sm tabular-nums">
         <span>
-          {formatPct(spentFraction)} spent · {formatUsd(spent)} of {formatUsd(budget)}
+          {formatPct(spentFraction)} ejecutado · {formatUsd(spent)} de {formatUsd(budget)}
         </span>
         <span className="text-foreground/50">
-          {formatUsd(budget - spent)} remaining
+          {formatUsd(budget - spent)} restante
         </span>
       </div>
     </section>

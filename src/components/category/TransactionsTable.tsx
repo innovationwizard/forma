@@ -38,11 +38,20 @@ interface TransactionsTableProps {
 const STATUS_FILTERS: StatusFilter[] = ["ALL", "VERIFIED", "PENDING", "FLAGGED", "VOIDED", "ANULADO"];
 
 const SORT_OPTIONS: Array<{ key: SortKey; label: string }> = [
-  { key: "date_desc", label: "Newest" },
-  { key: "date_asc", label: "Oldest" },
-  { key: "amount_desc", label: "Largest" },
-  { key: "amount_asc", label: "Smallest" },
+  { key: "date_desc", label: "Más recientes" },
+  { key: "date_asc", label: "Más antiguas" },
+  { key: "amount_desc", label: "Mayor monto" },
+  { key: "amount_asc", label: "Menor monto" },
 ];
+
+const STATUS_LABELS: Record<StatusFilter, string> = {
+  ALL: "TODAS",
+  VERIFIED: "VERIFICADA",
+  PENDING: "PENDIENTE",
+  FLAGGED: "MARCADA",
+  VOIDED: "ANULADA (app)",
+  ANULADO: "ANULADO (xlsx)",
+};
 
 export function TransactionsTable({
   categoryCode,
@@ -58,11 +67,16 @@ export function TransactionsTable({
       className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 id="transactions-title" className="text-foreground text-base font-semibold">
-          Transactions
-        </h2>
+        <div>
+          <h2 id="transactions-title" className="text-foreground text-base font-semibold">
+            TRANSACCIONES
+          </h2>
+          <p className="text-foreground/40 text-[10px] italic">
+            (Gastos + aportaciones de la categoría)
+          </p>
+        </div>
         <span className="text-foreground/50 text-xs tabular-nums">
-          Showing {events.length} of {totalEventCount}
+          Mostrando {events.length} de {totalEventCount}
         </span>
       </div>
 
@@ -75,19 +89,19 @@ export function TransactionsTable({
 
       {events.length === 0 ? (
         <p className="text-foreground/60 mt-6 text-sm">
-          No transactions match the current filters.
+          Ninguna transacción coincide con los filtros activos.
         </p>
       ) : (
         <div className="mt-4 overflow-x-auto">
           <table className="text-foreground/80 w-full text-sm">
             <thead>
               <tr className="border-foreground/10 text-foreground/60 border-b text-left text-xs font-medium tracking-wide uppercase">
-                <th scope="col" className="py-2 pr-3 font-medium">Date</th>
-                <th scope="col" className="py-2 pr-3 font-medium">Counterparty</th>
-                <th scope="col" className="py-2 pr-3 font-medium">Description</th>
-                <th scope="col" className="py-2 pr-3 font-medium">Kind</th>
-                <th scope="col" className="py-2 pr-3 font-medium">Status</th>
-                <th scope="col" className="py-2 text-right font-medium">Amount</th>
+                <th scope="col" className="py-2 pr-3 font-medium">Fecha</th>
+                <th scope="col" className="py-2 pr-3 font-medium">Contraparte</th>
+                <th scope="col" className="py-2 pr-3 font-medium">Descripción</th>
+                <th scope="col" className="py-2 pr-3 font-medium">Tipo</th>
+                <th scope="col" className="py-2 pr-3 font-medium">Estado</th>
+                <th scope="col" className="py-2 text-right font-medium">Monto</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
@@ -131,7 +145,7 @@ function Filters({
     <div className="mt-4 flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-foreground/50 mr-1 text-[10px] font-medium tracking-wide uppercase">
-          Status:
+          Estado:
         </span>
         {STATUS_FILTERS.map((s) => (
           <Link
@@ -144,14 +158,14 @@ function Filters({
                 : "bg-background text-foreground/70 ring-zinc-200 hover:bg-zinc-50",
             )}
           >
-            {s}
+            {STATUS_LABELS[s]}
           </Link>
         ))}
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-foreground/50 mr-1 text-[10px] font-medium tracking-wide uppercase">
-          Sort:
+          Ordenar:
         </span>
         {SORT_OPTIONS.map((o) => (
           <Link
@@ -171,14 +185,14 @@ function Filters({
 
       <form action={base} method="GET" className="flex items-center gap-2">
         <label htmlFor="counterparty-search" className="sr-only">
-          Search counterparty or description
+          Buscar contraparte o descripción
         </label>
         <input
           id="counterparty-search"
           type="search"
           name="q"
           defaultValue={activeSearch}
-          placeholder="Search counterparty or description…"
+          placeholder="Buscar contraparte o descripción…"
           className="border-foreground/10 focus:ring-foreground/40 w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 sm:max-w-xs"
         />
         {activeSort !== "date_desc" ? (
@@ -191,14 +205,14 @@ function Filters({
           type="submit"
           className="bg-foreground text-background rounded-md px-3 py-1.5 text-xs font-medium"
         >
-          Search
+          Buscar
         </button>
         {activeSearch.length > 0 ? (
           <Link
             href={href({ q: "" })}
             className="text-foreground/60 hover:text-foreground text-xs"
           >
-            Clear
+            Limpiar
           </Link>
         ) : null}
       </form>
@@ -235,7 +249,7 @@ function Row({ event }: { event: CategoryEventRow }) {
             statusClass,
           )}
         >
-          {event.status}
+          {eventStatusLabel(event.status)}
         </span>
       </td>
       <td className="py-2 text-right tabular-nums">
@@ -264,5 +278,25 @@ function statusClassFor(status: CategoryEventRow["status"]): string {
     case "PENDING":
     default:
       return "bg-zinc-100 text-zinc-700 ring-zinc-200";
+  }
+}
+
+/// Expenditure + PartnerContribution status enums → Spanish display labels.
+function eventStatusLabel(s: CategoryEventRow["status"]): string {
+  switch (s) {
+    case "VERIFIED":
+      return "VERIFICADA";
+    case "POSTED":
+      return "REGISTRADA";
+    case "FLAGGED":
+      return "MARCADA";
+    case "VOIDED":
+      return "ANULADA";
+    case "ANULADO":
+      return "ANULADO";
+    case "PENDING":
+      return "PENDIENTE";
+    default:
+      return s;
   }
 }

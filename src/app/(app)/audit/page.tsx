@@ -55,24 +55,32 @@ export default async function AuditPage({ searchParams }: PageProps) {
           href="/"
           className="text-foreground/60 hover:text-foreground inline-flex items-center gap-1 text-xs"
         >
-          ← Back to dashboard
+          ← Volver al tablero
         </Link>
-        <h1 className="text-foreground mt-2 text-2xl font-semibold tracking-tight">
-          Activity log
-        </h1>
+        <div className="mt-2">
+          <h1 className="text-foreground text-2xl font-semibold tracking-tight">
+            REGISTRO DE ACTIVIDAD
+          </h1>
+          <p className="text-foreground/40 text-[10px] italic">
+            (Auditoría global del sistema)
+          </p>
+        </div>
         <p className="text-foreground/60 mt-1 text-sm">
-          Every mutation in the app writes one of these rows in the same Prisma
-          transaction as the underlying change. Read-only per D8 (the log is
-          immutable; the table has no <code>deletedAt</code>).
+          Cada mutación en la aplicación escribe una de estas filas en la misma
+          transacción Prisma que el cambio subyacente. Solo lectura por D8 (el
+          registro es inmutable; la tabla no tiene <code>deletedAt</code>).
         </p>
       </header>
 
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
-        <h2 className="text-foreground text-base font-semibold">Filters</h2>
+        <div>
+          <h2 className="text-foreground text-base font-semibold">FILTROS</h2>
+          <p className="text-foreground/40 text-[10px] italic">(Reducir los eventos mostrados)</p>
+        </div>
         <form action="/audit" method="GET" className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Field label="User">
+          <Field label="Usuario">
             <select name="user" defaultValue={filters.userId ?? ""} className={inputClass}>
-              <option value="">— any —</option>
+              <option value="">— cualquiera —</option>
               {snapshot.users.map((u) => (
                 <option key={u.id} value={u.id}>
                   {u.fullName}
@@ -80,9 +88,9 @@ export default async function AuditPage({ searchParams }: PageProps) {
               ))}
             </select>
           </Field>
-          <Field label="Entity type">
+          <Field label="Tipo de entidad">
             <select name="entityType" defaultValue={filters.entityType ?? ""} className={inputClass}>
-              <option value="">— any —</option>
+              <option value="">— cualquiera —</option>
               {snapshot.entityTypes.map((t) => (
                 <option key={t} value={t}>
                   {t}
@@ -90,17 +98,17 @@ export default async function AuditPage({ searchParams }: PageProps) {
               ))}
             </select>
           </Field>
-          <Field label="Action">
+          <Field label="Acción">
             <select name="action" defaultValue={filters.action ?? ""} className={inputClass}>
-              <option value="">— any —</option>
+              <option value="">— cualquiera —</option>
               {[...VALID_ACTIONS].map((a) => (
                 <option key={a} value={a}>
-                  {a}
+                  {actionLabelEs(a)}
                 </option>
               ))}
             </select>
           </Field>
-          <Field label="Entity id (exact)">
+          <Field label="ID de entidad (exacto)">
             <input
               type="text"
               name="entityId"
@@ -109,7 +117,7 @@ export default async function AuditPage({ searchParams }: PageProps) {
               className={inputClass}
             />
           </Field>
-          <Field label="From date">
+          <Field label="Fecha desde">
             <input
               type="date"
               name="from"
@@ -117,7 +125,7 @@ export default async function AuditPage({ searchParams }: PageProps) {
               className={inputClass}
             />
           </Field>
-          <Field label="To date">
+          <Field label="Fecha hasta">
             <input
               type="date"
               name="to"
@@ -125,12 +133,12 @@ export default async function AuditPage({ searchParams }: PageProps) {
               className={inputClass}
             />
           </Field>
-          <Field label="Free-text search">
+          <Field label="Búsqueda libre">
             <input
               type="search"
               name="q"
               defaultValue={filters.query ?? ""}
-              placeholder="context / field / values"
+              placeholder="contexto / campo / valores"
               className={inputClass}
             />
           </Field>
@@ -139,13 +147,13 @@ export default async function AuditPage({ searchParams }: PageProps) {
               type="submit"
               className="bg-foreground text-background rounded-md px-3 py-2 text-xs font-medium"
             >
-              Apply
+              Aplicar
             </button>
             <Link
               href="/audit"
               className="border-foreground/20 text-foreground hover:bg-zinc-50 rounded-md border px-3 py-2 text-xs font-medium"
             >
-              Reset
+              Limpiar
             </Link>
           </div>
         </form>
@@ -153,38 +161,41 @@ export default async function AuditPage({ searchParams }: PageProps) {
 
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-foreground text-base font-semibold">
-            Events {snapshot.total > 0 ? `(${snapshot.total} matching)` : ""}
-          </h2>
+          <div>
+            <h2 className="text-foreground text-base font-semibold">
+              EVENTOS {snapshot.total > 0 ? `(${snapshot.total} coinciden)` : ""}
+            </h2>
+            <p className="text-foreground/40 text-[10px] italic">(Filas de auditoría)</p>
+          </div>
           <span className="text-foreground/50 text-xs tabular-nums">
-            Page {snapshot.page} of {snapshot.totalPages}
+            Página {snapshot.page} de {snapshot.totalPages}
           </span>
         </div>
 
         {snapshot.rows.length === 0 ? (
-          <p className="text-foreground/60 mt-3 text-sm">No events match the current filters.</p>
+          <p className="text-foreground/60 mt-3 text-sm">Ningún evento coincide con los filtros activos.</p>
         ) : (
           <div className="mt-4 overflow-x-auto">
             <table className="text-foreground/80 w-full text-xs">
               <thead>
                 <tr className="border-foreground/10 text-foreground/60 border-b text-left font-medium tracking-wide uppercase">
-                  <th scope="col" className="py-2 pr-2">When</th>
-                  <th scope="col" className="py-2 pr-2">Who</th>
-                  <th scope="col" className="py-2 pr-2">Action</th>
-                  <th scope="col" className="py-2 pr-2">Entity</th>
-                  <th scope="col" className="py-2 pr-2">Field</th>
-                  <th scope="col" className="py-2 pr-2">Change</th>
-                  <th scope="col" className="py-2">Context</th>
+                  <th scope="col" className="py-2 pr-2">Cuándo</th>
+                  <th scope="col" className="py-2 pr-2">Quién</th>
+                  <th scope="col" className="py-2 pr-2">Acción</th>
+                  <th scope="col" className="py-2 pr-2">Entidad</th>
+                  <th scope="col" className="py-2 pr-2">Campo</th>
+                  <th scope="col" className="py-2 pr-2">Cambio</th>
+                  <th scope="col" className="py-2">Contexto</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
                 {snapshot.rows.map((r) => (
                   <tr key={r.id}>
                     <td className="text-foreground/70 py-1.5 pr-2 whitespace-nowrap tabular-nums">
-                      {new Date(r.timestamp).toLocaleString()}
+                      {new Date(r.timestamp).toLocaleString("es-GT")}
                     </td>
                     <td className="text-foreground py-1.5 pr-2">
-                      {r.user?.fullName ?? "(unknown)"}
+                      {r.user?.fullName ?? "(desconocido)"}
                     </td>
                     <td className="py-1.5 pr-2">
                       <span
@@ -193,7 +204,7 @@ export default async function AuditPage({ searchParams }: PageProps) {
                           actionClass(r.action),
                         )}
                       >
-                        {r.action}
+                        {actionLabelEs(r.action)}
                       </span>
                     </td>
                     <td className="text-foreground/70 py-1.5 pr-2 font-mono text-[10px]">
@@ -207,9 +218,9 @@ export default async function AuditPage({ searchParams }: PageProps) {
                     <td className="text-foreground/70 py-1.5 pr-2 text-[10px]">
                       {r.fieldName != null && (r.oldValue != null || r.newValue != null) ? (
                         <span>
-                          <span className="text-foreground/50">{truncate(r.oldValue, 30) ?? "(none)"}</span>
+                          <span className="text-foreground/50">{truncate(r.oldValue, 30) ?? "(ninguno)"}</span>
                           <span className="text-foreground/40"> → </span>
-                          <span className="text-foreground">{truncate(r.newValue, 30) ?? "(none)"}</span>
+                          <span className="text-foreground">{truncate(r.newValue, 30) ?? "(ninguno)"}</span>
                         </span>
                       ) : (
                         "—"
@@ -266,10 +277,10 @@ function Pagination({
         )}
         aria-disabled={current === 1}
       >
-        ← Prev
+        ← Anterior
       </Link>
       <span className="text-foreground/60 tabular-nums">
-        Page {current} of {total}
+        Página {current} de {total}
       </span>
       <Link
         href={pageHref(next)}
@@ -279,7 +290,7 @@ function Pagination({
         )}
         aria-disabled={current === total}
       >
-        Next →
+        Siguiente →
       </Link>
     </div>
   );
@@ -295,6 +306,21 @@ function actionClass(a: AuditAction): string {
     case "DELETE":
     case "VOID":
       return "bg-red-50 text-red-900 ring-red-200";
+  }
+}
+
+function actionLabelEs(a: AuditAction): string {
+  switch (a) {
+    case "CREATE":
+      return "CREAR";
+    case "IMPORT":
+      return "IMPORTAR";
+    case "UPDATE":
+      return "ACTUALIZAR";
+    case "DELETE":
+      return "ELIMINAR";
+    case "VOID":
+      return "ANULAR";
   }
 }
 

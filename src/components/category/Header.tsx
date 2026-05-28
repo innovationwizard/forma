@@ -42,7 +42,7 @@ export function CategoryHeader({ category }: CategoryHeaderProps) {
         href="/"
         className="text-foreground/60 hover:text-foreground inline-flex items-center gap-1 text-xs"
       >
-        ← Back to dashboard
+        ← Volver al tablero
       </Link>
 
       <div className="mt-2 flex flex-wrap items-baseline justify-between gap-3">
@@ -67,14 +67,14 @@ export function CategoryHeader({ category }: CategoryHeaderProps) {
       </div>
 
       <dl className="text-foreground mt-5 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
-        <Stat label="Budget" value={formatUsd(category.health.budgetUsd)} />
-        <Stat label="Spent" value={formatUsd(category.health.spentUsd)} />
+        <Stat label="Presupuesto" value={formatUsd(category.health.budgetUsd)} />
+        <Stat label="Ejecutado" value={formatUsd(category.health.spentUsd)} />
         <Stat
-          label={isOver ? "Over by" : "Remaining"}
+          label={isOver ? "Sobre por" : "Restante"}
           value={formatUsd(Math.abs(remaining))}
           accent={isOver ? "negative" : "neutral"}
         />
-        <Stat label="% consumed" value={formatPct(pct)} accent={isOver ? "negative" : "neutral"} />
+        <Stat label="% consumido" value={formatPct(pct)} accent={isOver ? "negative" : "neutral"} />
       </dl>
     </section>
   );

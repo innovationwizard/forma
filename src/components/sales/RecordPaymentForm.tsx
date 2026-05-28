@@ -105,14 +105,14 @@ export function RecordPaymentForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       <p className="text-foreground/60 text-xs">
-        Manual entry — for payments without a bank-statement source. Use the
-        Inbox flow when the payment already exists as a bank transaction.
+        Entrada manual — para pagos sin origen en un estado bancario. Usa el flujo de la
+        Bandeja cuando el pago ya exista como transacción bancaria.
       </p>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <label className="flex flex-col gap-1">
           <span className="text-foreground/60 text-[10px] font-medium tracking-wide uppercase">
-            Payment date
+            Fecha del pago
           </span>
           <input
             type="date"
@@ -126,7 +126,7 @@ export function RecordPaymentForm({
         </label>
         <label className="flex flex-col gap-1">
           <span className="text-foreground/60 text-[10px] font-medium tracking-wide uppercase">
-            GTQ → USD rate
+            Tipo de cambio (GTQ → USD)
           </span>
           <input
             type="text"
@@ -140,7 +140,7 @@ export function RecordPaymentForm({
         </label>
         <label className="flex flex-col gap-1">
           <span className="text-foreground/60 text-[10px] font-medium tracking-wide uppercase">
-            Amount USD {side === "usd" ? "· primary" : ""}
+            Monto USD {side === "usd" ? "· primario" : ""}
           </span>
           <input
             type="text"
@@ -154,7 +154,7 @@ export function RecordPaymentForm({
         </label>
         <label className="flex flex-col gap-1">
           <span className="text-foreground/60 text-[10px] font-medium tracking-wide uppercase">
-            Amount GTQ {side === "gtq" ? "· primary" : ""}
+            Monto GTQ {side === "gtq" ? "· primario" : ""}
           </span>
           <input
             type="text"
@@ -170,20 +170,20 @@ export function RecordPaymentForm({
 
       <label className="flex flex-col gap-1">
         <span className="text-foreground/60 text-[10px] font-medium tracking-wide uppercase">
-          Notes (optional)
+          Notas (opcional)
         </span>
         <input
           type="text"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="e.g. cash payment 2026-05-28, receipt #..."
+          placeholder="ej. pago en efectivo 2026-05-28, recibo #..."
           disabled={pending}
           className="border-foreground/10 focus:ring-foreground/40 rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2"
         />
       </label>
 
       <div className="text-foreground/60 text-xs">
-        Will record: <strong className="text-foreground tabular-nums">{usdDisplay}</strong>
+        Se registrará: <strong className="text-foreground tabular-nums">{usdDisplay}</strong>
       </div>
 
       <div className="flex items-center gap-3">
@@ -192,7 +192,7 @@ export function RecordPaymentForm({
           disabled={pending}
           className="bg-foreground text-background disabled:bg-zinc-300 disabled:text-zinc-500 rounded-md px-3 py-1.5 text-xs font-medium"
         >
-          {pending ? "Recording…" : "Record payment"}
+          {pending ? "Registrando…" : "Registrar pago"}
         </button>
         {error != null ? (
           <span role="alert" className="text-xs text-red-700">

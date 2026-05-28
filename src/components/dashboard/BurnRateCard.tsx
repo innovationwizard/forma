@@ -22,28 +22,33 @@ export function BurnRateCard({ burnRate }: BurnRateCardProps) {
       aria-labelledby="burn-rate-title"
       className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-5 shadow-sm"
     >
-      <h2
-        id="burn-rate-title"
-        className="text-foreground/60 text-xs font-medium tracking-wider uppercase"
-      >
-        Burn rate
-      </h2>
+      <div>
+        <h2
+          id="burn-rate-title"
+          className="text-foreground/60 text-xs font-medium tracking-wider uppercase"
+        >
+          RITMO DE GASTO
+        </h2>
+        <p className="text-foreground/40 text-[10px] italic">
+          (Consumo mensual del presupuesto)
+        </p>
+      </div>
 
       <div className="mt-3 flex items-baseline gap-2">
         <span className="text-foreground text-3xl font-semibold tabular-nums">
           {formatUsd(burnRate.monthlyBurnUsd)}
         </span>
-        <span className="text-foreground/60 text-xs">/ mo avg</span>
+        <span className="text-foreground/60 text-xs">/ mes prom.</span>
       </div>
 
       <dl className="text-foreground/70 mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-        <dt className="text-foreground/50">Trailing 3-mo</dt>
+        <dt className="text-foreground/50">Últimos 3 meses</dt>
         <dd className="text-foreground text-right tabular-nums">
           {formatUsd(burnRate.trailing3moUsd)}
         </dd>
-        <dt className="text-foreground/50">Months active</dt>
+        <dt className="text-foreground/50">Meses transcurridos</dt>
         <dd className="text-foreground text-right tabular-nums">{burnRate.monthsActive}</dd>
-        <dt className="text-foreground/50">Months remaining</dt>
+        <dt className="text-foreground/50">Meses restantes</dt>
         <dd className="text-foreground text-right tabular-nums">{burnRate.monthsRemaining}</dd>
       </dl>
 
@@ -58,7 +63,7 @@ export function BurnRateCard({ burnRate }: BurnRateCardProps) {
         <span aria-hidden className="mr-1">
           {onTrack ? "•" : "▲"}
         </span>
-        Projected total {onTrack ? "within" : "exceeds"} budget by EOP:{" "}
+        Total proyectado {onTrack ? "dentro del" : "excede el"} presupuesto al cierre:{" "}
         <span className="font-semibold tabular-nums">
           {formatUsd(burnRate.projectedTotalUsd)}
         </span>

@@ -29,9 +29,12 @@ export function SubItemsList({ subItems }: SubItemsListProps) {
   if (subItems.length === 0) {
     return (
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
-        <h2 className="text-foreground text-base font-semibold">Sub-items</h2>
+        <div>
+          <h2 className="text-foreground text-base font-semibold">PARTIDAS INTERNAS</h2>
+          <p className="text-foreground/40 text-[10px] italic">(Sub-elementos de la categoría)</p>
+        </div>
         <p className="text-foreground/60 mt-3 text-sm">
-          No sub-items recorded for this category.
+          Sin partidas internas registradas para esta categoría.
         </p>
       </section>
     );
@@ -47,9 +50,14 @@ export function SubItemsList({ subItems }: SubItemsListProps) {
       className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm"
     >
       <div className="flex items-baseline justify-between">
-        <h2 id="subitems-title" className="text-foreground text-base font-semibold">
-          Sub-items ({subItems.length})
-        </h2>
+        <div>
+          <h2 id="subitems-title" className="text-foreground text-base font-semibold">
+            PARTIDAS INTERNAS ({subItems.length})
+          </h2>
+          <p className="text-foreground/40 text-[10px] italic">
+            (Sub-elementos de la categoría)
+          </p>
+        </div>
         <span className="text-foreground/50 text-xs tabular-nums">
           Total {formatUsd(total)}
         </span>
@@ -59,11 +67,11 @@ export function SubItemsList({ subItems }: SubItemsListProps) {
         <table className="text-foreground/80 w-full text-sm">
           <thead>
             <tr className="border-foreground/10 text-foreground/60 border-b text-left text-xs font-medium tracking-wide uppercase">
-              <th scope="col" className="py-2 pr-3 font-medium">Code</th>
-              <th scope="col" className="py-2 pr-3 font-medium">Description</th>
-              <th scope="col" className="py-2 pr-3 text-right font-medium">Qty</th>
-              <th scope="col" className="py-2 pr-3 font-medium">Unit</th>
-              <th scope="col" className="py-2 pr-3 text-right font-medium">Unit price</th>
+              <th scope="col" className="py-2 pr-3 font-medium">Código</th>
+              <th scope="col" className="py-2 pr-3 font-medium">Descripción</th>
+              <th scope="col" className="py-2 pr-3 text-right font-medium">Cant.</th>
+              <th scope="col" className="py-2 pr-3 font-medium">Unidad</th>
+              <th scope="col" className="py-2 pr-3 text-right font-medium">Precio unit.</th>
               <th scope="col" className="py-2 text-right font-medium">Total</th>
             </tr>
           </thead>

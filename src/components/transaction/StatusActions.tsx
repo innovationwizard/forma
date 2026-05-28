@@ -46,7 +46,7 @@ export function StatusActions({ id, currentStatus, canMutate }: StatusActionsPro
     if (reason == null) return;
     const trimmed = reason.trim();
     if (trimmed.length === 0) {
-      setError("Reason cannot be empty.");
+      setError("El motivo no puede estar vacío.");
       return;
     }
     setError(null);
@@ -66,25 +66,25 @@ export function StatusActions({ id, currentStatus, canMutate }: StatusActionsPro
         type="button"
         disabled={pending || isFlagged}
         onClick={() =>
-          promptAndRun("Flag reason:", (reason) =>
+          promptAndRun("Motivo para marcar:", (reason) =>
             flagExpenditureAction({ id, reason }),
           )
         }
         className="rounded-md bg-amber-100 px-3 py-1.5 text-xs font-medium text-amber-900 ring-1 ring-amber-200 ring-inset disabled:opacity-50"
       >
-        {isFlagged ? "Already flagged" : "Flag for review"}
+        {isFlagged ? "Ya marcada" : "Marcar para revisión"}
       </button>
       <button
         type="button"
         disabled={pending || isVoided}
         onClick={() =>
-          promptAndRun("Void reason:", (reason) =>
+          promptAndRun("Motivo para anular:", (reason) =>
             voidExpenditureAction({ id, reason }),
           )
         }
         className="rounded-md bg-red-50 px-3 py-1.5 text-xs font-medium text-red-900 ring-1 ring-red-200 ring-inset disabled:opacity-50"
       >
-        {isVoided ? "Already voided" : "Void"}
+        {isVoided ? "Ya anulada" : "Anular"}
       </button>
       {error != null ? (
         <span role="alert" className="text-xs text-red-700">

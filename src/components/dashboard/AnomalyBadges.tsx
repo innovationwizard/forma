@@ -28,10 +28,10 @@ const SEVERITY_ORDER: SeverityKey[] = [
 ];
 
 const SEVERITY_LABEL: Record<SeverityKey, string> = {
-  ERROR_BLOCKING: "Blocking",
-  ERROR_VISIBLE: "Action needed",
-  WARNING: "Warnings",
-  INFO: "Info",
+  ERROR_BLOCKING: "Bloqueante",
+  ERROR_VISIBLE: "Acción requerida",
+  WARNING: "Advertencias",
+  INFO: "Información",
 };
 
 const SEVERITY_CLASS: Record<SeverityKey, string> = {
@@ -49,14 +49,14 @@ export function AnomalyBadges({ anomalies }: AnomalyBadgesProps) {
       <div className="flex items-center gap-2">
         <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-900 ring-1 ring-emerald-200 ring-inset">
           <span aria-hidden className="mr-1">•</span>
-          All checks clear
+          Todo en orden
         </span>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2" aria-label="Data quality flags">
+    <div className="flex flex-wrap items-center gap-2" aria-label="Banderas de calidad de datos">
       {visible.map((s) => (
         <span
           key={s}

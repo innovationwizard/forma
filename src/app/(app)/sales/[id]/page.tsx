@@ -49,65 +49,71 @@ export default async function SalesDetailPage({ params }: PageProps) {
           href="/sales"
           className="text-foreground/60 hover:text-foreground inline-flex items-center gap-1 text-xs"
         >
-          ← Back to sales
+          ← Volver a ventas
         </Link>
         <div className="mt-2 flex flex-wrap items-baseline justify-between gap-3">
           <div className="flex items-center gap-2">
             <h1 className="text-foreground text-2xl font-semibold tracking-tight">{u.name}</h1>
             <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium tracking-wide text-zinc-700 ring-1 ring-zinc-200 ring-inset uppercase">
-              {u.status}
+              {salesStatusLabel(u.status)}
             </span>
           </div>
           <Link
             href={`/casa/${u.id}/reflujo`}
             className="text-foreground/60 hover:text-foreground text-xs underline"
           >
-            View reflujo →
+            Ver reflujo →
           </Link>
         </div>
         <p className="text-foreground/60 mt-1 text-sm">
           {buyerLabel ?? (
-            <span className="italic">Buyer not linked yet.</span>
+            <span className="italic">Comprador no vinculado todavía.</span>
           )}
         </p>
       </header>
 
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
-        <h2 className="text-foreground text-base font-semibold">Unit summary</h2>
+        <div>
+          <h2 className="text-foreground text-base font-semibold">RESUMEN DE LA UNIDAD</h2>
+          <p className="text-foreground/40 text-[10px] italic">(Datos generales)</p>
+        </div>
         <dl className="text-foreground mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
-          <Stat label="Area (m²)" value={u.areaM2} />
+          <Stat label="Área (m²)" value={u.areaM2} />
           <Stat
-            label="Sale price"
+            label="Precio de venta"
             value={u.salePriceSinIvaUsd != null ? formatUsd(u.salePriceSinIvaUsd) : "—"}
           />
-          <Stat label="Enganche rate" value={formatPct(u.engancheRate)} />
-          <Stat label="Expected enganche" value={formatUsd(snapshot.totals.engancheExpectedUsd)} />
-          <Stat label="Sale month" value={u.saleMonth != null ? `M${u.saleMonth}` : "—"} />
-          <Stat label="Delivery month" value={u.deliveryMonth != null ? `M${u.deliveryMonth}` : "—"} />
-          <Stat label="Reserved on" value={u.reservedAt != null ? formatIsoDate(u.reservedAt) : "—"} />
-          <Stat label="Sold on" value={u.soldAt != null ? formatIsoDate(u.soldAt) : "—"} />
-          <Stat label="Total planned" value={formatUsd(snapshot.totals.plannedUsd)} />
-          <Stat label="Total paid" value={formatUsd(snapshot.totals.paidUsd)} />
+          <Stat label="Tasa de enganche" value={formatPct(u.engancheRate)} />
+          <Stat label="Enganche esperado" value={formatUsd(snapshot.totals.engancheExpectedUsd)} />
+          <Stat label="Mes de venta" value={u.saleMonth != null ? `M${u.saleMonth}` : "—"} />
+          <Stat label="Mes de entrega" value={u.deliveryMonth != null ? `M${u.deliveryMonth}` : "—"} />
+          <Stat label="Reservada el" value={u.reservedAt != null ? formatIsoDate(u.reservedAt) : "—"} />
+          <Stat label="Vendida el" value={u.soldAt != null ? formatIsoDate(u.soldAt) : "—"} />
+          <Stat label="Total planeado" value={formatUsd(snapshot.totals.plannedUsd)} />
+          <Stat label="Total pagado" value={formatUsd(snapshot.totals.paidUsd)} />
         </dl>
       </section>
 
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
-        <h2 className="text-foreground text-base font-semibold">Buyer</h2>
+        <div>
+          <h2 className="text-foreground text-base font-semibold">COMPRADOR</h2>
+          <p className="text-foreground/40 text-[10px] italic">(Datos del adquiriente)</p>
+        </div>
         {u.buyer != null ? (
           <dl className="text-foreground mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-3">
-            <Stat label="Name" value={u.buyer.name} />
-            <Stat label="Tax ID (NIT)" value={u.buyer.taxId ?? "—"} />
-            <Stat label="Type" value={u.buyer.type.toLowerCase()} />
+            <Stat label="Nombre" value={u.buyer.name} />
+            <Stat label="NIT" value={u.buyer.taxId ?? "—"} />
+            <Stat label="Tipo" value={u.buyer.type.toLowerCase()} />
           </dl>
         ) : (
           <div className="mt-3 flex flex-col gap-3">
             <p className="text-foreground/60 text-xs">
-              No buyer linked. {u.status === "SOLD" ? (
+              Sin comprador vinculado. {u.status === "SOLD" ? (
                 <span className="text-amber-700">
-                  ▲ Unit is SOLD — buyer data is incomplete. Link a partner below.
+                  ▲ La unidad está VENDIDA — faltan datos del comprador. Vincula un socio abajo.
                 </span>
               ) : (
-                "Link a partner if a buyer is in negotiation."
+                "Vincula un socio si hay un comprador en negociación."
               )}
             </p>
             <LinkBuyerForm
@@ -121,10 +127,13 @@ export default async function SalesDetailPage({ params }: PageProps) {
 
       {canMutateUnits ? (
         <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
-          <h2 className="text-foreground text-base font-semibold">Status actions</h2>
+          <div>
+            <h2 className="text-foreground text-base font-semibold">ACCIONES DE ESTADO</h2>
+            <p className="text-foreground/40 text-[10px] italic">(Cambios de estado validados por máquina de estados)</p>
+          </div>
           <p className="text-foreground/50 mt-1 text-xs">
-            State-machine validated server-side. Allowed transitions from{" "}
-            <strong>{u.status}</strong> only.
+            Validado en el servidor. Solo se permiten transiciones desde{" "}
+            <strong>{salesStatusLabel(u.status)}</strong>.
           </p>
           <div className="mt-3">
             <StatusActions id={u.id} currentStatus={u.status} canMutate={canMutateUnits} />
@@ -133,27 +142,30 @@ export default async function SalesDetailPage({ params }: PageProps) {
       ) : null}
 
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
-        <h2 className="text-foreground text-base font-semibold">
-          Payments ({snapshot.payments.length})
-        </h2>
+        <div>
+          <h2 className="text-foreground text-base font-semibold">
+            PAGOS ({snapshot.payments.length})
+          </h2>
+          <p className="text-foreground/40 text-[10px] italic">(Cuotas recibidas)</p>
+        </div>
         {snapshot.payments.length === 0 ? (
           <p className="text-foreground/60 mt-3 text-sm">
-            No payments recorded yet. Classify bank inflows from the{" "}
+            Sin pagos registrados todavía. Clasifica ingresos bancarios desde la{" "}
             <Link href="/inbox" className="underline">
-              Inbox
+              Bandeja
             </Link>{" "}
-            to attribute them to this unit, or record a manual entry below.
+            para asignarlos a esta unidad, o registra una entrada manual abajo.
           </p>
         ) : (
           <div className="mt-4 overflow-x-auto">
             <table className="text-foreground/80 w-full text-sm">
               <thead>
                 <tr className="border-foreground/10 text-foreground/60 border-b text-left text-xs font-medium tracking-wide uppercase">
-                  <th scope="col" className="py-2 pr-3 font-medium">Date</th>
+                  <th scope="col" className="py-2 pr-3 font-medium">Fecha</th>
                   <th scope="col" className="py-2 pr-3 text-right font-medium">USD</th>
                   <th scope="col" className="py-2 pr-3 text-right font-medium">GTQ</th>
-                  <th scope="col" className="py-2 pr-3 font-medium">Reconciliation</th>
-                  <th scope="col" className="py-2 font-medium">Source</th>
+                  <th scope="col" className="py-2 pr-3 font-medium">Conciliación</th>
+                  <th scope="col" className="py-2 font-medium">Origen</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
@@ -181,7 +193,7 @@ export default async function SalesDetailPage({ params }: PageProps) {
                                 : "bg-zinc-100 text-zinc-700 ring-zinc-200",
                         )}
                       >
-                        {p.reconciliationStatus}
+                        {reconciliationStatusLabel(p.reconciliationStatus)}
                       </span>
                     </td>
                     <td className="text-foreground/60 py-2 text-xs">
@@ -190,7 +202,7 @@ export default async function SalesDetailPage({ params }: PageProps) {
                           href={`/inbox/${p.bankTransactionId}`}
                           className="underline"
                         >
-                          bank tx
+                          tx bancaria
                         </Link>
                       ) : (
                         <span className="italic">manual</span>
@@ -209,7 +221,7 @@ export default async function SalesDetailPage({ params }: PageProps) {
         {canCreatePayment ? (
           <details className="mt-5">
             <summary className="text-foreground/70 hover:text-foreground cursor-pointer text-xs">
-              Record manual payment
+              Registrar pago manual
             </summary>
             <div className="border-foreground/10 mt-3 border-t pt-4">
               <RecordPaymentForm
@@ -232,4 +244,40 @@ function Stat({ label, value }: { label: string; value: string }) {
       <dd className="text-foreground mt-0.5 text-sm font-medium tabular-nums">{value}</dd>
     </div>
   );
+}
+
+function salesStatusLabel(s: string): string {
+  switch (s) {
+    case "SOLD":
+      return "VENDIDA";
+    case "AVAILABLE":
+      return "DISPONIBLE";
+    case "SOFT_HOLD":
+      return "RESERVA TENTATIVA";
+    case "RESERVED":
+      return "RESERVADA";
+    case "FROZEN":
+      return "CONGELADA";
+    default:
+      return s;
+  }
+}
+
+function reconciliationStatusLabel(s: string): string {
+  switch (s) {
+    case "MATCHED":
+      return "COINCIDE";
+    case "OVERPAYMENT":
+      return "SOBREPAGO";
+    case "UNDERPAYMENT":
+      return "SUBPAGO";
+    case "UNEXPECTED_PAYMENT":
+      return "PAGO INESPERADO";
+    case "MISSED":
+      return "OMITIDO";
+    case "UPCOMING":
+      return "POR VENIR";
+    default:
+      return s;
+  }
 }

@@ -31,27 +31,32 @@ export function RevenueBlock({ revenue }: RevenueBlockProps) {
       className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm"
     >
       <div className="flex items-baseline justify-between">
-        <h2 id="revenue-title" className="text-foreground text-base font-semibold">
-          Revenue
-        </h2>
+        <div>
+          <h2 id="revenue-title" className="text-foreground text-base font-semibold">
+            INGRESOS
+          </h2>
+          <p className="text-foreground/40 text-[10px] italic">
+            (Ingresos proyectados — ventas)
+          </p>
+        </div>
         <span className="text-foreground/50 text-xs">USD, sin IVA</span>
       </div>
 
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <SummaryStat
-          label="Projected total"
+          label="Total proyectado"
           value={formatUsd(totalProjected)}
-          sub={`${revenue.unitCountSold + revenue.unitCountAvailable} units total`}
+          sub={`${revenue.unitCountSold + revenue.unitCountAvailable} unidades en total`}
         />
         <SummaryStat
-          label="Realized to date"
+          label="Realizado a la fecha"
           value={formatUsd(realized)}
-          sub={`${formatPct(realizedFraction)} of projected`}
+          sub={`${formatPct(realizedFraction)} de lo proyectado`}
         />
         <SummaryStat
-          label="Sold / available"
+          label="Vendidas / disponibles"
           value={`${revenue.unitCountSold} / ${revenue.unitCountAvailable}`}
-          sub="Canonical sold bucket = {1, 2, 5, 6, 7, 11}"
+          sub="Bloque canónico vendido = {1, 2, 5, 6, 7, 11}"
         />
       </div>
 
@@ -59,11 +64,11 @@ export function RevenueBlock({ revenue }: RevenueBlockProps) {
         <table className="text-foreground/80 w-full text-sm">
           <thead>
             <tr className="border-foreground/10 text-foreground/60 border-b text-left text-xs font-medium tracking-wide uppercase">
-              <th scope="col" className="py-2 pr-3 font-medium">Unit</th>
-              <th scope="col" className="py-2 pr-3 font-medium">Status</th>
-              <th scope="col" className="py-2 pr-3 text-right font-medium">Price</th>
-              <th scope="col" className="py-2 pr-3 text-right font-medium">Sale month</th>
-              <th scope="col" className="py-2 text-right font-medium">Delivery month</th>
+              <th scope="col" className="py-2 pr-3 font-medium">Unidad</th>
+              <th scope="col" className="py-2 pr-3 font-medium">Estado</th>
+              <th scope="col" className="py-2 pr-3 text-right font-medium">Precio</th>
+              <th scope="col" className="py-2 pr-3 text-right font-medium">Mes de venta</th>
+              <th scope="col" className="py-2 text-right font-medium">Mes de entrega</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100">
@@ -75,7 +80,7 @@ export function RevenueBlock({ revenue }: RevenueBlockProps) {
                     <Link
                       href={`/casa/${u.id}/reflujo`}
                       className="hover:underline"
-                      aria-label={`Open ${u.name} reflujo`}
+                      aria-label={`Abrir reflujo de ${u.name}`}
                     >
                       {u.name}
                     </Link>
@@ -89,7 +94,7 @@ export function RevenueBlock({ revenue }: RevenueBlockProps) {
                           : "bg-zinc-100 text-zinc-700 ring-zinc-200",
                       )}
                     >
-                      {u.status}
+                      {salesStatusLabel(u.status)}
                     </span>
                   </td>
                   <td className="py-2 pr-3 text-right tabular-nums">
@@ -121,4 +126,22 @@ function SummaryStat({ label, value, sub }: { label: string; value: string; sub:
       <div className="text-foreground/50 mt-0.5 text-xs">{sub}</div>
     </div>
   );
+}
+
+/// SOLD/AVAILABLE/SOFT_HOLD/RESERVED/FROZEN → display labels (per CanonicalTaxonomy + D9).
+function salesStatusLabel(status: string): string {
+  switch (status) {
+    case "SOLD":
+      return "VENDIDA";
+    case "AVAILABLE":
+      return "DISPONIBLE";
+    case "SOFT_HOLD":
+      return "RESERVA TENTATIVA";
+    case "RESERVED":
+      return "RESERVADA";
+    case "FROZEN":
+      return "CONGELADA";
+    default:
+      return status;
+  }
 }

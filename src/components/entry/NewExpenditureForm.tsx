@@ -188,13 +188,16 @@ export function NewExpenditureForm({
       onSubmit={handleSubmit}
       className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm"
     >
-      <h2 className="text-foreground text-base font-semibold">New transaction</h2>
+      <div>
+        <h2 className="text-foreground text-base font-semibold">NUEVA TRANSACCIÓN</h2>
+        <p className="text-foreground/40 text-[10px] italic">(Registrar gasto manualmente)</p>
+      </div>
       <p className="text-foreground/50 mt-1 text-xs">
-        Source = MANUAL · Status = PENDING (until an analyst verifies it).
+        Origen = MANUAL · Estado = PENDIENTE (hasta que un analista la verifique).
       </p>
 
       <fieldset className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2" disabled={pending}>
-        <Field label="Date">
+        <Field label="Fecha">
           <input
             type="date"
             required
@@ -205,13 +208,13 @@ export function NewExpenditureForm({
           />
         </Field>
 
-        <Field label="Bank account">
+        <Field label="Cuenta bancaria">
           <select
             value={state.bankAccountId}
             onChange={(e) => setState((s) => ({ ...s, bankAccountId: e.target.value }))}
             className={inputClass}
           >
-            <option value="">— none (non-bank event) —</option>
+            <option value="">— ninguna (evento no bancario) —</option>
             {choices.bankAccounts.map((b) => (
               <option key={b.id} value={b.id}>
                 {b.displayName} · {b.accountNumber}
@@ -220,14 +223,14 @@ export function NewExpenditureForm({
           </select>
         </Field>
 
-        <Field label="Vendor (raw)">
+        <Field label="Proveedor (texto crudo)">
           <input
             type="text"
             required
             list="vendor-suggestions"
             value={state.vendorRaw}
             onChange={(e) => setState((s) => ({ ...s, vendorRaw: e.target.value }))}
-            placeholder="As shown on the invoice / payment record"
+            placeholder="Tal como aparece en la factura / comprobante"
             className={inputClass}
           />
           <datalist id="vendor-suggestions">
@@ -240,13 +243,13 @@ export function NewExpenditureForm({
           </datalist>
         </Field>
 
-        <Field label="Partner (optional link)">
+        <Field label="Socio (vínculo opcional)">
           <select
             value={state.partnerId}
             onChange={(e) => setState((s) => ({ ...s, partnerId: e.target.value }))}
             className={inputClass}
           >
-            <option value="">— unlinked —</option>
+            <option value="">— sin vínculo —</option>
             {choices.partnerSuggestions.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
@@ -258,10 +261,10 @@ export function NewExpenditureForm({
 
       <fieldset className="mt-6" disabled={pending}>
         <legend className="text-foreground/60 text-[10px] font-medium tracking-wide uppercase">
-          Amounts (GTQ; IVA rate {(ivaRate * 100).toFixed(0)}%)
+          Montos (GTQ; tasa de IVA {(ivaRate * 100).toFixed(0)}%)
         </legend>
         <div className="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Field label={`Con IVA${activeAmount === "conIva" ? " · primary" : ""}`}>
+          <Field label={`Con IVA${activeAmount === "conIva" ? " · primario" : ""}`}>
             <input
               type="text"
               inputMode="decimal"
@@ -271,7 +274,7 @@ export function NewExpenditureForm({
               className={inputClass}
             />
           </Field>
-          <Field label={`Sin IVA${activeAmount === "sinIva" ? " · primary" : ""}`}>
+          <Field label={`Sin IVA${activeAmount === "sinIva" ? " · primario" : ""}`}>
             <input
               type="text"
               inputMode="decimal"
@@ -281,7 +284,7 @@ export function NewExpenditureForm({
               className={inputClass}
             />
           </Field>
-          <Field label={`IVA${activeAmount === "iva" ? " · primary" : ""}`}>
+          <Field label={`IVA${activeAmount === "iva" ? " · primario" : ""}`}>
             <input
               type="text"
               inputMode="decimal"
@@ -293,17 +296,17 @@ export function NewExpenditureForm({
           </Field>
         </div>
         <p className="text-foreground/50 mt-2 text-xs">
-          Type any one; the other two recompute. USD reconstruction uses
-          sin-IVA ÷ exchange rate (live below).
+          Escribe cualquiera; los otros dos se recalculan. La reconstrucción USD usa
+          sin-IVA ÷ tipo de cambio (en vivo abajo).
         </p>
       </fieldset>
 
       <fieldset className="border-foreground/10 mt-6 rounded-xl border bg-background/50 p-4" disabled={pending}>
         <legend className="text-foreground/60 px-2 text-[10px] font-medium tracking-wide uppercase">
-          Exchange rate
+          Tipo de cambio
         </legend>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Field label="GTQ per USD">
+          <Field label="GTQ por USD">
             <input
               type="text"
               inputMode="decimal"
@@ -322,20 +325,20 @@ export function NewExpenditureForm({
             <p>
               {resolvedRate != null ? (
                 <>
-                  Resolved from <Source rate={resolvedRate} />
-                  {resolvedRate.isStale ? " (stale fallback)" : ""}.
+                  Resuelto desde <Source rate={resolvedRate} />
+                  {resolvedRate.isStale ? " (respaldo desactualizado)" : ""}.
                 </>
               ) : (
-                "Resolving…"
+                "Resolviendo…"
               )}
             </p>
             <p className="text-foreground mt-1 text-sm font-semibold tabular-nums">
-              USD reconstructed: {formatUsd(usdReconstructed)}
+              USD reconstruido: {formatUsd(usdReconstructed)}
             </p>
           </div>
         </div>
         {state.exchangeRateOverridden ? (
-          <Field className="mt-3" label="Override reason (required when override is on)">
+          <Field className="mt-3" label="Motivo del override (obligatorio cuando el override está activo)">
             <input
               type="text"
               required={state.exchangeRateOverridden}
@@ -343,7 +346,7 @@ export function NewExpenditureForm({
               onChange={(e) =>
                 setState((s) => ({ ...s, exchangeRateOverrideReason: e.target.value }))
               }
-              placeholder="e.g. published rate differs from BANGUAT cache"
+              placeholder="ej. tasa publicada difiere del caché BANGUAT"
               className={inputClass}
             />
           </Field>
@@ -361,26 +364,26 @@ export function NewExpenditureForm({
               }))
             }
           >
-            Restore resolved rate
+            Restaurar tasa resuelta
           </button>
         ) : null}
       </fieldset>
 
       <fieldset className="mt-6" disabled={pending}>
-        <Field label="Description">
+        <Field label="Descripción">
           <textarea
             required
             rows={3}
             value={state.description}
             onChange={(e) => setState((s) => ({ ...s, description: e.target.value }))}
-            placeholder="e.g. FEE DE DESARROLLO DEL PROYECTO SANTA ELENA, MES DE MAYO 2026"
+            placeholder="ej. FEE DE DESARROLLO DEL PROYECTO SANTA ELENA, MES DE MAYO 2026"
             className={inputClass}
           />
         </Field>
       </fieldset>
 
       <fieldset className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3" disabled={pending}>
-        <Field label="L1 Partition">
+        <Field label="Partición (L1)">
           <select
             required
             value={state.partitionId}
@@ -389,7 +392,7 @@ export function NewExpenditureForm({
             }
             className={inputClass}
           >
-            <option value="">— select —</option>
+            <option value="">— elige —</option>
             {choices.partitions.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.code} — {p.name}
@@ -397,7 +400,7 @@ export function NewExpenditureForm({
             ))}
           </select>
         </Field>
-        <Field label="L2 Category">
+        <Field label="Categoría (L2)">
           <select
             required
             disabled={state.partitionId === ""}
@@ -405,7 +408,7 @@ export function NewExpenditureForm({
             onChange={(e) => setState((s) => ({ ...s, categoryId: e.target.value, subItemId: "" }))}
             className={inputClass}
           >
-            <option value="">— select —</option>
+            <option value="">— elige —</option>
             {filteredCategories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -413,14 +416,14 @@ export function NewExpenditureForm({
             ))}
           </select>
         </Field>
-        <Field label="L3 Sub-item (optional)">
+        <Field label="Partida interna (L3, opcional)">
           <select
             disabled={state.categoryId === "" || filteredSubItems.length === 0}
             value={state.subItemId}
             onChange={(e) => setState((s) => ({ ...s, subItemId: e.target.value }))}
             className={inputClass}
           >
-            <option value="">— none —</option>
+            <option value="">— ninguna —</option>
             {filteredSubItems.map((si) => (
               <option key={si.id} value={si.id}>
                 {si.code} — {si.description}
@@ -436,7 +439,7 @@ export function NewExpenditureForm({
           disabled={pending}
           className="bg-foreground text-background disabled:bg-zinc-300 disabled:text-zinc-500 rounded-md px-4 py-2 text-sm font-medium"
         >
-          {pending ? "Submitting…" : "Submit"}
+          {pending ? "Enviando…" : "Enviar"}
         </button>
         {error != null ? (
           <span role="alert" className="text-xs text-red-700">
@@ -476,7 +479,7 @@ function Source({ rate }: { rate: ResolvedRate }) {
   return (
     <span className="font-medium">
       {rate.source} {rate.date}
-      {rate.requestedDate !== rate.date ? ` (asked for ${rate.requestedDate})` : ""}
+      {rate.requestedDate !== rate.date ? ` (solicitado para ${rate.requestedDate})` : ""}
     </span>
   );
 }

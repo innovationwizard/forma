@@ -21,10 +21,10 @@ export function ModelNotes({ notes }: ModelNotesProps) {
     <details className="border-foreground/10 bg-card text-card-foreground group rounded-2xl border p-5 shadow-sm">
       <summary className="flex cursor-pointer list-none items-baseline justify-between gap-3">
         <span className="text-foreground/70 text-sm font-medium">
-          Author notes ({notes.length})
+          NOTAS del autor ({notes.length})
         </span>
-        <span className="text-foreground/40 text-xs group-open:hidden">Show</span>
-        <span className="text-foreground/40 text-xs hidden group-open:inline">Hide</span>
+        <span className="text-foreground/40 text-xs group-open:hidden">Mostrar</span>
+        <span className="text-foreground/40 text-xs hidden group-open:inline">Ocultar</span>
       </summary>
       <ol className="text-foreground/80 mt-4 list-decimal space-y-2 pl-5 text-xs">
         {notes.map((n, i) => (
@@ -32,7 +32,7 @@ export function ModelNotes({ notes }: ModelNotesProps) {
         ))}
       </ol>
       <p className="text-foreground/40 mt-3 text-[10px]">
-        Preserved verbatim from FCFCasas2!A105:I110 per D32.
+        Conservadas verbatim desde FCFCasas2!A105:I110 por D32.
       </p>
     </details>
   );

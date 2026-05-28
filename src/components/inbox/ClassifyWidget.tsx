@@ -45,10 +45,10 @@ export function ClassifyWidget({ snapshot }: ClassifyWidgetProps) {
   );
 
   const tabs: Array<{ id: Tab; label: string; visible: boolean }> = [
-    { id: "EXPENDITURE", label: "Expenditure (outflow)", visible: isOutflow },
-    { id: "RV_PAYMENT", label: "RV Payment (inflow)", visible: isInflow },
-    { id: "NON_BUSINESS", label: "Non-business", visible: true },
-    { id: "SKIP", label: "Skip", visible: true },
+    { id: "EXPENDITURE", label: "Gasto (egreso)", visible: isOutflow },
+    { id: "RV_PAYMENT", label: "Pago de casa (ingreso)", visible: isInflow },
+    { id: "NON_BUSINESS", label: "No relacionado", visible: true },
+    { id: "SKIP", label: "Omitir", visible: true },
   ];
 
   return (
@@ -56,11 +56,14 @@ export function ClassifyWidget({ snapshot }: ClassifyWidgetProps) {
       aria-labelledby="classify-title"
       className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm"
     >
-      <h2 id="classify-title" className="text-foreground text-base font-semibold">
-        Classify
-      </h2>
+      <div>
+        <h2 id="classify-title" className="text-foreground text-base font-semibold">
+          CLASIFICAR
+        </h2>
+        <p className="text-foreground/40 text-[10px] italic">(Asignar el movimiento)</p>
+      </div>
 
-      <nav className="border-foreground/10 mt-4 flex flex-wrap gap-1 border-b" aria-label="Classification path">
+      <nav className="border-foreground/10 mt-4 flex flex-wrap gap-1 border-b" aria-label="Ruta de clasificación">
         {tabs.filter((t) => t.visible).map((t) => (
           <button
             key={t.id}
@@ -164,13 +167,13 @@ function ExpenditureForm({ snapshot }: { snapshot: InboxItemSnapshot }) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <p className="text-foreground/60 text-xs">
-        Creates an <code>Expenditure</code> row linked back to this bank transaction.
-        Source = <code>BANK_STATEMENT</code>, Status = <code>PENDING</code>. The
-        bank-tx flips to <code>EXPENDITURE</code> classification.
+        Crea un <code>Gasto</code> vinculado a esta transacción bancaria.
+        Origen = <code>ESTADO BANCARIO</code>, Estado = <code>PENDIENTE</code>. La
+        transacción bancaria cambia a clasificación <code>GASTO</code>.
       </p>
 
       <fieldset className="grid grid-cols-1 gap-4 sm:grid-cols-2" disabled={pending}>
-        <Field label="Vendor (raw)">
+        <Field label="Proveedor (texto crudo)">
           <input
             type="text"
             required
@@ -179,13 +182,13 @@ function ExpenditureForm({ snapshot }: { snapshot: InboxItemSnapshot }) {
             className={inputClass}
           />
         </Field>
-        <Field label="Partner (optional link)">
+        <Field label="Socio (vínculo opcional)">
           <select
             value={partnerId}
             onChange={(e) => setPartnerId(e.target.value)}
             className={inputClass}
           >
-            <option value="">— unlinked —</option>
+            <option value="">— sin vínculo —</option>
             {snapshot.expenditureChoices.partnerSuggestions.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
@@ -195,10 +198,10 @@ function ExpenditureForm({ snapshot }: { snapshot: InboxItemSnapshot }) {
 
       <fieldset disabled={pending}>
         <legend className="text-foreground/60 text-[10px] font-medium tracking-wide uppercase">
-          Amounts (GTQ — IVA {(ivaRate * 100).toFixed(0)}%)
+          Montos (GTQ — IVA {(ivaRate * 100).toFixed(0)}%)
         </legend>
         <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <Field label={`Con IVA${activeAmount === "conIva" ? " · primary" : ""}`}>
+          <Field label={`Con IVA${activeAmount === "conIva" ? " · primario" : ""}`}>
             <input
               type="text"
               inputMode="decimal"
@@ -207,7 +210,7 @@ function ExpenditureForm({ snapshot }: { snapshot: InboxItemSnapshot }) {
               className={inputClass}
             />
           </Field>
-          <Field label={`Sin IVA${activeAmount === "sinIva" ? " · primary" : ""}`}>
+          <Field label={`Sin IVA${activeAmount === "sinIva" ? " · primario" : ""}`}>
             <input
               type="text"
               inputMode="decimal"
@@ -216,7 +219,7 @@ function ExpenditureForm({ snapshot }: { snapshot: InboxItemSnapshot }) {
               className={inputClass}
             />
           </Field>
-          <Field label={`IVA${activeAmount === "iva" ? " · primary" : ""}`}>
+          <Field label={`IVA${activeAmount === "iva" ? " · primario" : ""}`}>
             <input
               type="text"
               inputMode="decimal"
@@ -227,12 +230,12 @@ function ExpenditureForm({ snapshot }: { snapshot: InboxItemSnapshot }) {
           </Field>
         </div>
         <p className="text-foreground/50 mt-2 text-xs">
-          USD reconstructed: <strong className="text-foreground tabular-nums">{formatUsd(sinIvaUsd)}</strong>{" "}
+          USD reconstruido: <strong className="text-foreground tabular-nums">{formatUsd(sinIvaUsd)}</strong>{" "}
           (sin IVA ÷ TC {exchangeRate})
         </p>
       </fieldset>
 
-      <Field label="Description">
+      <Field label="Descripción">
         <textarea
           required
           rows={2}
@@ -244,7 +247,7 @@ function ExpenditureForm({ snapshot }: { snapshot: InboxItemSnapshot }) {
       </Field>
 
       <fieldset className="grid grid-cols-1 gap-4 sm:grid-cols-3" disabled={pending}>
-        <Field label="L1 Partition">
+        <Field label="Partición (L1)">
           <select
             required
             value={partitionId}
@@ -255,13 +258,13 @@ function ExpenditureForm({ snapshot }: { snapshot: InboxItemSnapshot }) {
             }}
             className={inputClass}
           >
-            <option value="">— select —</option>
+            <option value="">— elige —</option>
             {snapshot.expenditureChoices.partitions.map((p) => (
               <option key={p.id} value={p.id}>{p.code} — {p.name}</option>
             ))}
           </select>
         </Field>
-        <Field label="L2 Category">
+        <Field label="Categoría (L2)">
           <select
             required
             disabled={partitionId === ""}
@@ -272,20 +275,20 @@ function ExpenditureForm({ snapshot }: { snapshot: InboxItemSnapshot }) {
             }}
             className={inputClass}
           >
-            <option value="">— select —</option>
+            <option value="">— elige —</option>
             {filteredCategories.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
         </Field>
-        <Field label="L3 Sub-item (optional)">
+        <Field label="Partida interna (L3, opcional)">
           <select
             disabled={categoryId === "" || filteredSubItems.length === 0}
             value={subItemId}
             onChange={(e) => setSubItemId(e.target.value)}
             className={inputClass}
           >
-            <option value="">— none —</option>
+            <option value="">— ninguna —</option>
             {filteredSubItems.map((si) => (
               <option key={si.id} value={si.id}>{si.code} — {si.description}</option>
             ))}
@@ -293,7 +296,7 @@ function ExpenditureForm({ snapshot }: { snapshot: InboxItemSnapshot }) {
         </Field>
       </fieldset>
 
-      <SubmitRow pending={pending} error={error} label="Save as Expenditure" />
+      <SubmitRow pending={pending} error={error} label="Guardar como gasto" />
     </form>
   );
 }
@@ -340,29 +343,29 @@ function RvPaymentForm({ snapshot }: { snapshot: InboxItemSnapshot }) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <p className="text-foreground/60 text-xs">
-        Creates an <code>RvPayment</code> row linking this inflow to a sold
-        house. Reconciliation against the planned cuota schedule lands in
-        Batch 13c — for now every new payment defaults to <code>UNMATCHED</code>.
+        Crea un <code>Pago de casa</code> vinculando este ingreso con una casa
+        vendida. La conciliación contra el calendario planeado vive aparte
+        en cada página de reflujo.
       </p>
 
       <fieldset className="grid grid-cols-1 gap-4 sm:grid-cols-2" disabled={pending}>
-        <Field label="Casa (sold unit)">
+        <Field label="Casa (unidad vendida)">
           <select
             required
             value={rvUnitId}
             onChange={(e) => setRvUnitId(e.target.value)}
             className={inputClass}
           >
-            <option value="">— select —</option>
+            <option value="">— elige —</option>
             {snapshot.rvUnits.map((u) => (
               <option key={u.id} value={u.id}>
-                {u.name} {u.status === "SOLD" ? "(sold)" : `(${u.status.toLowerCase()})`}
+                {u.name} {u.status === "SOLD" ? "(vendida)" : `(${u.status.toLowerCase()})`}
                 {u.buyer != null ? ` — ${u.buyer.name}` : ""}
               </option>
             ))}
           </select>
         </Field>
-        <Field label="Payment date">
+        <Field label="Fecha del pago">
           <input
             type="date"
             required
@@ -371,7 +374,7 @@ function RvPaymentForm({ snapshot }: { snapshot: InboxItemSnapshot }) {
             className={inputClass}
           />
         </Field>
-        <Field label="GTQ → USD exchange rate">
+        <Field label="Tipo de cambio (GTQ → USD)">
           <input
             type="text"
             inputMode="decimal"
@@ -383,15 +386,15 @@ function RvPaymentForm({ snapshot }: { snapshot: InboxItemSnapshot }) {
         </Field>
         <div className="text-foreground/70 self-end text-xs">
           <p>
-            Amount USD: <strong className="text-foreground tabular-nums">{formatUsd(amountUsd)}</strong>
+            Monto USD: <strong className="text-foreground tabular-nums">{formatUsd(amountUsd)}</strong>
           </p>
           <p className="mt-1">
-            Amount GTQ: <strong className="text-foreground tabular-nums">Q {amountGtq}</strong>
+            Monto GTQ: <strong className="text-foreground tabular-nums">Q {amountGtq}</strong>
           </p>
         </div>
       </fieldset>
 
-      <Field label="Notes (optional)">
+      <Field label="Notas (opcional)">
         <input
           type="text"
           value={notes}
@@ -401,7 +404,7 @@ function RvPaymentForm({ snapshot }: { snapshot: InboxItemSnapshot }) {
         />
       </Field>
 
-      <SubmitRow pending={pending} error={error} label="Save as RV Payment" />
+      <SubmitRow pending={pending} error={error} label="Guardar como pago de casa" />
     </form>
   );
 }
@@ -433,41 +436,58 @@ function NonBusinessForm({ snapshot }: { snapshot: InboxItemSnapshot }) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <p className="text-foreground/60 text-xs">
-        For events that don&apos;t belong in budget tracking (cross-account
-        transfers, bank-charged fees, ISR retentions, etc.). Flips the
-        bank-tx classification, no gold-side row created.
+        Para eventos que no pertenecen al seguimiento del presupuesto (transferencias
+        entre cuentas propias, cargos del banco, retenciones de ISR, etc.).
+        Cambia la clasificación de la transacción bancaria; no crea fila en el lado dorado.
       </p>
 
       <fieldset className="grid grid-cols-1 gap-4 sm:grid-cols-2" disabled={pending}>
-        <Field label="Kind">
+        <Field label="Tipo">
           <select
             required
             value={kind}
             onChange={(e) => setKind(e.target.value as typeof kind)}
             className={inputClass}
           >
-            <option value="INTERNAL_TRANSFER">Internal transfer (between own accounts)</option>
-            <option value="INTEREST">Interest (NC PAGO INTERÉSES)</option>
-            <option value="FEE">Bank fee</option>
-            <option value="TAX">Tax (NOTA DEBITO ISR)</option>
-            <option value="IGNORED">Ignored (other non-tracked event)</option>
+            <option value="INTERNAL_TRANSFER">Transferencia interna (entre cuentas propias)</option>
+            <option value="INTEREST">Interés (NC PAGO INTERÉSES)</option>
+            <option value="FEE">Cargo bancario</option>
+            <option value="TAX">Impuesto (NOTA DEBITO ISR)</option>
+            <option value="IGNORED">Ignorar (otro evento no rastreado)</option>
           </select>
         </Field>
-        <Field label="Note (required)">
+        <Field label="Nota (obligatoria)">
           <input
             type="text"
             required
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Why this classification?"
+            placeholder="¿Por qué esta clasificación?"
             className={inputClass}
           />
         </Field>
       </fieldset>
 
-      <SubmitRow pending={pending} error={error} label={`Mark as ${kind.replace(/_/g, " ").toLowerCase()}`} />
+      <SubmitRow pending={pending} error={error} label={`Marcar como ${nonBusinessKindLabel(kind)}`} />
     </form>
   );
+}
+
+function nonBusinessKindLabel(k: string): string {
+  switch (k) {
+    case "INTERNAL_TRANSFER":
+      return "transferencia interna";
+    case "INTEREST":
+      return "interés";
+    case "FEE":
+      return "cargo bancario";
+    case "TAX":
+      return "impuesto";
+    case "IGNORED":
+      return "ignorar";
+    default:
+      return k.toLowerCase().replace(/_/g, " ");
+  }
 }
 
 // ── SKIP FORM ──────────────────────────────────────────────────────────────
@@ -493,21 +513,21 @@ function SkipForm({ snapshot }: { snapshot: InboxItemSnapshot }) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <p className="text-foreground/60 text-xs">
-        Keeps this transaction as <code>UNCLASSIFIED</code> but adds a note so
-        a later reviewer (or you, on the next pass) knows why it was skipped.
+        Mantiene esta transacción como <code>SIN CLASIFICAR</code> pero agrega una nota
+        para que un revisor posterior (o tú, en la próxima pasada) sepa por qué se omitió.
       </p>
-      <Field label="Why skip? (required)">
+      <Field label="¿Por qué omitir? (obligatorio)">
         <input
           type="text"
           required
           value={note}
           onChange={(e) => setNote(e.target.value)}
           disabled={pending}
-          placeholder="e.g. needs Federico's input before I categorize"
+          placeholder="ej. requiere la opinión de Federico antes de categorizarla"
           className={inputClass}
         />
       </Field>
-      <SubmitRow pending={pending} error={error} label="Save note + skip" />
+      <SubmitRow pending={pending} error={error} label="Guardar nota + omitir" />
     </form>
   );
 }
@@ -544,7 +564,7 @@ function SubmitRow({
         disabled={pending}
         className="bg-foreground text-background disabled:bg-zinc-300 disabled:text-zinc-500 rounded-md px-4 py-2 text-sm font-medium"
       >
-        {pending ? "Saving…" : label}
+        {pending ? "Guardando…" : label}
       </button>
       {error != null ? (
         <span role="alert" className="text-xs text-red-700">

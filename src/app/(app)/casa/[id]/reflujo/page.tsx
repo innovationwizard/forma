@@ -57,14 +57,14 @@ export default async function CasaReflujoPage({ params }: PageProps) {
           href="/"
           className="text-foreground/60 hover:text-foreground inline-flex items-center gap-1 text-xs"
         >
-          ← Back to dashboard
+          ← Volver al tablero
         </Link>
         <div className="mt-2 flex flex-wrap items-baseline justify-between gap-3">
           <div className="flex items-center gap-2">
             <h1 className="text-foreground text-2xl font-semibold tracking-tight">
               {unit.name}
               <span className="text-foreground/40 ml-2 text-sm font-normal">
-                {unit.buyer?.name ?? "(no buyer linked)"}
+                {unit.buyer?.name ?? "(comprador no vinculado)"}
               </span>
             </h1>
             <span
@@ -75,40 +75,43 @@ export default async function CasaReflujoPage({ params }: PageProps) {
                   : "bg-zinc-100 text-zinc-700 ring-zinc-200",
               )}
             >
-              {unit.status}
+              {salesStatusLabel(unit.status)}
             </span>
           </div>
           <span className="text-foreground/50 text-xs tabular-nums">
-            Project M{project.currentMonth}
+            Proyecto M{project.currentMonth}
           </span>
         </div>
       </header>
 
       {noBuyerYet ? (
         <p className="bg-amber-50 text-amber-900 ring-amber-200 rounded-md px-3 py-2 text-xs ring-1 ring-inset">
-          ▲ This unit is <strong>{unit.status}</strong> — no buyer linked yet,
-          so the &quot;Actual&quot; column will be zero throughout. The planned
-          schedule shown below is the projection FORMA models for a hypothetical
-          future buyer.
+          ▲ Esta unidad está <strong>{salesStatusLabel(unit.status)}</strong> — sin
+          comprador vinculado aún, por lo que la columna &quot;Real&quot; será cero a
+          lo largo. El calendario planeado abajo es la proyección que FORMA modela
+          para un futuro comprador hipotético.
         </p>
       ) : null}
 
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
-        <h2 className="text-foreground text-base font-semibold">Summary</h2>
+        <div>
+          <h2 className="text-foreground text-base font-semibold">RESUMEN</h2>
+          <p className="text-foreground/40 text-[10px] italic">(Conciliación de la unidad)</p>
+        </div>
         <dl className="text-foreground mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
-          <Stat label="Sale price" value={unit.salePriceSinIvaUsd != null ? formatUsd(unit.salePriceSinIvaUsd) : "—"} />
-          <Stat label="Enganche rate" value={formatPct(unit.engancheRate)} />
-          <Stat label="Sale month" value={unit.saleMonth != null ? `M${unit.saleMonth}` : "—"} />
-          <Stat label="Delivery month" value={unit.deliveryMonth != null ? `M${unit.deliveryMonth}` : "—"} />
-          <Stat label="Total planned" value={formatUsd(report.totals.plannedUsd)} />
-          <Stat label="Total paid" value={formatUsd(report.totals.actualUsd)} />
+          <Stat label="Precio de venta" value={unit.salePriceSinIvaUsd != null ? formatUsd(unit.salePriceSinIvaUsd) : "—"} />
+          <Stat label="Tasa de enganche" value={formatPct(unit.engancheRate)} />
+          <Stat label="Mes de venta" value={unit.saleMonth != null ? `M${unit.saleMonth}` : "—"} />
+          <Stat label="Mes de entrega" value={unit.deliveryMonth != null ? `M${unit.deliveryMonth}` : "—"} />
+          <Stat label="Total planeado" value={formatUsd(report.totals.plannedUsd)} />
+          <Stat label="Total pagado" value={formatUsd(report.totals.actualUsd)} />
           <Stat
-            label={Number(report.totals.deltaUsd) >= 0 ? "Net overpayment" : "Net underpayment"}
+            label={Number(report.totals.deltaUsd) >= 0 ? "Sobrepago neto" : "Subpago neto"}
             value={formatUsd(Math.abs(Number(report.totals.deltaUsd)))}
             accent={Number(report.totals.deltaUsd) >= 0 ? "positive" : "negative"}
           />
           <Stat
-            label="Completion"
+            label="Avance"
             value={formatPct(report.totals.completionRatio)}
           />
         </dl>
@@ -135,19 +138,24 @@ export default async function CasaReflujoPage({ params }: PageProps) {
       </section>
 
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
-        <h2 className="text-foreground text-base font-semibold">
-          Monthly reconciliation
-        </h2>
+        <div>
+          <h2 className="text-foreground text-base font-semibold">
+            CONCILIACIÓN MENSUAL
+          </h2>
+          <p className="text-foreground/40 text-[10px] italic">
+            (Plan vs. real por mes)
+          </p>
+        </div>
         <p className="text-foreground/50 mt-1 text-xs">
-          Showing {activeRows.length} active month{activeRows.length === 1 ? "" : "s"}.
-          NO_ACTIVITY rows (planned = 0 and actual = 0) are hidden;{" "}
-          {report.counts.NO_ACTIVITY} total. Project starts {formatIsoDate(project.startDate)}.
+          Mostrando {activeRows.length} mes{activeRows.length === 1 ? "" : "es"} activo{activeRows.length === 1 ? "" : "s"}.
+          Las filas SIN ACTIVIDAD (plan = 0 y real = 0) están ocultas;{" "}
+          {report.counts.NO_ACTIVITY} en total. El proyecto inicia el {formatIsoDate(project.startDate)}.
         </p>
 
         {activeRows.length === 0 ? (
           <p className="text-foreground/60 mt-4 text-sm">
-            No activity in the schedule yet. Once the buyer&apos;s first payment
-            lands and is classified from the Inbox, it will appear here.
+            Sin actividad en el calendario aún. Cuando el primer pago del comprador
+            ingrese y sea clasificado desde la Bandeja, aparecerá aquí.
           </p>
         ) : (
           <div className="mt-4 overflow-x-auto">
@@ -155,12 +163,12 @@ export default async function CasaReflujoPage({ params }: PageProps) {
               <thead>
                 <tr className="border-foreground/10 text-foreground/60 border-b text-left text-xs font-medium tracking-wide uppercase">
                   <th scope="col" className="py-2 pr-3 font-medium">M</th>
-                  <th scope="col" className="py-2 pr-3 font-medium">Month</th>
-                  <th scope="col" className="py-2 pr-3 text-right font-medium">Planned</th>
-                  <th scope="col" className="py-2 pr-3 text-right font-medium">Actual</th>
+                  <th scope="col" className="py-2 pr-3 font-medium">Mes</th>
+                  <th scope="col" className="py-2 pr-3 text-right font-medium">Planeado</th>
+                  <th scope="col" className="py-2 pr-3 text-right font-medium">Real</th>
                   <th scope="col" className="py-2 pr-3 text-right font-medium">Δ</th>
-                  <th scope="col" className="py-2 pr-3 text-right font-medium">Balance</th>
-                  <th scope="col" className="py-2 font-medium">Status</th>
+                  <th scope="col" className="py-2 pr-3 text-right font-medium">Saldo</th>
+                  <th scope="col" className="py-2 font-medium">Estado</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
@@ -227,10 +235,10 @@ function ReconciliationRow({ row }: { row: ReconciliationMonthRow }) {
                       href={`/inbox/${p.bankTransactionId}`}
                       className="text-foreground/50 hover:text-foreground ml-2 underline"
                     >
-                      from bank tx
+                      desde tx bancaria
                     </Link>
                   ) : (
-                    <span className="text-foreground/40 ml-2">(manual entry)</span>
+                    <span className="text-foreground/40 ml-2">(entrada manual)</span>
                   )}
                   {p.notes != null ? (
                     <span className="text-foreground/50 ml-2 italic">— {p.notes}</span>
@@ -243,6 +251,23 @@ function ReconciliationRow({ row }: { row: ReconciliationMonthRow }) {
       ) : null}
     </>
   );
+}
+
+function salesStatusLabel(s: string): string {
+  switch (s) {
+    case "SOLD":
+      return "VENDIDA";
+    case "AVAILABLE":
+      return "DISPONIBLE";
+    case "SOFT_HOLD":
+      return "RESERVA TENTATIVA";
+    case "RESERVED":
+      return "RESERVADA";
+    case "FROZEN":
+      return "CONGELADA";
+    default:
+      return s;
+  }
 }
 
 function Stat({

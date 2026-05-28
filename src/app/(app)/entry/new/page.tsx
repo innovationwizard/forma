@@ -35,16 +35,20 @@ export default async function NewExpenditurePage() {
             href="/"
             className="text-foreground/60 hover:text-foreground inline-flex items-center gap-1 text-xs"
           >
-            ← Back to dashboard
+            ← Volver al tablero
           </Link>
-          <h1 className="text-foreground mt-2 text-2xl font-semibold tracking-tight">
-            New transaction
-          </h1>
+          <div className="mt-2">
+            <h1 className="text-foreground text-2xl font-semibold tracking-tight">
+              NUEVA TRANSACCIÓN
+            </h1>
+            <p className="text-foreground/40 text-[10px] italic">
+              (Registrar gasto manualmente)
+            </p>
+          </div>
           <p className="text-foreground/70 mt-3 text-sm">
-            Your role ({role}) cannot create expenditure rows. This is
-            enforced server-side — the buttons aren&apos;t just hidden, the
-            mutation endpoint will return <code>403 forbidden</code> for
-            your role.
+            Tu rol ({role}) no puede crear gastos. Esto se aplica del lado del
+            servidor — los botones no solo están ocultos, el endpoint de mutación
+            responderá <code>403 prohibido</code> para tu rol.
           </p>
         </section>
       </main>
@@ -68,13 +72,18 @@ export default async function NewExpenditurePage() {
         >
           ← Back to dashboard
         </Link>
-        <h1 className="text-foreground mt-2 text-2xl font-semibold tracking-tight">
-          New transaction
-        </h1>
+        <div className="mt-2">
+          <h1 className="text-foreground text-2xl font-semibold tracking-tight">
+            NUEVA TRANSACCIÓN
+          </h1>
+          <p className="text-foreground/40 text-[10px] italic">
+            (Registrar gasto manualmente)
+          </p>
+        </div>
         <p className="text-foreground/60 mt-1 text-sm">
-          Logs a manual Expenditure row. Source = MANUAL, Status = PENDING.
-          BANGUAT exchange rate auto-resolved by date; override with a
-          required reason for audit.
+          Registra un gasto manual. Origen = MANUAL, Estado = PENDIENTE.
+          El tipo de cambio BANGUAT se resuelve automáticamente por fecha;
+          puedes sobrescribirlo dando un motivo obligatorio para la auditoría.
         </p>
       </header>
 

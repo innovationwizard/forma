@@ -55,52 +55,57 @@ export default async function ImportDetailPage({ params, searchParams }: PagePro
           href="/import/new"
           className="text-foreground/60 hover:text-foreground inline-flex items-center gap-1 text-xs"
         >
-          ← Upload another statement
+          ← Cargar otro estado
         </Link>
         <h1 className="text-foreground mt-2 text-2xl font-semibold tracking-tight">
           {snapshot.fileName}
         </h1>
         <p className="text-foreground/60 mt-1 text-sm">
-          Detected bank: <strong>{snapshot.detectedBank}</strong> · Uploaded by{" "}
-          {snapshot.uploadedBy?.fullName ?? "(unknown)"} ·{" "}
-          {new Date(snapshot.uploadedAt).toLocaleString()}
+          Banco detectado: <strong>{snapshot.detectedBank}</strong> · Cargado por{" "}
+          {snapshot.uploadedBy?.fullName ?? "(desconocido)"} ·{" "}
+          {new Date(snapshot.uploadedAt).toLocaleString("es-GT")}
         </p>
         {isDup ? (
           <p className="bg-amber-50 text-amber-900 ring-amber-200 mt-3 rounded-md px-3 py-2 text-xs ring-1 ring-inset">
-            ▲ This file was already uploaded earlier (matched by content
-            hash). Showing the existing import.
+            ▲ Este archivo ya había sido cargado antes (coincide por hash de contenido).
+            Mostrando la importación existente.
           </p>
         ) : null}
       </header>
 
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
-        <h2 className="text-foreground text-base font-semibold">Summary</h2>
+        <div>
+          <h2 className="text-foreground text-base font-semibold">RESUMEN</h2>
+          <p className="text-foreground/40 text-[10px] italic">(Conteos de la importación)</p>
+        </div>
         <dl className="text-foreground mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
-          <Stat label="Sheets" value={snapshot.sheets.length.toString()} />
-          <Stat label="Bronze rows" value={snapshot.totals.rawRows.toString()} />
-          <Stat label="Silver rows" value={snapshot.totals.silverRows.toString()} />
+          <Stat label="Hojas" value={snapshot.sheets.length.toString()} />
+          <Stat label="Filas bronce" value={snapshot.totals.rawRows.toString()} />
+          <Stat label="Filas plata" value={snapshot.totals.silverRows.toString()} />
           <Stat
-            label="Duplicates flagged"
+            label="Duplicados marcados"
             value={snapshot.totals.duplicatesFlagged.toString()}
             accent={snapshot.totals.duplicatesFlagged > 0 ? "info" : "neutral"}
           />
           <Stat
-            label="Parser warnings"
+            label="Advertencias del parser"
             value={snapshot.totals.parserWarnings.toString()}
             accent={snapshot.totals.parserWarnings > 0 ? "warning" : "neutral"}
           />
-          <Stat label="File size" value={`${(snapshot.fileSizeBytes / 1024).toFixed(1)} KB`} />
+          <Stat label="Tamaño del archivo" value={`${(snapshot.fileSizeBytes / 1024).toFixed(1)} KB`} />
           <Stat label="Hash (sha256)" value={snapshot.fileSha256.slice(0, 12) + "…"} />
         </dl>
       </section>
 
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
-        <h2 className="text-foreground text-base font-semibold">Sheets</h2>
+        <div>
+          <h2 className="text-foreground text-base font-semibold">HOJAS</h2>
+          <p className="text-foreground/40 text-[10px] italic">(Hojas del estado bancario)</p>
+        </div>
         <p className="text-foreground/50 mt-1 text-xs">
-          Per Jorge directive #2: when an import contains twin sheets for the
-          same account, only the canonical one feeds silver. Use{" "}
-          <strong>Make canonical</strong> to switch — silver re-derives
-          automatically.
+          Cuando una importación contiene hojas gemelas para la misma cuenta, solo la
+          canónica alimenta la capa plata. Usa <strong>Hacer canónica</strong> para
+          cambiar — la capa plata se vuelve a derivar automáticamente.
         </p>
         <div className="mt-4 flex flex-col gap-3">
           {snapshot.sheets.map((s) => {
@@ -124,12 +129,15 @@ export default async function ImportDetailPage({ params, searchParams }: PagePro
 
       {snapshot.flags.length > 0 ? (
         <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
-          <h2 className="text-foreground text-base font-semibold">
-            Data-quality flags ({snapshot.flags.length})
-          </h2>
+          <div>
+            <h2 className="text-foreground text-base font-semibold">
+              BANDERAS DE CALIDAD DE DATOS ({snapshot.flags.length})
+            </h2>
+            <p className="text-foreground/40 text-[10px] italic">(Anomalías detectadas durante el ingreso)</p>
+          </div>
           <p className="text-foreground/50 mt-1 text-xs">
-            Per D31 the parser never crashes — surprising rows surface here
-            instead. Resolve from the Data Quality view (Batch 17).
+            Por D31 el parser nunca se rompe — las filas raras aparecen aquí en su lugar.
+            Resuelve desde la vista de calidad de datos.
           </p>
           <ul className="mt-4 space-y-2">
             {snapshot.flags.map((f) => (

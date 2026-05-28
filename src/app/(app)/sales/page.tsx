@@ -36,41 +36,49 @@ export default async function SalesGridPage() {
           href="/"
           className="text-foreground/60 hover:text-foreground inline-flex items-center gap-1 text-xs"
         >
-          ← Back to dashboard
+          ← Volver al tablero
         </Link>
         <div className="mt-2 flex flex-wrap items-baseline justify-between gap-3">
-          <h1 className="text-foreground text-2xl font-semibold tracking-tight">Sales</h1>
+          <div>
+            <h1 className="text-foreground text-2xl font-semibold tracking-tight">VENTAS</h1>
+            <p className="text-foreground/40 text-[10px] italic">
+              (Estado y pagos por unidad)
+            </p>
+          </div>
           <span className="text-foreground/60 text-xs tabular-nums">
-            {grid.rows.length} units
+            {grid.rows.length} unidades
           </span>
         </div>
         <p className="text-foreground/60 mt-1 text-sm">
-          Per-house status, buyer linkage, and payments-to-date. Click any
-          card for the lifecycle + payment-schedule detail. Reflujo (planned
-          vs actual flow) lives separately at <code>/casa/[id]/reflujo</code>.
+          Estado por casa, vinculación con el comprador, y pagos recibidos a la fecha.
+          Haz clic en cualquier tarjeta para ver el ciclo y el calendario de pagos.
+          El reflujo (plan vs real) vive aparte en <code>/casa/[id]/reflujo</code>.
         </p>
       </header>
 
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
-        <h2 className="text-foreground text-base font-semibold">Aggregate</h2>
+        <div>
+          <h2 className="text-foreground text-base font-semibold">RESUMEN GENERAL</h2>
+          <p className="text-foreground/40 text-[10px] italic">(Totales agregados de ventas)</p>
+        </div>
         <dl className="text-foreground mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
-          <Stat label="Total projected" value={formatUsd(totals.totalProjectedUsd)} />
-          <Stat label="Total paid" value={formatUsd(totals.totalPaidUsd)} />
-          <Stat label="Sold" value={`${totals.unitCountSold} / ${grid.rows.length}`} />
-          <Stat label="Available" value={`${totals.unitCountAvailable} / ${grid.rows.length}`} />
+          <Stat label="Total proyectado" value={formatUsd(totals.totalProjectedUsd)} />
+          <Stat label="Total pagado" value={formatUsd(totals.totalPaidUsd)} />
+          <Stat label="Vendidas" value={`${totals.unitCountSold} / ${grid.rows.length}`} />
+          <Stat label="Disponibles" value={`${totals.unitCountAvailable} / ${grid.rows.length}`} />
           {totals.unitsWithIncompleteData > 0 ? (
             <Stat
-              label="Data incomplete"
+              label="Datos incompletos"
               value={totals.unitsWithIncompleteData.toString()}
               accent="warning"
             />
           ) : null}
           {totals.unitCountOther > 0 ? (
-            <Stat label="Other status" value={totals.unitCountOther.toString()} />
+            <Stat label="Otros estados" value={totals.unitCountOther.toString()} />
           ) : null}
         </dl>
         <p className="text-foreground/40 mt-3 text-[10px]">
-          Total projected reconciles to SDD §3.2.5 ($12,639,661.49).
+          Total proyectado reconcilia con SDD §3.2.5 ($12,639,661.49).
         </p>
       </section>
 

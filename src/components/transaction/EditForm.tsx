@@ -44,9 +44,12 @@ export function EditForm({
   if (!canEdit) {
     return (
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
-        <h2 className="text-foreground text-base font-semibold">Edit</h2>
+        <div>
+          <h2 className="text-foreground text-base font-semibold">EDITAR</h2>
+          <p className="text-foreground/40 text-[10px] italic">(Modificar proveedor y descripción)</p>
+        </div>
         <p className="text-foreground/60 mt-2 text-sm">
-          Your role can view this transaction but cannot edit it.
+          Tu rol puede ver esta transacción pero no editarla.
         </p>
       </section>
     );
@@ -78,15 +81,20 @@ export function EditForm({
       aria-labelledby="tx-edit-title"
       className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm"
     >
-      <h2 id="tx-edit-title" className="text-foreground text-base font-semibold">
-        Edit
-      </h2>
+      <div>
+        <h2 id="tx-edit-title" className="text-foreground text-base font-semibold">
+          EDITAR
+        </h2>
+        <p className="text-foreground/40 text-[10px] italic">
+          (Modificar proveedor y descripción)
+        </p>
+      </div>
       <p className="text-foreground/50 mt-1 text-xs">
-        Vendor and description only. Re-categorization lands in Batch 17 settings.
+        Solo proveedor y descripción. La recategorización vive en Ajustes.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-4">
-        <Field label="Vendor (raw)">
+        <Field label="Proveedor (texto crudo)">
           <input
             type="text"
             value={vendor}
@@ -96,7 +104,7 @@ export function EditForm({
           />
         </Field>
 
-        <Field label="Description">
+        <Field label="Descripción">
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -112,7 +120,7 @@ export function EditForm({
             disabled={!dirty || pending}
             className="bg-foreground text-background disabled:bg-zinc-300 disabled:text-zinc-500 rounded-md px-4 py-2 text-sm font-medium"
           >
-            {pending ? "Saving…" : "Save changes"}
+            {pending ? "Guardando…" : "Guardar cambios"}
           </button>
           {error != null ? (
             <span className="text-xs text-red-700" role="alert">
@@ -121,7 +129,7 @@ export function EditForm({
           ) : null}
           {savedAt != null && error == null ? (
             <span className="text-xs text-emerald-700" role="status">
-              Saved.
+              Guardado.
             </span>
           ) : null}
         </div>

@@ -46,11 +46,16 @@ export default async function TransactionDetailPage({ params }: PageProps) {
       <TransactionDetailCard transaction={snapshot} />
 
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
-        <h2 className="text-foreground text-base font-semibold">Actions</h2>
+        <div>
+          <h2 className="text-foreground text-base font-semibold">ACCIONES</h2>
+          <p className="text-foreground/40 text-[10px] italic">
+            (Operaciones disponibles sobre esta transacción)
+          </p>
+        </div>
         <p className="text-foreground/50 mt-1 text-xs">
           {canMutate
-            ? `Available to your role (${role}).`
-            : `View-only for your role (${role}). Server enforces this — buttons are hidden, but mutation requests would be rejected with 403.`}
+            ? `Disponibles para tu rol (${role}).`
+            : `Solo lectura para tu rol (${role}). El servidor lo aplica — los botones están ocultos, pero las solicitudes de mutación serían rechazadas con 403.`}
         </p>
         <div className="mt-4">
           <StatusActions

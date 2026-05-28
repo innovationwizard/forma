@@ -40,11 +40,16 @@ export function CategoryBars({ categories }: CategoryBarsProps) {
       className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm"
     >
       <div className="flex items-baseline justify-between">
-        <h2 id="category-bars-title" className="text-foreground text-base font-semibold">
-          Categories
-        </h2>
+        <div>
+          <h2 id="category-bars-title" className="text-foreground text-base font-semibold">
+            CATEGORÍAS
+          </h2>
+          <p className="text-foreground/40 text-[10px] italic">
+            (Salud por categoría)
+          </p>
+        </div>
         <span className="text-foreground/50 text-xs">
-          Canonical order — anomalies highlighted in place
+          Orden canónico — anomalías resaltadas en su lugar
         </span>
       </div>
 
@@ -73,7 +78,7 @@ function CategoryRow({ category }: { category: CategoryHealth }) {
       <Link
         href={detailHref}
         className="block focus:outline-none focus:ring-2 focus:ring-foreground/30 rounded-md"
-        aria-label={`Open ${category.name} category detail`}
+        aria-label={`Abrir detalle de la categoría ${category.name}`}
       >
         <div className="grid grid-cols-[1fr_auto] items-baseline gap-3">
           <div className="flex items-center gap-2">
@@ -112,8 +117,8 @@ function CategoryRow({ category }: { category: CategoryHealth }) {
             : 0
         }
         aria-label={`${category.name}: ${
-          hasSpend ? formatPct(pctConsumed) : "no spend"
-        } of budget consumed`}
+          hasSpend ? formatPct(pctConsumed) : "sin gasto"
+        } del presupuesto consumido`}
       >
         <div
           className={cn("h-full", hasSpend ? style.barClass : "bg-transparent")}
@@ -123,15 +128,15 @@ function CategoryRow({ category }: { category: CategoryHealth }) {
 
       <div className="text-foreground/60 mt-1.5 flex items-baseline justify-between gap-2 text-xs tabular-nums">
         <span>
-          {formatUsd(category.spentUsd)} of {formatUsd(category.budgetUsd)}
+          {formatUsd(category.spentUsd)} de {formatUsd(category.budgetUsd)}
         </span>
         {isOver ? (
           <span className={cn("font-medium", style.textClass)}>
-            Over by {formatUsd(Math.abs(Number(category.remainingUsd)))}
+            Sobre por {formatUsd(Math.abs(Number(category.remainingUsd)))}
           </span>
         ) : (
           <span className="text-foreground/50">
-            {formatUsd(category.remainingUsd)} left
+            {formatUsd(category.remainingUsd)} restante
           </span>
         )}
       </div>

@@ -24,13 +24,18 @@ export function AuditTimeline({ events }: AuditTimelineProps) {
       aria-labelledby="audit-title"
       className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm"
     >
-      <h2 id="audit-title" className="text-foreground text-base font-semibold">
-        History ({events.length})
-      </h2>
+      <div>
+        <h2 id="audit-title" className="text-foreground text-base font-semibold">
+          HISTORIAL ({events.length})
+        </h2>
+        <p className="text-foreground/40 text-[10px] italic">
+          (Eventos de auditoría — solo lectura)
+        </p>
+      </div>
 
       {events.length === 0 ? (
         <p className="text-foreground/60 mt-3 text-sm">
-          No audit events recorded for this transaction.
+          No hay eventos de auditoría para esta transacción.
         </p>
       ) : (
         <ol className="mt-4 space-y-3">
@@ -47,7 +52,7 @@ export function AuditTimeline({ events }: AuditTimelineProps) {
                       actionClass(e.action),
                     )}
                   >
-                    {e.action}
+                    {auditActionLabel(e.action)}
                   </span>
                   {e.fieldName != null ? (
                     <span className="text-foreground/70 font-mono text-xs">
@@ -56,16 +61,16 @@ export function AuditTimeline({ events }: AuditTimelineProps) {
                   ) : null}
                 </div>
                 <span className="text-foreground/50 text-xs tabular-nums">
-                  {new Date(e.timestamp).toLocaleString()}
+                  {new Date(e.timestamp).toLocaleString("es-GT")}
                 </span>
               </div>
 
               {e.fieldName != null && (e.oldValue != null || e.newValue != null) ? (
                 <div className="text-foreground/70 mt-2 text-xs">
-                  <span className="text-foreground/50">{e.oldValue ?? "(none)"}</span>{" "}
+                  <span className="text-foreground/50">{e.oldValue ?? "(ninguno)"}</span>{" "}
                   <span className="text-foreground/40">→</span>{" "}
                   <span className="text-foreground font-medium">
-                    {e.newValue ?? "(none)"}
+                    {e.newValue ?? "(ninguno)"}
                   </span>
                 </div>
               ) : null}
@@ -75,7 +80,7 @@ export function AuditTimeline({ events }: AuditTimelineProps) {
               ) : null}
 
               <p className="text-foreground/40 mt-2 text-[10px]">
-                by {e.user?.fullName ?? "(system / deleted user)"}
+                por {e.user?.fullName ?? "(sistema / usuario eliminado)"}
               </p>
             </li>
           ))}
@@ -95,5 +100,20 @@ function actionClass(action: AuditEvent["action"]): string {
     case "VOID":
     case "DELETE":
       return "bg-red-50 text-red-900 ring-red-200";
+  }
+}
+
+function auditActionLabel(action: AuditEvent["action"]): string {
+  switch (action) {
+    case "CREATE":
+      return "CREADA";
+    case "IMPORT":
+      return "IMPORTADA";
+    case "UPDATE":
+      return "ACTUALIZADA";
+    case "VOID":
+      return "ANULADA";
+    case "DELETE":
+      return "ELIMINADA";
   }
 }

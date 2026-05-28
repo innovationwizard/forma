@@ -58,7 +58,7 @@ export function LinkBuyerForm({ unitId, partnerSuggestions, canMutate }: LinkBuy
             checked={mode === "existing"}
             onChange={() => setMode("existing")}
           />
-          Pick existing partner
+          Elegir socio existente
         </label>
         <label className="flex items-center gap-1.5">
           <input
@@ -68,7 +68,7 @@ export function LinkBuyerForm({ unitId, partnerSuggestions, canMutate }: LinkBuy
             checked={mode === "new"}
             onChange={() => setMode("new")}
           />
-          Create new partner
+          Crear nuevo socio
         </label>
       </div>
 
@@ -80,7 +80,7 @@ export function LinkBuyerForm({ unitId, partnerSuggestions, canMutate }: LinkBuy
           disabled={pending}
           className="border-foreground/10 focus:ring-foreground/40 w-full rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2"
         >
-          <option value="">— select partner —</option>
+          <option value="">— elige un socio —</option>
           {partnerSuggestions.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
@@ -94,7 +94,7 @@ export function LinkBuyerForm({ unitId, partnerSuggestions, canMutate }: LinkBuy
             required
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            placeholder="Buyer's full legal name"
+            placeholder="Nombre legal completo del comprador"
             disabled={pending}
             className="border-foreground/10 focus:ring-foreground/40 rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2"
           />
@@ -102,7 +102,7 @@ export function LinkBuyerForm({ unitId, partnerSuggestions, canMutate }: LinkBuy
             type="text"
             value={newTaxId}
             onChange={(e) => setNewTaxId(e.target.value)}
-            placeholder="NIT (optional)"
+            placeholder="NIT (opcional)"
             disabled={pending}
             className="border-foreground/10 focus:ring-foreground/40 rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2"
           />
@@ -115,7 +115,7 @@ export function LinkBuyerForm({ unitId, partnerSuggestions, canMutate }: LinkBuy
           disabled={pending}
           className="bg-foreground text-background disabled:bg-zinc-300 disabled:text-zinc-500 rounded-md px-3 py-1.5 text-xs font-medium"
         >
-          {pending ? "Linking…" : "Link buyer"}
+          {pending ? "Vinculando…" : "Vincular comprador"}
         </button>
         {error != null ? (
           <span role="alert" className="text-xs text-red-700">

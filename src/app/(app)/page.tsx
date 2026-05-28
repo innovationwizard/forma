@@ -63,14 +63,14 @@ export default async function DashboardPage() {
               {snapshot.project.name}
             </h1>
             <p className="text-foreground/60 mt-1 text-sm">
-              Month {snapshot.project.currentMonth} ·{" "}
+              Mes {snapshot.project.currentMonth} ·{" "}
               {formatIsoDate(snapshot.project.startDate)} →{" "}
               {formatIsoDate(snapshot.project.projectedEndDate)}
             </p>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-foreground/60 text-sm tabular-nums">
-              {today.toLocaleDateString("en-US", {
+              {today.toLocaleDateString("es-GT", {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
@@ -80,26 +80,26 @@ export default async function DashboardPage() {
               href="/sales"
               className="border-foreground/20 text-foreground hover:bg-zinc-50 rounded-md border px-3 py-1.5 text-xs font-medium"
             >
-              Sales
+              Ventas
             </Link>
             <Link
               href="/forecast"
               className="border-foreground/20 text-foreground hover:bg-zinc-50 rounded-md border px-3 py-1.5 text-xs font-medium"
             >
-              Forecast
+              Proyección
             </Link>
             <Link
               href="/settings"
               className="border-foreground/20 text-foreground hover:bg-zinc-50 rounded-md border px-3 py-1.5 text-xs font-medium"
             >
-              Settings
+              Ajustes
             </Link>
             {canClassify ? (
               <Link
                 href="/inbox"
                 className="border-foreground/20 text-foreground hover:bg-zinc-50 inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs font-medium"
               >
-                Inbox
+                Bandeja
                 {unclassifiedCount > 0 ? (
                   <span className="bg-amber-500 text-background inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-semibold tabular-nums">
                     {unclassifiedCount}
@@ -113,13 +113,13 @@ export default async function DashboardPage() {
                   href="/import/new"
                   className="border-foreground/20 text-foreground hover:bg-zinc-50 rounded-md border px-3 py-1.5 text-xs font-medium"
                 >
-                  Import statement
+                  Importar estado
                 </Link>
                 <Link
                   href="/entry/new"
                   className="bg-foreground text-background rounded-md px-3 py-1.5 text-xs font-medium"
                 >
-                  + New transaction
+                  + Nueva transacción
                 </Link>
               </>
             ) : null}

@@ -21,20 +21,20 @@ export default async function SettingsIndexPage() {
   const tiles = [
     {
       href: "/settings/budget",
-      label: "Budget categories",
-      blurb: "Edit category budgets. Each change requires a reason + audited.",
+      label: "Categorías del presupuesto",
+      blurb: "Editar los presupuestos por categoría. Cada cambio requiere motivo + queda auditado.",
       visible: can(role, "READ", "budget_category"),
     },
     {
       href: "/settings/rates",
-      label: "Rates",
-      blurb: "Locked TC · IVA · ISR obligation rates. Foundational to every calc.",
+      label: "Tasas y tipos de cambio",
+      blurb: "TC anclado · IVA · tasas de ISR. Base de todos los cálculos.",
       visible: can(role, "READ", "project") || can(role, "READ", "isr_obligation"),
     },
     {
       href: "/audit",
-      label: "Activity log",
-      blurb: "Global audit-log browser. Read-only per D8.",
+      label: "Registro de actividad",
+      blurb: "Auditoría global. Solo lectura por D8.",
       visible: can(role, "READ", "audit_log"),
     },
   ].filter((t) => t.visible);
@@ -46,14 +46,20 @@ export default async function SettingsIndexPage() {
           href="/"
           className="text-foreground/60 hover:text-foreground inline-flex items-center gap-1 text-xs"
         >
-          ← Back to dashboard
+          ← Volver al tablero
         </Link>
-        <h1 className="text-foreground mt-2 text-2xl font-semibold tracking-tight">
-          Settings
-        </h1>
+        <div className="mt-2">
+          <h1 className="text-foreground text-2xl font-semibold tracking-tight">
+            AJUSTES
+          </h1>
+          <p className="text-foreground/40 text-[10px] italic">
+            (Configuración del proyecto)
+          </p>
+        </div>
         <p className="text-foreground/60 mt-1 text-sm">
-          Admin overrides for project parameters. User management lives in
-          the Supabase dashboard until Batch 19 ships a wrapper UI.
+          Overrides de administrador para los parámetros del proyecto. La gestión
+          de usuarios vive en el panel de Supabase hasta que una UI envoltura
+          aterrice.
         </p>
       </header>
 

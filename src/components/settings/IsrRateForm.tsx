@@ -62,7 +62,7 @@ export function IsrRateForm({ id, uiLabel, currentRate, canEdit }: IsrRateFormPr
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 disabled={pending}
-                placeholder="Reason"
+                placeholder="Motivo"
                 className="border-foreground/10 focus:ring-foreground/40 w-48 rounded-md border bg-background px-2 py-1 focus:outline-none focus:ring-2"
               />
               <button
@@ -70,7 +70,7 @@ export function IsrRateForm({ id, uiLabel, currentRate, canEdit }: IsrRateFormPr
                 disabled={pending || reason.trim().length === 0}
                 className="bg-foreground text-background disabled:bg-zinc-300 disabled:text-zinc-500 rounded-md px-2.5 py-1 text-[10px] font-medium"
               >
-                {pending ? "Saving…" : "Save"}
+                {pending ? "Guardando…" : "Guardar"}
               </button>
             </>
           ) : null}
@@ -81,7 +81,7 @@ export function IsrRateForm({ id, uiLabel, currentRate, canEdit }: IsrRateFormPr
           ) : null}
           {saved && !dirty && error == null ? (
             <span role="status" className="text-emerald-700">
-              Saved.
+              Guardado.
             </span>
           ) : null}
         </>

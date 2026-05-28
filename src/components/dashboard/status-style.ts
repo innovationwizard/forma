@@ -35,7 +35,7 @@ export interface StatusStyle {
 
 const STYLES: Record<BudgetHealthStatus, StatusStyle> = {
   ON_TRACK: {
-    label: "On track",
+    label: "En curso",
     icon: "•",
     barClass: "bg-emerald-500",
     rowClass: "bg-emerald-50/40",
@@ -43,7 +43,7 @@ const STYLES: Record<BudgetHealthStatus, StatusStyle> = {
     textClass: "text-emerald-700",
   },
   AT_RISK: {
-    label: "At risk",
+    label: "En riesgo",
     icon: "▲",
     barClass: "bg-amber-500",
     rowClass: "bg-amber-50/60",
@@ -51,7 +51,7 @@ const STYLES: Record<BudgetHealthStatus, StatusStyle> = {
     textClass: "text-amber-700",
   },
   OVER_BUDGET: {
-    label: "Over budget",
+    label: "Sobre presupuesto",
     icon: "▲",
     barClass: "bg-red-600",
     rowClass: "bg-red-50/70",
@@ -59,7 +59,7 @@ const STYLES: Record<BudgetHealthStatus, StatusStyle> = {
     textClass: "text-red-700",
   },
   DELAYED: {
-    label: "Delayed",
+    label: "Demorada",
     icon: "◷",
     barClass: "bg-zinc-400",
     rowClass: "bg-zinc-50/60",
@@ -67,7 +67,7 @@ const STYLES: Record<BudgetHealthStatus, StatusStyle> = {
     textClass: "text-zinc-700",
   },
   NOT_STARTED: {
-    label: "Not started",
+    label: "No iniciada",
     icon: "○",
     barClass: "bg-zinc-300",
     rowClass: "",

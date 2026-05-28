@@ -1626,6 +1626,58 @@ Per PLAN.md Batch 18 acceptance criteria, automated assertions are only half: th
 
 ---
 
+### Spanish UI sweep — Batch 19 prerequisite (2026-05-28)
+
+**Trigger**: Jorge's first production login revealed every UI string built in Batches 8–18 had shipped in **English**, not Spanish. The original `/login` page was Spanish (`Inicia sesión para continuar` / `Correo electrónico` / `Contraseña`), but every subsequent component built greenfield ignored the convention. Jorge flagged this as a `_THE_RULES.MD` Rule 4 + Rule 11 violation. Rule recorded in [[feedback_ui_must_be_spanish]] — **all user-facing UI must be Latin American (Guatemalan) Spanish**.
+
+**Dual-label pattern (per Jorge's Case-A choice)**
+
+For card headings + section titles + primary row labels, the rule is:
+- **Line 1 (primary)**: CAPS formal Spanish in xlsx-flavored wording (e.g. `PRESUPUESTO`, `RITMO DE GASTO`, `CIERRE PROYECTADO`)
+- **Line 2 (secondary, parenthesized + muted)**: clarifier explaining what the card shows (e.g. `(Salud del presupuesto)`, `(Consumo mensual del presupuesto)`)
+
+For nav buttons, status chips, table cells, body copy: single-line Spanish only. Financial acronyms (EBITDA, IRR, IVA, ISR, TC, NIT, LTV, LTC) and D34 literal labels (`ISR 18`, `ISR 25`) are **preserved as-is** — they are standard in LATAM finance contexts and the xlsx uses them unchanged.
+
+**Files touched (full sweep)**
+
+- **Dashboard (`src/components/dashboard/`)**: HealthHeader, StatusTiles, CategoryBars, BurnRateCard, ProjectionCard, RevenueBlock, FinancialBottomLine, AnomalyBadges, ModelNotes, `status-style.ts` (status labels: EN_CURSO / EN_RIESGO / SOBRE_PRESUPUESTO / NO_INICIADA / DEMORADA).
+- **Dashboard root**: `src/app/(app)/page.tsx` — Spanish nav (Ventas · Proyección · Ajustes · Bandeja · Importar estado · + Nueva transacción), locale `es-GT` for the date in the header.
+- **Level 1 (`src/components/category/`, `src/app/(app)/category/[code]/page.tsx`)**: CATEGORÍAS, EJECUCIÓN ACUMULADA, PARTIDAS INTERNAS, TRANSACCIONES headings; STATUS_LABELS Spanish; sort options Spanish; status pill labels translated.
+- **Level 2 (`src/components/transaction/`, `src/app/(app)/transaction/[id]/page.tsx`)**: ACCIONES, EDITAR, HISTORIAL headings; subcards (MONTOS, TIPO DE CAMBIO, CONTRAPARTE, BANCO, ORIGEN Y REFERENCIAS, CATEGORIZACIÓN); StatusBadge + AuditAction enums to Spanish.
+- **Sales (`src/components/sales/`, `src/app/(app)/sales/`)**: VENTAS grid + per-house detail; STATUS_STYLE labels Spanish (Vendida/Reservada/Reserva tentativa/Congelada/Disponible); LinkBuyerForm, RecordPaymentForm, StatusActions all Spanish; reconciliationStatusLabel helper.
+- **Forecast (`src/app/(app)/forecast/page.tsx`)**: PROYECCIÓN DE FLUJO DE CAJA, RETORNOS (4 figuras), TOTALES, CRÉDITO BANCARIO, PROYECCIÓN MENSUAL A 36 MESES; IRR tooltips fully Spanish (Newton-Raphson + bisección, VAN = Σ fc/(1+r)^t = 0, irr_anual = irr_mensual × 12).
+- **Reflujo (`src/components/casa/reconciliation-style.ts`, `src/app/(app)/casa/[id]/reflujo/page.tsx`)**: status labels (Coincide/Sobrepago/Subpago/Omitido/Por venir/Inesperado), CONCILIACIÓN MENSUAL heading.
+- **Entry (`src/app/(app)/entry/new/`, `src/components/entry/`)**: NUEVA TRANSACCIÓN; full NewExpenditureForm with all 30+ labels in Spanish.
+- **Inbox (`src/app/(app)/inbox/`, `src/components/inbox/`)**: BANDEJA DE CLASIFICACIÓN listing + CLASIFICAR detail; ClassifyWidget 4 tabs (Gasto / Pago de casa / No relacionado / Omitir) with full forms translated.
+- **Import (`src/app/(app)/import/`, `src/components/import/`)**: IMPORTAR ESTADO BANCARIO + per-sheet card; canonical/alterna labels; parseStatus → PROCESADA/VACÍA/etc.
+- **Settings (`src/app/(app)/settings/`, `src/components/settings/`)**: AJUSTES index + CATEGORÍAS DEL PRESUPUESTO + TASAS Y TIPOS DE CAMBIO + ISR forms.
+- **Audit (`src/app/(app)/audit/page.tsx`)**: REGISTRO DE ACTIVIDAD + filters + pagination Spanish; actionLabelEs helper for the AuditAction enum.
+
+**What's NOT translated (per rule scope)**
+
+- Code identifiers (variable / function / type / file names, route paths) — these are developer-facing.
+- Code comments + docstrings — developer-facing.
+- AuditLog `context` field values — internal forensic data, mostly emitted by server actions. Display labels around them ARE translated.
+- DataQualityFlag `humanMessage` strings — already mostly Spanish per D31 + parser convention.
+- Financial acronyms (EBITDA, IRR, IVA, ISR, TC, NIT, LTV, LTC) — preserved per Jorge's "Keep as-is" choice.
+- D34 literal labels (`ISR 18`, `ISR 25`) — preserved per [[feedback_literal_labels_when_multiple_values]].
+
+**Verification**
+
+- `pnpm typecheck` clean.
+- `pnpm lint` clean.
+- `pnpm test` 199/199 + 2 skipped (parity assertions unchanged).
+- `pnpm build` 21 routes all `ƒ` dynamic.
+
+**Lessons recorded**
+
+- [[ui-must-be-spanish]] — the rule + scope + dual-label pattern.
+- Future component-building MUST grep for an existing user-facing string in the codebase first to confirm the convention. `grep -rn "Volver al tablero\|Inicia sesión" src/` confirms Spanish.
+
+**Companion fix**: login page bug from Vercel deploy day stays in `src/app/login/page.tsx` (the missing-role redirect loop fix from earlier in the day). Login page itself was already Spanish; no change needed there.
+
+---
+
 ## 6. Canonical File Manifest
 
 Tracks every file we own. Updated at the end of each batch. Empty until Batch 1 lands.

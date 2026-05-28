@@ -26,16 +26,21 @@ export default async function NewImportPage() {
           href="/"
           className="text-foreground/60 hover:text-foreground inline-flex items-center gap-1 text-xs"
         >
-          ← Back to dashboard
+          ← Volver al tablero
         </Link>
-        <h1 className="text-foreground mt-2 text-2xl font-semibold tracking-tight">
-          Import bank statement
-        </h1>
+        <div className="mt-2">
+          <h1 className="text-foreground text-2xl font-semibold tracking-tight">
+            IMPORTAR ESTADO BANCARIO
+          </h1>
+          <p className="text-foreground/40 text-[10px] italic">
+            (Cargar archivo de movimientos)
+          </p>
+        </div>
         <p className="text-foreground/60 mt-1 text-sm">
-          REFLUJO bronze ingestion: every row of every sheet captured verbatim.
-          Silver promotion (deduplicated, signed amounts) happens automatically
-          for the canonical sheet of each detected account. Twin-sheet decisions
-          can be flipped on the import detail page.
+          Ingreso REFLUJO bronce: cada fila de cada hoja se captura verbatim.
+          La promoción a plata (deduplicada, montos firmados) sucede automáticamente
+          para la hoja canónica de cada cuenta detectada. Las decisiones de hojas gemelas
+          pueden invertirse desde la página de detalle de la importación.
         </p>
       </header>
 
@@ -44,9 +49,8 @@ export default async function NewImportPage() {
       ) : (
         <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
           <p className="text-foreground/70 text-sm">
-            Your role ({role}) cannot upload bank statements. The server
-            enforces this — submission requests are rejected with{" "}
-            <code>403 forbidden</code>.
+            Tu rol ({role}) no puede cargar estados bancarios. El servidor lo aplica —
+            los envíos se rechazan con <code>403 prohibido</code>.
           </p>
         </section>
       )}

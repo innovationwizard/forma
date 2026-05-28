@@ -45,15 +45,20 @@ export default async function BudgetSettingsPage() {
           href="/settings"
           className="text-foreground/60 hover:text-foreground inline-flex items-center gap-1 text-xs"
         >
-          ← Settings
+          ← Ajustes
         </Link>
-        <h1 className="text-foreground mt-2 text-2xl font-semibold tracking-tight">
-          Budget categories
-        </h1>
+        <div className="mt-2">
+          <h1 className="text-foreground text-2xl font-semibold tracking-tight">
+            CATEGORÍAS DEL PRESUPUESTO
+          </h1>
+          <p className="text-foreground/40 text-[10px] italic">
+            (Editar montos por categoría)
+          </p>
+        </div>
         <p className="text-foreground/60 mt-1 text-sm">
-          {categories.length} categories · total budget{" "}
+          {categories.length} categorías · presupuesto total{" "}
           <strong className="text-foreground tabular-nums">{formatUsd(total)}</strong>.
-          Each edit requires a reason and lands an AuditLog row visible in{" "}
+          Cada edición requiere un motivo y crea una fila de auditoría visible en{" "}
           <Link href="/audit" className="underline">
             /audit
           </Link>
@@ -61,8 +66,8 @@ export default async function BudgetSettingsPage() {
         </p>
         {!canEdit ? (
           <p className="bg-zinc-50 text-foreground/70 mt-3 rounded-md px-3 py-2 text-xs ring-1 ring-zinc-200 ring-inset">
-            Your role ({role}) is read-only on this resource. Edits would be
-            rejected with <code>403 forbidden</code> server-side.
+            Tu rol ({role}) es solo lectura sobre este recurso. Las ediciones
+            serían rechazadas con <code>403 prohibido</code> del lado del servidor.
           </p>
         ) : null}
       </header>
@@ -72,10 +77,10 @@ export default async function BudgetSettingsPage() {
           <table className="text-foreground/80 w-full text-sm">
             <thead>
               <tr className="border-foreground/10 text-foreground/60 border-b text-left text-xs font-medium tracking-wide uppercase">
-                <th scope="col" className="py-2 pr-3">Code</th>
-                <th scope="col" className="py-2 pr-3">Name</th>
-                <th scope="col" className="py-2 pr-3 text-right">Current</th>
-                <th scope="col" className="py-2 pr-3">Edit</th>
+                <th scope="col" className="py-2 pr-3">Código</th>
+                <th scope="col" className="py-2 pr-3">Nombre</th>
+                <th scope="col" className="py-2 pr-3 text-right">Actual</th>
+                <th scope="col" className="py-2 pr-3">Editar</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">

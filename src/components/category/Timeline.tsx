@@ -57,13 +57,18 @@ export function CategoryTimeline({ timeline, currentMonth }: CategoryTimelinePro
       className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm"
     >
       <div className="flex items-baseline justify-between">
-        <h2 id="timeline-title" className="text-foreground text-base font-semibold">
-          Cumulative spend
-        </h2>
+        <div>
+          <h2 id="timeline-title" className="text-foreground text-base font-semibold">
+            EJECUCIÓN ACUMULADA
+          </h2>
+          <p className="text-foreground/40 text-[10px] italic">
+            (Gasto acumulado por mes)
+          </p>
+        </div>
         <div className="text-foreground/60 flex items-center gap-4 text-xs">
-          <LegendItem swatchClass="bg-emerald-500/60" label="Actual" />
-          <LegendItem swatchClass="bg-zinc-400" label="Planned" />
-          <span className="text-foreground/40">Month {currentMonth}</span>
+          <LegendItem swatchClass="bg-emerald-500/60" label="Real" />
+          <LegendItem swatchClass="bg-zinc-400" label="Plan" />
+          <span className="text-foreground/40">Mes {currentMonth}</span>
         </div>
       </div>
 
@@ -85,9 +90,9 @@ export function CategoryTimeline({ timeline, currentMonth }: CategoryTimelinePro
             <Tooltip
               formatter={(value, name) => [
                 formatUsd(typeof value === "number" ? value : Number(value)),
-                name === "actual" ? "Actual" : "Planned",
+                name === "actual" ? "Real" : "Plan",
               ]}
-              labelFormatter={(m) => `Month ${m}`}
+              labelFormatter={(m) => `Mes ${m}`}
               contentStyle={{
                 borderRadius: 8,
                 border: "1px solid rgba(0,0,0,0.1)",

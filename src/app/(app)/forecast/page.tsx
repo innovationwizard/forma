@@ -44,82 +44,98 @@ export default async function ForecastPage() {
           href="/"
           className="text-foreground/60 hover:text-foreground inline-flex items-center gap-1 text-xs"
         >
-          ← Back to dashboard
+          ← Volver al tablero
         </Link>
         <div className="mt-2 flex flex-wrap items-baseline justify-between gap-3">
-          <h1 className="text-foreground text-2xl font-semibold tracking-tight">
-            Cash flow forecast
-          </h1>
+          <div>
+            <h1 className="text-foreground text-2xl font-semibold tracking-tight">
+              PROYECCIÓN DE FLUJO DE CAJA
+            </h1>
+            <p className="text-foreground/40 text-[10px] italic">
+              (Modelo financiero a 36 meses)
+            </p>
+          </div>
           <span className="text-foreground/60 text-xs tabular-nums">
-            {projection.rows.length} months · {project.startDate} → {project.projectedEndDate}
+            {projection.rows.length} meses · {project.startDate} → {project.projectedEndDate}
           </span>
         </div>
         <p className="text-foreground/60 mt-1 text-sm">
-          The 36-month financial model from the canonical xlsx, with derived
-          cumulative series + four disambiguated return figures per D28. Read-only
-          in this version; cell editing + cascade recompute land in a follow-up
-          (Batch 16b — gated on Q9 IRR formula verification).
+          El modelo financiero a 36 meses del archivo xlsx canónico, con series acumuladas
+          derivadas + cuatro figuras de retorno disambiguadas por D28. Solo lectura
+          en esta versión; la edición de celdas + recálculo en cascada llegan en una entrega
+          posterior (Batch 16b — sujeto a la verificación Q9 de la fórmula de IRR).
         </p>
       </header>
 
       {/* ── Returns card (per D28) ─────────────────────────────────────── */}
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
-        <h2 className="text-foreground text-base font-semibold">
-          Returns (4 figures · disambiguated per D28)
-        </h2>
+        <div>
+          <h2 className="text-foreground text-base font-semibold">
+            RETORNOS (4 figuras · disambiguadas por D28)
+          </h2>
+          <p className="text-foreground/40 text-[10px] italic">
+            (Ratios y márgenes financieros del proyecto)
+          </p>
+        </div>
         <p className="text-foreground/50 mt-1 text-xs">
-          Per <code>feedback_literal_labels_when_multiple_values</code>, none of
-          these is labeled simply &quot;ROI&quot; — each carries its own literal
-          token so the four can&apos;t be confused.
+          Por <code>feedback_literal_labels_when_multiple_values</code>, ninguna se
+          etiqueta simplemente como &quot;ROI&quot; — cada una lleva su propio token literal
+          para que las cuatro no se confundan.
         </p>
 
         <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
           <ReturnCard
-            title="Revenue ÷ Cost"
+            title="Ingresos ÷ Costo"
             value={`${Number(ret.revenueToCostRatio).toFixed(4)}×`}
-            sub={`+${formatPct(ret.revenueToCostMarginPct)} above cost`}
-            note="Ratio (not margin). H47/H22 per D28 #1."
+            sub={`+${formatPct(ret.revenueToCostMarginPct)} sobre el costo`}
+            note="Razón (no margen). H47/H22 por D28 #1."
           />
           <ReturnCard
-            title="EBITDA margin"
+            title="Margen EBITDA"
             value={formatPct(ret.ebitdaMarginPct)}
-            sub={`EBITDA / Total cost`}
-            note="H55/H22 per D28 #2."
+            sub={`EBITDA / Costo total`}
+            note="H55/H22 por D28 #2."
           />
           <IrrCard
             irrAnnualizedFull={ret.irrAnnualizedFull}
             irrAnnualizedXlsx={ret.irrAnnualizedXlsx}
           />
           <ReturnCard
-            title="Return on peak equity"
+            title="Retorno sobre patrimonio pico"
             value={formatPct(ret.returnOnPeakEquity)}
-            sub={`Peak equity: ${formatUsd(ret.peakEquityUsd)}`}
-            note="Total EBITDA / |min(cum EBITDA)| per D28 #4."
+            sub={`Patrimonio pico: ${formatUsd(ret.peakEquityUsd)}`}
+            note="EBITDA total / |min(EBITDA acum.)| por D28 #4."
           />
         </div>
       </section>
 
       {/* ── Aggregate totals ───────────────────────────────────────────── */}
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
-        <h2 className="text-foreground text-base font-semibold">Totals</h2>
+        <div>
+          <h2 className="text-foreground text-base font-semibold">TOTALES</h2>
+          <p className="text-foreground/40 text-[10px] italic">(Agregados del proyecto)</p>
+        </div>
         <dl className="text-foreground mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
-          <Stat label="Total cost (sin IVA)" value={formatUsd(projection.totals.totalCostSinIvaUsd)} />
-          <Stat label="Total revenue (sin IVA)" value={formatUsd(projection.totals.totalRevenueSinIvaUsd)} />
-          <Stat label="Total IVA on costs" value={formatUsd(projection.totals.totalIvaOnCostsUsd)} />
-          <Stat label="Total EBITDA" value={formatUsd(projection.totals.totalEbitdaUsd)} />
+          <Stat label="Costo total (sin IVA)" value={formatUsd(projection.totals.totalCostSinIvaUsd)} />
+          <Stat label="Ingresos totales (sin IVA)" value={formatUsd(projection.totals.totalRevenueSinIvaUsd)} />
+          <Stat label="IVA total sobre costos" value={formatUsd(projection.totals.totalIvaOnCostsUsd)} />
+          <Stat label="EBITDA total" value={formatUsd(projection.totals.totalEbitdaUsd)} />
         </dl>
       </section>
 
       {/* ── Credit facility ────────────────────────────────────────────── */}
       {creditFacility != null ? (
         <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
-          <h2 className="text-foreground text-base font-semibold">Credit facility</h2>
+          <div>
+            <h2 className="text-foreground text-base font-semibold">CRÉDITO BANCARIO</h2>
+            <p className="text-foreground/40 text-[10px] italic">(Detalles del crédito)</p>
+          </div>
           <dl className="text-foreground mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
-            <Stat label="Lender" value={creditFacility.lenderName} />
-            <Stat label="Initial cap" value={formatUsd(creditFacility.initialCapUsd)} />
-            <Stat label="Annual rate" value={formatPct(creditFacility.annualRate)} />
+            <Stat label="Banco" value={creditFacility.lenderName} />
+            <Stat label="Cupo inicial" value={formatUsd(creditFacility.initialCapUsd)} />
+            <Stat label="Tasa anual" value={formatPct(creditFacility.annualRate)} />
             <Stat
-              label="Amortization mechanism"
+              label="Mecanismo de amortización"
               value={amortizationRule?.mechanism.toLowerCase().replace(/_/g, " ") ?? "—"}
             />
           </dl>
@@ -128,26 +144,29 @@ export default async function ForecastPage() {
 
       {/* ── 36-month projection table ──────────────────────────────────── */}
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
-        <h2 className="text-foreground text-base font-semibold">36-month projection</h2>
+        <div>
+          <h2 className="text-foreground text-base font-semibold">PROYECCIÓN MENSUAL A 36 MESES</h2>
+          <p className="text-foreground/40 text-[10px] italic">(Costo / Ingresos / EBITDA por mes)</p>
+        </div>
         <p className="text-foreground/50 mt-1 text-xs">
-          Cost / Revenue / EBITDA per month, cumulative series, and credit
-          facility flow. Read-only — cell editing lands in Batch 16b.
+          Costo / Ingresos / EBITDA por mes, series acumuladas, y flujo del crédito.
+          Solo lectura — la edición de celdas llega en Batch 16b.
         </p>
         <div className="mt-4 overflow-x-auto">
           <table className="text-foreground/80 w-full text-xs">
             <thead>
               <tr className="border-foreground/10 text-foreground/60 border-b text-left font-medium tracking-wide uppercase">
                 <th scope="col" className="py-2 pr-2">M</th>
-                <th scope="col" className="py-2 pr-2">Month</th>
-                <th scope="col" className="py-2 pr-2 text-right">Cost</th>
-                <th scope="col" className="py-2 pr-2 text-right">Revenue</th>
+                <th scope="col" className="py-2 pr-2">Mes</th>
+                <th scope="col" className="py-2 pr-2 text-right">Costo</th>
+                <th scope="col" className="py-2 pr-2 text-right">Ingresos</th>
                 <th scope="col" className="py-2 pr-2 text-right">EBITDA</th>
-                <th scope="col" className="py-2 pr-2 text-right">Cum cost</th>
-                <th scope="col" className="py-2 pr-2 text-right">Cum revenue</th>
-                <th scope="col" className="py-2 pr-2 text-right">Cum EBITDA</th>
-                <th scope="col" className="py-2 pr-2 text-right">Credit bal.</th>
-                <th scope="col" className="py-2 pr-2 text-right">Interest</th>
-                <th scope="col" className="py-2 text-right">Principal</th>
+                <th scope="col" className="py-2 pr-2 text-right">Costo acum.</th>
+                <th scope="col" className="py-2 pr-2 text-right">Ingresos acum.</th>
+                <th scope="col" className="py-2 pr-2 text-right">EBITDA acum.</th>
+                <th scope="col" className="py-2 pr-2 text-right">Saldo crédito</th>
+                <th scope="col" className="py-2 pr-2 text-right">Interés</th>
+                <th scope="col" className="py-2 text-right">Capital</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
@@ -261,63 +280,63 @@ function IrrCard({
       )}
     >
       <h3 className="text-foreground/60 text-[10px] font-medium tracking-wider uppercase">
-        Annualized IRR · 36-mo corrected
+        IRR anualizado · 36 meses corregido
       </h3>
       <div className="text-foreground mt-1 flex items-center gap-1.5 text-2xl font-semibold tabular-nums">
         <span>{irrAnnualizedFull != null ? formatPct(irrAnnualizedFull) : "—"}</span>
-        <InfoTooltip label="How is the 36-mo IRR calculated?">
-          <p className="font-medium">Annualized IRR · 36-mo corrected</p>
+        <InfoTooltip label="¿Cómo se calcula el IRR a 36 meses?">
+          <p className="font-medium">IRR anualizado · 36 meses corregido</p>
           <p className="text-foreground/70 mt-1.5">
-            Internal Rate of Return computed over the full 36-month EBITDA
-            series, then annualized.
+            Tasa Interna de Retorno calculada sobre la serie completa de EBITDA
+            de 36 meses, luego anualizada.
           </p>
           <ul className="text-foreground/70 mt-2 list-disc space-y-1 pl-4">
             <li>
-              Input: monthly EBITDA (post-IVA-SAT) for M1..M36, treated as a
-              cash-flow series starting at M0 = 0.
+              Entrada: EBITDA mensual (post-IVA-SAT) para M1..M36, tratado como
+              serie de flujos de caja que empieza en M0 = 0.
             </li>
             <li>
-              IRR solves for{" "}
+              El IRR resuelve para{" "}
               <span className="font-mono">r</span>
-              {" "}such that{" "}
-              <span className="font-mono">NPV = Σ cf[t] / (1+r)^t = 0</span>
-              {" "}across t = 0..36.
+              {" "}tal que{" "}
+              <span className="font-mono">VAN = Σ fc[t] / (1+r)^t = 0</span>
+              {" "}en t = 0..36.
             </li>
             <li>
-              Solver: Newton-Raphson with a bisection fallback when the
-              derivative is flat. Returns null when the series has no sign
-              change (no break-even crossing).
+              Algoritmo: Newton-Raphson con respaldo por bisección cuando la
+              derivada es plana. Devuelve nulo cuando la serie no tiene cambio
+              de signo (no hay cruce de punto de equilibrio).
             </li>
             <li>
-              Annualized:{" "}
-              <span className="font-mono">irr_annual = irr_monthly × 12</span>.
+              Anualizado:{" "}
+              <span className="font-mono">irr_anual = irr_mensual × 12</span>.
             </li>
           </ul>
           <p className="text-foreground/50 mt-2 text-[10px]">
-            Per D28 #3. Differs from the xlsx because the xlsx uses partner-cash-flow
-            (row 82), not EBITDA — both windows surfaced for cross-check.
+            Por D28 #3. Difiere del xlsx porque el xlsx usa el flujo de caja del socio
+            (fila 82), no EBITDA — ambas ventanas se muestran para validación cruzada.
           </p>
         </InfoTooltip>
       </div>
       <p className="text-foreground/70 mt-2 flex items-center gap-1.5 text-xs">
         {irrAnnualizedXlsx != null ? (
           <>
-            <span>xlsx as-written (30-mo window): {formatPct(irrAnnualizedXlsx)}</span>
-            <InfoTooltip label="How is the 30-mo xlsx IRR calculated?">
-              <p className="font-medium">xlsx 30-mo IRR · as-written</p>
+            <span>xlsx tal como está (ventana 30 meses): {formatPct(irrAnnualizedXlsx)}</span>
+            <InfoTooltip label="¿Cómo se calcula el IRR a 30 meses del xlsx?">
+              <p className="font-medium">IRR a 30 meses · tal como está en xlsx</p>
               <p className="text-foreground/70 mt-1.5">
-                Reproduces the xlsx I97 formula{" "}
-                <span className="font-mono">IRR(K95:AN95) × 12</span> — same
-                math as the 36-mo figure but truncated at M30 instead of M36.
+                Reproduce la fórmula I97 del xlsx{" "}
+                <span className="font-mono">IRR(K95:AN95) × 12</span> — la misma
+                matemática que la cifra a 36 meses pero truncada en M30 en vez de M36.
               </p>
               <ul className="text-foreground/70 mt-2 list-disc space-y-1 pl-4">
                 <li>
-                  Window: months 1..30 only (xlsx I97 stops at col AN; should be
-                  AT for the full 36-month timeline).
+                  Ventana: meses 1..30 únicamente (el xlsx I97 termina en la columna AN;
+                  debería ser AT para la línea de tiempo completa de 36 meses).
                 </li>
                 <li>
-                  Same Newton-Raphson + bisection solver as the corrected
-                  figure; just a shorter cash-flow series.
+                  El mismo algoritmo Newton-Raphson + bisección que la cifra
+                  corregida; solo es una serie de flujos más corta.
                 </li>
                 <li>
                   Annualized:{" "}
@@ -325,17 +344,17 @@ function IrrCard({
                 </li>
               </ul>
               <p className="text-foreground/50 mt-2 text-[10px]">
-                Q-TIRI-WINDOW: surfaced as-modeled per D31 + the corrected
-                36-mo figure for comparison.
+                Q-TIRI-WINDOW: se muestra tal como está modelado en el archivo por D31,
+                junto a la cifra corregida a 36 meses para comparación.
               </p>
             </InfoTooltip>
           </>
         ) : (
-          <span>xlsx 30-mo: insufficient sign change</span>
+          <span>xlsx 30 meses: cambio de signo insuficiente</span>
         )}
       </p>
       <p className="text-foreground/40 mt-3 text-[10px]">
-        IRR(monthly EBITDA, 0) × 12 per D28 #3. Q-TIRI-WINDOW: xlsx I97 truncates at M30.
+        IRR(EBITDA mensual, 0) × 12 por D28 #3. Q-TIRI-WINDOW: el xlsx I97 trunca en M30.
       </p>
     </div>
   );

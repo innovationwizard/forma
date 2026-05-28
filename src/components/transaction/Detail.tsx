@@ -32,7 +32,7 @@ export function TransactionDetailCard({ transaction }: DetailProps) {
         href={`/category/${encodeURIComponent(t.category.code)}`}
         className="text-foreground/60 hover:text-foreground inline-flex items-center gap-1 text-xs"
       >
-        ← Back to {t.category.name}
+        ← Volver a {t.category.name}
       </Link>
 
       <div className="mt-2 flex flex-wrap items-baseline justify-between gap-3">
@@ -55,59 +55,59 @@ export function TransactionDetailCard({ transaction }: DetailProps) {
       </p>
 
       <dl className="text-foreground mt-6 grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-4">
-        <Stat label="Date" value={formatIsoDate(t.date)} />
-        <Stat label="Kind" value={prettyKind(t.kind)} />
-        <Stat label="Category" value={t.category.name} />
-        <Stat label="Partition" value={t.partition.name} />
+        <Stat label="Fecha" value={formatIsoDate(t.date)} />
+        <Stat label="Tipo" value={prettyKind(t.kind)} />
+        <Stat label="Categoría" value={t.category.name} />
+        <Stat label="Partición" value={t.partition.name} />
       </dl>
 
       <div className="border-foreground/5 mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Subcard title="Amounts (GTQ)">
+        <Subcard title="MONTOS (GTQ)">
           <Row label="Con IVA" value={`Q ${t.amounts.conIvaGtq}`} />
           <Row label="Sin IVA" value={`Q ${t.amounts.sinIvaGtq}`} />
           <Row label="IVA" value={`Q ${t.amounts.ivaGtq}`} />
-          <Row label="USD reconstructed" value={formatUsd(t.amounts.usd)} accent />
+          <Row label="USD reconstruido" value={formatUsd(t.amounts.usd)} accent />
         </Subcard>
 
-        <Subcard title="Exchange rate (per Detalle egresos finding #11)">
-          <Row label="Per-transaction TC" value={t.exchangeRate.perTxTc ?? "(none)"} />
-          <Row label="Booked TC" value={t.exchangeRate.bookedTc} />
-          <Row label="Project locked TC" value={t.exchangeRate.lockedTc} />
+        <Subcard title="TIPO DE CAMBIO (TC) — Detalle egresos finding #11">
+          <Row label="TC por transacción" value={t.exchangeRate.perTxTc ?? "(ninguno)"} />
+          <Row label="TC contable" value={t.exchangeRate.bookedTc} />
+          <Row label="TC del proyecto (anclado)" value={t.exchangeRate.lockedTc} />
         </Subcard>
 
-        <Subcard title="Counterparty">
-          <Row label="Vendor (raw)" value={t.vendorRaw} />
-          <Row label="Partner" value={t.partner?.name ?? "(unlinked)"} />
+        <Subcard title="CONTRAPARTE">
+          <Row label="Proveedor (texto crudo)" value={t.vendorRaw} />
+          <Row label="Socio vinculado" value={t.partner?.name ?? "(sin vínculo)"} />
         </Subcard>
 
-        <Subcard title="Bank">
-          <Row label="Account" value={t.bankAccount?.displayName ?? "(none / aportación)"} />
-          <Row label="Number" value={t.bankAccount?.accountNumber ?? "—"} />
-          <Row label="Currency" value={t.bankAccount?.currency ?? "—"} />
+        <Subcard title="BANCO">
+          <Row label="Cuenta" value={t.bankAccount?.displayName ?? "(ninguno / aportación)"} />
+          <Row label="Número" value={t.bankAccount?.accountNumber ?? "—"} />
+          <Row label="Moneda" value={t.bankAccount?.currency ?? "—"} />
         </Subcard>
 
-        <Subcard title="Source & references">
-          <Row label="Source" value={prettySource(t.source)} />
-          <Row label="Workbook ref" value={t.sourceWorkbookRef ?? "—"} />
-          <Row label="Check #" value={t.checkNumber ?? "—"} />
-          <Row label="Invoice ref" value={t.invoiceReference ?? "—"} />
+        <Subcard title="ORIGEN Y REFERENCIAS">
+          <Row label="Origen" value={prettySource(t.source)} />
+          <Row label="Ref. del archivo xlsx" value={t.sourceWorkbookRef ?? "—"} />
+          <Row label="No. de cheque" value={t.checkNumber ?? "—"} />
+          <Row label="Ref. de factura" value={t.invoiceReference ?? "—"} />
         </Subcard>
 
-        <Subcard title="Categorization">
-          <Row label="L1 Partition" value={t.partition.code} />
-          <Row label="L2 Category" value={t.category.code} />
-          <Row label="L3 Sub-item" value={t.subItem?.code ?? "(none)"} />
+        <Subcard title="CATEGORIZACIÓN">
+          <Row label="Partición (L1)" value={t.partition.code} />
+          <Row label="Categoría (L2)" value={t.category.code} />
+          <Row label="Partida interna (L3)" value={t.subItem?.code ?? "(ninguna)"} />
           <Row
-            label="Dashboard visible"
-            value={t.showOnDashboard ? "yes" : "no"}
+            label="Visible en tablero"
+            value={t.showOnDashboard ? "sí" : "no"}
           />
         </Subcard>
       </div>
 
       <p className="text-foreground/40 mt-4 text-[10px]">
-        Created by {t.createdBy?.fullName ?? "(unknown)"} ·{" "}
-        {new Date(t.createdAt).toLocaleString()} · Updated{" "}
-        {new Date(t.updatedAt).toLocaleString()}
+        Creada por {t.createdBy?.fullName ?? "(desconocido)"} ·{" "}
+        {new Date(t.createdAt).toLocaleString("es-GT")} · Actualizada{" "}
+        {new Date(t.updatedAt).toLocaleString("es-GT")}
       </p>
     </section>
   );
@@ -122,9 +122,26 @@ function StatusBadge({ status }: { status: TransactionDetailSnapshot["status"] }
         cls,
       )}
     >
-      {status}
+      {expenditureStatusLabel(status)}
     </span>
   );
+}
+
+function expenditureStatusLabel(s: TransactionDetailSnapshot["status"]): string {
+  switch (s) {
+    case "VERIFIED":
+      return "VERIFICADA";
+    case "FLAGGED":
+      return "MARCADA";
+    case "VOIDED":
+      return "ANULADA";
+    case "ANULADO":
+      return "ANULADO";
+    case "PENDING":
+      return "PENDIENTE";
+    default:
+      return s;
+  }
 }
 
 function statusClassFor(status: TransactionDetailSnapshot["status"]): string {
@@ -189,23 +206,27 @@ function Row({
 }
 
 function prettyKind(kind: TransactionDetailSnapshot["kind"]): string {
-  return kind
-    .toLowerCase()
-    .replace(/_/g, " ")
-    .replace(/^./, (c) => c.toUpperCase());
+  switch (kind) {
+    case "OPERATING_EXPENSE":
+      return "Gasto operativo";
+    case "EQUITY_EVENT":
+      return "Evento de capital";
+    case "CASH_MOVEMENT":
+      return "Movimiento de efectivo";
+  }
 }
 
 function prettySource(source: TransactionDetailSnapshot["source"]): string {
   switch (source) {
     case "XLSX_IMPORT":
-      return "xlsx import";
+      return "Importación xlsx";
     case "BANK_STATEMENT":
-      return "Bank statement";
+      return "Estado bancario";
     case "CHECK":
-      return "Check";
+      return "Cheque";
     case "INVOICE":
-      return "Invoice";
+      return "Factura";
     case "MANUAL":
-      return "Manual entry";
+      return "Entrada manual";
   }
 }

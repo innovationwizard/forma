@@ -69,7 +69,7 @@ export function BudgetEditRow({ id, code, name, budgetUsd, canEdit }: BudgetEdit
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   disabled={pending}
-                  placeholder="Reason (required)"
+                  placeholder="Motivo (obligatorio)"
                   className="border-foreground/10 focus:ring-foreground/40 w-48 rounded-md border bg-background px-2 py-1 text-xs focus:outline-none focus:ring-2"
                 />
                 <button
@@ -77,7 +77,7 @@ export function BudgetEditRow({ id, code, name, budgetUsd, canEdit }: BudgetEdit
                   disabled={pending || reason.trim().length === 0}
                   className="bg-foreground text-background disabled:bg-zinc-300 disabled:text-zinc-500 rounded-md px-2.5 py-1 text-[10px] font-medium"
                 >
-                  {pending ? "Saving…" : "Save"}
+                  {pending ? "Guardando…" : "Guardar"}
                 </button>
               </>
             ) : null}
@@ -88,12 +88,12 @@ export function BudgetEditRow({ id, code, name, budgetUsd, canEdit }: BudgetEdit
             ) : null}
             {saved && !dirty && error == null ? (
               <span role="status" className="text-[10px] text-emerald-700">
-                Saved.
+                Guardado.
               </span>
             ) : null}
           </form>
         ) : (
-          <span className="text-foreground/40 text-xs">read-only</span>
+          <span className="text-foreground/40 text-xs">solo lectura</span>
         )}
       </td>
     </tr>

@@ -34,41 +34,45 @@ export default async function InboxPage() {
             href="/"
             className="text-foreground/60 hover:text-foreground inline-flex items-center gap-1 text-xs"
           >
-            ← Back to dashboard
+            ← Volver al tablero
           </Link>
-          <h1 className="text-foreground mt-2 text-2xl font-semibold tracking-tight">
-            Classification inbox
-          </h1>
+          <div className="mt-2">
+            <h1 className="text-foreground text-2xl font-semibold tracking-tight">
+              BANDEJA DE CLASIFICACIÓN
+            </h1>
+            <p className="text-foreground/40 text-[10px] italic">
+              (Transacciones bancarias por clasificar)
+            </p>
+          </div>
           <p className="text-foreground/60 mt-1 text-sm">
-            {inbox.unclassifiedCount} unclassified bank transaction
-            {inbox.unclassifiedCount === 1 ? "" : "s"}. Newest first. Click
-            any row to classify it.
+            {inbox.unclassifiedCount} transacc{inbox.unclassifiedCount === 1 ? "ión" : "iones"} bancaria{inbox.unclassifiedCount === 1 ? "" : "s"} sin clasificar.
+            Más recientes primero. Haz clic en una fila para clasificarla.
           </p>
         </div>
         <Link
           href="/import/new"
           className="border-foreground/20 text-foreground hover:bg-zinc-50 rounded-md border px-3 py-1.5 text-xs font-medium"
         >
-          + Import statement
+          + Importar estado
         </Link>
       </header>
 
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
         {inbox.rows.length === 0 ? (
           <p className="text-foreground/60 text-sm">
-            Nothing waiting. All bank transactions have been classified.
+            Nada pendiente. Todas las transacciones bancarias han sido clasificadas.
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="text-foreground/80 w-full text-sm">
               <thead>
                 <tr className="border-foreground/10 text-foreground/60 border-b text-left text-xs font-medium tracking-wide uppercase">
-                  <th scope="col" className="py-2 pr-3 font-medium">Date</th>
-                  <th scope="col" className="py-2 pr-3 font-medium">Account</th>
-                  <th scope="col" className="py-2 pr-3 font-medium">Description</th>
-                  <th scope="col" className="py-2 pr-3 font-medium">Ref</th>
-                  <th scope="col" className="py-2 pr-3 font-medium">Source file</th>
-                  <th scope="col" className="py-2 pr-3 text-right font-medium">Amount</th>
+                  <th scope="col" className="py-2 pr-3 font-medium">Fecha</th>
+                  <th scope="col" className="py-2 pr-3 font-medium">Cuenta</th>
+                  <th scope="col" className="py-2 pr-3 font-medium">Descripción</th>
+                  <th scope="col" className="py-2 pr-3 font-medium">Ref.</th>
+                  <th scope="col" className="py-2 pr-3 font-medium">Archivo origen</th>
+                  <th scope="col" className="py-2 pr-3 text-right font-medium">Monto</th>
                   <th scope="col" className="py-2 text-right font-medium" />
                 </tr>
               </thead>
@@ -116,10 +120,10 @@ export default async function InboxPage() {
                           href={`/inbox/${r.id}`}
                           className="bg-foreground text-background rounded-md px-2.5 py-1 text-xs font-medium"
                         >
-                          Classify
+                          Clasificar
                         </Link>
                       ) : (
-                        <span className="text-foreground/40 text-xs">read-only</span>
+                        <span className="text-foreground/40 text-xs">solo lectura</span>
                       )}
                     </td>
                   </tr>

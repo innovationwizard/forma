@@ -44,7 +44,7 @@ export function SheetCard({ sheet, canFlip, hasPeers }: SheetCardProps) {
 
   function handleFlip() {
     setError(null);
-    if (!confirm(`Make "${sheet.sheetName}" the canonical sheet?\n\nThis re-derives silver: the current canonical's silver rows are soft-deleted, and silver is recomputed from this sheet's bronze rows.`))
+    if (!confirm(`¿Hacer canónica la hoja "${sheet.sheetName}"?\n\nEsto vuelve a derivar la capa plata: las filas plata de la canónica actual se eliminan suavemente, y la capa plata se recalcula a partir de las filas bronce de esta hoja.`))
       return;
     startTransition(async () => {
       const result = await flipCanonicalAction({ sheetId: sheet.id });
@@ -66,11 +66,11 @@ export function SheetCard({ sheet, canFlip, hasPeers }: SheetCardProps) {
           <h3 className="text-foreground text-sm font-medium">{sheet.sheetName}</h3>
           {sheet.isCanonical ? (
             <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium tracking-wide uppercase text-emerald-900 ring-1 ring-emerald-200 ring-inset">
-              Canonical
+              Canónica
             </span>
           ) : (
             <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium tracking-wide uppercase text-zinc-700 ring-1 ring-zinc-200 ring-inset">
-              Alternate
+              Alterna
             </span>
           )}
           <span
@@ -83,26 +83,26 @@ export function SheetCard({ sheet, canFlip, hasPeers }: SheetCardProps) {
                   : "bg-amber-50 text-amber-900 ring-amber-200",
             )}
           >
-            {sheet.parseStatus}
+            {parseStatusLabel(sheet.parseStatus)}
           </span>
         </div>
       </header>
 
       <dl className="text-foreground/70 mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs sm:grid-cols-4">
-        <Stat label="Rows in source" value={sheet.rowCount.toString()} />
-        <Stat label="Bronze captured" value={sheet.rawRowsCount.toString()} />
-        <Stat label="Silver promoted" value={sheet.silverRowsCount.toString()} />
+        <Stat label="Filas en el archivo" value={sheet.rowCount.toString()} />
+        <Stat label="Bronce capturadas" value={sheet.rawRowsCount.toString()} />
+        <Stat label="Plata promovidas" value={sheet.silverRowsCount.toString()} />
         <Stat
-          label="Statement type"
+          label="Tipo de estado"
           value={sheet.statementType.toLowerCase().replace(/_/g, " ")}
         />
-        <Stat label="Currency" value={sheet.detectedCurrency ?? "—"} />
+        <Stat label="Moneda" value={sheet.detectedCurrency ?? "—"} />
         <Stat
-          label="Account"
+          label="Cuenta"
           value={sheet.detectedAccount ? sheet.detectedAccount.displayName : "—"}
         />
-        <Stat label="Period start" value={sheet.detectedPeriodStart ?? "—"} />
-        <Stat label="Period end" value={sheet.detectedPeriodEnd ?? "—"} />
+        <Stat label="Periodo inicia" value={sheet.detectedPeriodStart ?? "—"} />
+        <Stat label="Periodo termina" value={sheet.detectedPeriodEnd ?? "—"} />
       </dl>
 
       {sheet.parseNote != null ? (
@@ -117,7 +117,7 @@ export function SheetCard({ sheet, canFlip, hasPeers }: SheetCardProps) {
             onClick={handleFlip}
             className="bg-foreground text-background disabled:bg-zinc-300 disabled:text-zinc-500 rounded-md px-3 py-1.5 text-xs font-medium"
           >
-            {pending ? "Re-deriving silver…" : "Make canonical"}
+            {pending ? "Re-derivando capa plata…" : "Hacer canónica"}
           </button>
           {error != null ? (
             <span role="alert" className="text-xs text-red-700">
@@ -137,4 +137,20 @@ function Stat({ label, value }: { label: string; value: string }) {
       <dd className="text-foreground tabular-nums">{value}</dd>
     </div>
   );
+}
+
+function parseStatusLabel(s: string): string {
+  switch (s) {
+    case "PARSED":
+      return "PROCESADA";
+    case "EMPTY":
+      return "VACÍA";
+    case "WARN":
+    case "WARNING":
+      return "ADVERTENCIA";
+    case "ERROR":
+      return "ERROR";
+    default:
+      return s;
+  }
 }

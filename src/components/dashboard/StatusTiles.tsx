@@ -34,7 +34,7 @@ export function StatusTiles({ categories }: StatusTilesProps) {
 
   return (
     <section
-      aria-label="Category status counts"
+      aria-label="Conteo de categorías por estado"
       className="grid grid-cols-2 gap-3 sm:grid-cols-4"
     >
       {TILE_ORDER.map((status) => {
@@ -64,7 +64,7 @@ export function StatusTiles({ categories }: StatusTilesProps) {
               {count}
             </span>
             <span className="text-foreground/50 text-xs">
-              {count === 1 ? "category" : "categories"}
+              {count === 1 ? "categoría" : "categorías"}
             </span>
           </div>
         );

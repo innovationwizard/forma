@@ -40,11 +40,16 @@ export function FinancialBottomLine({
       className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm"
     >
       <div className="flex items-baseline justify-between">
-        <h2 id="bottom-line-title" className="text-foreground text-base font-semibold">
-          Bottom line
-        </h2>
+        <div>
+          <h2 id="bottom-line-title" className="text-foreground text-base font-semibold">
+            RESULTADO FINANCIERO
+          </h2>
+          <p className="text-foreground/40 text-[10px] italic">
+            (EBITDA · crédito · IVA · ISR)
+          </p>
+        </div>
         <span className="text-foreground/50 text-xs">
-          EBITDA · credit · IVA · ISR
+          EBITDA · crédito · IVA · ISR
         </span>
       </div>
 
@@ -84,7 +89,7 @@ function SubCard({
 
 function EbitdaCard({ ebitda }: { ebitda: EbitdaSnapshot }) {
   return (
-    <SubCard title="EBITDA (project)">
+    <SubCard title="EBITDA (proyecto)">
       <div className="flex items-baseline gap-2">
         <span className="text-foreground text-2xl font-semibold tabular-nums">
           {formatUsd(ebitda.totalEbitdaUsd)}
@@ -96,14 +101,14 @@ function EbitdaCard({ ebitda }: { ebitda: EbitdaSnapshot }) {
         <dd className="text-foreground text-right tabular-nums">
           {formatUsd(ebitda.totalEbitdaConIvaUsd)}
         </dd>
-        <dt className="text-foreground/50">Margin</dt>
+        <dt className="text-foreground/50">Margen</dt>
         <dd className="text-foreground text-right tabular-nums">
           {formatPct(ebitda.marginPct)}
         </dd>
         {ebitda.latestMonth ? (
           <>
             <dt className="text-foreground/50">
-              Latest (M{ebitda.latestMonth.monthNumber})
+              Último (M{ebitda.latestMonth.monthNumber})
             </dt>
             <dd className="text-foreground text-right tabular-nums">
               {formatUsd(ebitda.latestMonth.ebitdaUsd)}
@@ -118,35 +123,35 @@ function EbitdaCard({ ebitda }: { ebitda: EbitdaSnapshot }) {
 function CreditFacilityCard({ facility }: { facility: CreditFacilityState | null }) {
   if (facility == null) {
     return (
-      <SubCard title="Credit facility">
-        <p className="text-foreground/60 text-sm">No active facility on file.</p>
+      <SubCard title="Crédito bancario">
+        <p className="text-foreground/60 text-sm">Sin crédito activo registrado.</p>
       </SubCard>
     );
   }
   const stress = facility.inStressZone;
   return (
-    <SubCard title="Credit facility">
+    <SubCard title="Crédito bancario">
       <div className="text-foreground/60 text-xs">{facility.lenderName}</div>
       <div className="mt-1 flex items-baseline gap-2">
         <span className="text-foreground text-2xl font-semibold tabular-nums">
           {formatUsd(facility.currentBalanceUsd)}
         </span>
-        <span className="text-foreground/50 text-xs">outstanding</span>
+        <span className="text-foreground/50 text-xs">saldo</span>
       </div>
       <dl className="text-foreground/70 mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-        <dt className="text-foreground/50">Cap (initial)</dt>
+        <dt className="text-foreground/50">Cupo inicial</dt>
         <dd className="text-foreground text-right tabular-nums">
           {formatUsd(facility.initialCapUsd)}
         </dd>
-        <dt className="text-foreground/50">Monthly interest</dt>
+        <dt className="text-foreground/50">Interés mensual</dt>
         <dd className="text-foreground text-right tabular-nums">
           {formatUsd(facility.monthlyInterestUsd)}
         </dd>
-        <dt className="text-foreground/50">Monthly principal</dt>
+        <dt className="text-foreground/50">Capital mensual</dt>
         <dd className="text-foreground text-right tabular-nums">
           {formatUsd(facility.monthlyPrincipalPaymentUsd)}
         </dd>
-        <dt className="text-foreground/50">LTC / ceiling</dt>
+        <dt className="text-foreground/50">LTC / tope</dt>
         <dd
           className={cn(
             "text-right tabular-nums",
@@ -159,7 +164,7 @@ function CreditFacilityCard({ facility }: { facility: CreditFacilityState | null
       {stress ? (
         <p className="mt-3 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-900 ring-1 ring-amber-200 ring-inset">
           <span aria-hidden className="mr-1">▲</span>
-          Above LTC ceiling — informational per Q-LTC-CEILING.
+          Sobre el tope LTC — informativo por Q-LTC-CEILING.
         </p>
       ) : null}
     </SubCard>
@@ -169,13 +174,13 @@ function CreditFacilityCard({ facility }: { facility: CreditFacilityState | null
 function IvaCard({ iva }: { iva: IvaSnapshot }) {
   const net = Number(iva.netIvaPayableUsd);
   return (
-    <SubCard title="IVA position">
+    <SubCard title="Posición de IVA">
       <div className="flex items-baseline gap-2">
         <span className="text-foreground text-2xl font-semibold tabular-nums">
           {formatUsd(iva.netIvaPayableUsd)}
         </span>
         <span className="text-foreground/50 text-xs">
-          {net >= 0 ? "net payable" : "net credit"}
+          {net >= 0 ? "neto a pagar" : "neto a favor"}
         </span>
       </div>
       <dl className="text-foreground/70 mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
@@ -194,12 +199,12 @@ function IvaCard({ iva }: { iva: IvaSnapshot }) {
 
 function IsrCard({ isr }: { isr: IsrSnapshot }) {
   return (
-    <SubCard title="ISR obligations">
+    <SubCard title="Obligaciones de ISR">
       <div className="flex items-baseline gap-2">
         <span className="text-foreground text-2xl font-semibold tabular-nums">
           {formatUsd(isr.projectedTotalIsrUsd)}
         </span>
-        <span className="text-foreground/50 text-xs">projected</span>
+        <span className="text-foreground/50 text-xs">proyectado</span>
       </div>
       <ul className="text-foreground/70 mt-3 space-y-1 text-xs">
         {isr.obligations.map((o) => (
@@ -209,7 +214,7 @@ function IsrCard({ isr }: { isr: IsrSnapshot }) {
                 {o.uiLabel}
               </span>
               <span className="text-foreground/50 normal-case">
-                {o.appliedIfPattern.toLowerCase().replace("_", " ")}
+                {isrPatternLabel(o.appliedIfPattern)}
               </span>
             </span>
             <span className="text-foreground tabular-nums">
@@ -219,8 +224,26 @@ function IsrCard({ isr }: { isr: IsrSnapshot }) {
         ))}
       </ul>
       <p className="text-foreground/50 mt-3 text-[10px]">
-        Pre-tax profit basis: {formatUsd(isr.preTaxProfitBasisUsd)}
+        Base de utilidad antes de impuestos: {formatUsd(isr.preTaxProfitBasisUsd)}
       </p>
     </SubCard>
   );
+}
+
+/// Convert ISR payment-pattern enum to Spanish display label.
+function isrPatternLabel(p: string): string {
+  switch (p) {
+    case "LUMP_END":
+      return "pago único al cierre";
+    case "QUARTERLY":
+      return "trimestral";
+    case "ANNUAL":
+      return "anual";
+    case "CUSTOM_TRIGGER":
+      return "evento gatillo";
+    case "COMPOSITE":
+      return "compuesto";
+    default:
+      return p.toLowerCase().replace(/_/g, " ");
+  }
 }

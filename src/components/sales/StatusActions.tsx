@@ -26,11 +26,19 @@ interface StatusActionsProps {
 }
 
 const LABELS: Record<RvUnitStatus, string> = {
-  AVAILABLE: "Mark as Available",
-  SOFT_HOLD: "Set Soft Hold",
-  RESERVED: "Mark as Reserved",
-  FROZEN: "Freeze",
-  SOLD: "Mark as Sold",
+  AVAILABLE: "Marcar como Disponible",
+  SOFT_HOLD: "Reserva tentativa",
+  RESERVED: "Marcar como Reservada",
+  FROZEN: "Congelar",
+  SOLD: "Marcar como Vendida",
+};
+
+const STATUS_LABELS: Record<RvUnitStatus, string> = {
+  AVAILABLE: "DISPONIBLE",
+  SOFT_HOLD: "RESERVA TENTATIVA",
+  RESERVED: "RESERVADA",
+  FROZEN: "CONGELADA",
+  SOLD: "VENDIDA",
 };
 
 export function StatusActions({ id, currentStatus, canMutate }: StatusActionsProps) {
@@ -44,17 +52,17 @@ export function StatusActions({ id, currentStatus, canMutate }: StatusActionsPro
   if (nextStates.length === 0) {
     return (
       <p className="text-foreground/50 text-xs italic">
-        Status <strong>{currentStatus}</strong> is terminal in the current state machine.
+        El estado <strong>{STATUS_LABELS[currentStatus]}</strong> es terminal en la máquina de estados actual.
       </p>
     );
   }
 
   function run(to: RvUnitStatus) {
-    const reason = window.prompt(`Reason for moving to ${to}?`);
+    const reason = window.prompt(`Motivo para cambiar a ${STATUS_LABELS[to]}:`);
     if (reason == null) return;
     const trimmed = reason.trim();
     if (trimmed.length === 0) {
-      setError("Reason cannot be empty.");
+      setError("El motivo no puede estar vacío.");
       return;
     }
     setError(null);

@@ -45,23 +45,31 @@ export default async function RatesSettingsPage() {
           href="/settings"
           className="text-foreground/60 hover:text-foreground inline-flex items-center gap-1 text-xs"
         >
-          ← Settings
+          ← Ajustes
         </Link>
-        <h1 className="text-foreground mt-2 text-2xl font-semibold tracking-tight">
-          Rates
-        </h1>
+        <div className="mt-2">
+          <h1 className="text-foreground text-2xl font-semibold tracking-tight">
+            TASAS Y TIPOS DE CAMBIO
+          </h1>
+          <p className="text-foreground/40 text-[10px] italic">
+            (Parámetros base de los cálculos)
+          </p>
+        </div>
         <p className="text-foreground/60 mt-1 text-sm">
-          Project locked TC, IVA, and ISR obligation rates. Foundational to
-          every calc — changes require a reason and are audited.
+          TC anclado del proyecto, IVA, y tasas de obligaciones de ISR. Base de todos
+          los cálculos — los cambios requieren un motivo y se auditan.
         </p>
       </header>
 
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
-        <h2 className="text-foreground text-base font-semibold">Project rates</h2>
+        <div>
+          <h2 className="text-foreground text-base font-semibold">TASAS DEL PROYECTO</h2>
+          <p className="text-foreground/40 text-[10px] italic">(TC anclado e IVA)</p>
+        </div>
         <p className="text-foreground/50 mt-1 text-xs">
-          The locked TC is the fallback when per-tx TC isn&apos;t extractable
-          (Detalle egresos finding #11). IVA rate drives all sin-IVA ↔ con-IVA
-          conversions across the app.
+          El TC anclado es el respaldo cuando el TC por transacción no es extractable
+          (Detalle egresos finding #11). La tasa de IVA impulsa todas las conversiones
+          sin-IVA ↔ con-IVA en la aplicación.
         </p>
         <div className="mt-4">
           <ProjectRatesForm
@@ -73,12 +81,15 @@ export default async function RatesSettingsPage() {
       </section>
 
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
-        <h2 className="text-foreground text-base font-semibold">ISR obligations</h2>
+        <div>
+          <h2 className="text-foreground text-base font-semibold">OBLIGACIONES DE ISR</h2>
+          <p className="text-foreground/40 text-[10px] italic">(Tasas de ISR del proyecto)</p>
+        </div>
         <p className="text-foreground/50 mt-1 text-xs">
-          Per D34: labels are <strong>literal</strong> (<code>&quot;ISR 18&quot;</code>{" "}
-          / <code>&quot;ISR 25&quot;</code>) — never abbreviated to
-          &quot;effective&quot;/&quot;nominal&quot;. Each rate stored as a
-          fractional decimal (e.g. <code>0.18</code> = 18%).
+          Por D34: las etiquetas son <strong>literales</strong> (<code>&quot;ISR 18&quot;</code>{" "}
+          / <code>&quot;ISR 25&quot;</code>) — nunca abreviadas a
+          &quot;efectiva&quot;/&quot;nominal&quot;. Cada tasa se guarda como decimal
+          fraccionario (ej. <code>0.18</code> = 18%).
         </p>
         <div className="mt-4 flex flex-col gap-3">
           {isrObligations.map((o) => (
@@ -87,14 +98,14 @@ export default async function RatesSettingsPage() {
               className="border-foreground/10 bg-background/50 flex flex-col gap-1 rounded-lg border p-3"
             >
               <div className="text-foreground/50 flex items-center gap-2 text-[10px] tracking-wide uppercase">
-                <span>Source: {o.sourceCell}</span>
+                <span>Origen: {o.sourceCell}</span>
                 <span>·</span>
-                <span>Pattern: {o.paymentPattern.toLowerCase().replace(/_/g, " ")}</span>
+                <span>Patrón: {o.paymentPattern.toLowerCase().replace(/_/g, " ")}</span>
                 <span>·</span>
-                <span>Kind: {o.rateKind.toLowerCase()}</span>
+                <span>Tipo: {o.rateKind.toLowerCase()}</span>
               </div>
               <div className="text-foreground/60 text-xs">
-                Current: <strong className="text-foreground tabular-nums">{formatPct(decimalString(o.rate))}</strong>
+                Actual: <strong className="text-foreground tabular-nums">{formatPct(decimalString(o.rate))}</strong>
               </div>
               <IsrRateForm
                 id={o.id}
