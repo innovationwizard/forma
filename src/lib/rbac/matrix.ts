@@ -143,6 +143,16 @@ export const MATRIX: Matrix = {
   },
 
   // ── Projection / Credit ──────────────────────────────────────────────────
+  /// Investment phases (FORMA's capital-deployment milestones — see the model
+  /// docstring; NOT the buyer-side 3-phase sale model). ANALISTA fully manages
+  /// the 5 phases + their status; AUXILIAR read-only.
+  investment_phase: {
+    MASTER: FULL_CRUD,
+    CEO: READ_ONLY,
+    ANALISTA: FULL_CRUD,
+    AUXILIAR: READ_ONLY,
+  },
+
   /// Monthly projection. ANALISTA has FULL_CRUD per user direction
   /// (forecasts evolve over time, including adding/removing months).
   /// AUXILIAR read-only — forecasting is ANALISTA's domain.
@@ -218,6 +228,145 @@ export const MATRIX: Matrix = {
     CEO: READ_ONLY,
     ANALISTA: READ_ONLY,
     AUXILIAR: READ_ONLY,
+  },
+
+  // ── Batch 4.5 additions ──────────────────────────────────────────────────
+
+  /// Per D33: composable amortization rules under a CreditFacility.
+  /// ANALISTA owns these (forecast tweaks, mechanism changes); AUXILIAR
+  /// read-only (formal banking artifact). Same posture as credit_facility.
+  amortization_rule: {
+    MASTER: FULL_CRUD,
+    CEO: READ_ONLY,
+    ANALISTA: FULL_CRUD,
+    AUXILIAR: READ_ONLY,
+  },
+
+  /// Per D33: partner equity flows (capital calls, distributions, in-kind
+  /// asset contributions like the 2018 terreno aportación). ANALISTA owns
+  /// these; AUXILIAR read-only because partner equity is a sensitive
+  /// financial domain that should not be entered by juniors.
+  partner_contribution: {
+    MASTER: FULL_CRUD,
+    CEO: READ_ONLY,
+    ANALISTA: FULL_CRUD,
+    AUXILIAR: READ_ONLY,
+  },
+
+  /// Per D33: composable sources for a PartnerContribution. Same posture
+  /// as the parent table.
+  contribution_source: {
+    MASTER: FULL_CRUD,
+    CEO: READ_ONLY,
+    ANALISTA: FULL_CRUD,
+    AUXILIAR: READ_ONLY,
+  },
+
+  /// Per D34: ISR obligations — both `ISR 18` and `ISR 25` literal rows.
+  /// ANALISTA fully manages (rates may change with tax-regime updates);
+  /// AUXILIAR read-only.
+  isr_obligation: {
+    MASTER: FULL_CRUD,
+    CEO: READ_ONLY,
+    ANALISTA: FULL_CRUD,
+    AUXILIAR: READ_ONLY,
+  },
+
+  /// Per D31: parser-emitted data-quality anomalies. ANALISTA can RESOLVE
+  /// flags (UPDATE to set `resolvedAt` + `resolutionNote`); AUXILIAR can
+  /// only READ (resolving flags is an authoritative act). CEO reads to see
+  /// what needs attention. CREATE happens via the parser/system path, not
+  /// via human UI — MASTER bypass covers system inserts. DELETE is soft
+  /// per D21 (no resolved flags ever vanish — audit invariant).
+  data_quality_flag: {
+    MASTER: FULL_CRUD,
+    CEO: READ_ONLY,
+    ANALISTA: new Set(["READ", "UPDATE", "DELETE"]) as ReadonlySet<Action>,
+    AUXILIAR: READ_ONLY,
+  },
+
+  // ── REFLUJO Batch 13a — bank-statement ingestion ─────────────────────────
+
+  /// BRONZE: uploaded statement files. ANALISTA owns the full lifecycle.
+  /// AUXILIAR can upload (CREATE) + view (READ) — a junior dropping files
+  /// into the system is exactly the kind of low-risk grunt work that makes
+  /// sense for AUXILIAR. UPDATE/DELETE stays out of AUXILIAR scope:
+  /// retroactively editing an import (e.g., changing the uploader, the
+  /// file hash) would defeat the audit trail. CEO read-only per global
+  /// posture. MASTER full bypass.
+  bank_statement_import: {
+    MASTER: FULL_CRUD,
+    CEO: READ_ONLY,
+    ANALISTA: FULL_CRUD,
+    AUXILIAR: new Set(["CREATE", "READ"]) as ReadonlySet<Action>,
+  },
+
+  /// BRONZE: per-sheet records inside an import. ANALISTA can UPDATE to
+  /// flip the `is_canonical` toggle (the twin-sheet decision per Jorge
+  /// directive #2). AUXILIAR is read-only here because flipping canonical
+  /// re-derives silver — meaningful side effect, ANALISTA territory.
+  /// CREATE is system-only (happens during the upload action); no role
+  /// needs explicit CREATE because MASTER bypasses and the upload action
+  /// runs as the uploading user with MASTER-aware logic for the bronze
+  /// insert. (Same pattern the seeder uses for AuditLog rows.)
+  bank_statement_sheet: {
+    MASTER: FULL_CRUD,
+    CEO: READ_ONLY,
+    ANALISTA: new Set(["READ", "UPDATE"]) as ReadonlySet<Action>,
+    AUXILIAR: READ_ONLY,
+  },
+
+  /// BRONZE: raw rows. IMMUTABLE per architecture — the whole point of
+  /// bronze is that it never changes. Every non-MASTER role is READ-only.
+  /// MASTER keeps full access for emergency surgery / debugging.
+  bank_statement_raw_row: {
+    MASTER: FULL_CRUD,
+    CEO: READ_ONLY,
+    ANALISTA: READ_ONLY,
+    AUXILIAR: READ_ONLY,
+  },
+
+  /// SILVER: normalized bank movements. ANALISTA classifies + edits
+  /// (UPDATE writes classifier metadata, sets the gold-side FKs landing
+  /// in Batch 13b). AUXILIAR can read + update so a junior can do basic
+  /// classification (the "CASA" tagging Ronny does today). CREATE is
+  /// SYSTEM-ONLY — silver rows only come from a bronze build pass, never
+  /// from a human directly. DELETE is soft-only per D21 + ANALISTA-gated.
+  bank_transaction: {
+    MASTER: FULL_CRUD,
+    CEO: READ_ONLY,
+    ANALISTA: new Set(["READ", "UPDATE", "DELETE"]) as ReadonlySet<Action>,
+    AUXILIAR: new Set(["READ", "UPDATE"]) as ReadonlySet<Action>,
+  },
+
+  // ── REFLUJO Batch 13b — gold addition: per-house payments ────────────────
+
+  /// GOLD: per-house installment payments. Created via the classification
+  /// queue at `/inbox` when an analyst maps an inflow BankTransaction to a
+  /// sold RvUnit. ANALISTA + AUXILIAR can both CRUD because tagging payments
+  /// to houses is the exact "CASA" annotation step Ronny does today — junior
+  /// territory by design. CEO read-only.
+  rv_payment: {
+    MASTER: FULL_CRUD,
+    CEO: READ_ONLY,
+    ANALISTA: FULL_CRUD,
+    AUXILIAR: FULL_CRUD,
+  },
+
+  // ── REFLUJO Batch 13d — issued cheques (FORMA's internal check register) ─
+
+  /// GOLD/SILVER hybrid: each row represents a cheque DRAWN against a bank
+  /// account (FORMA-internal record, not bank-generated). CREATE happens via
+  /// the check-register import path — same flow as bronze, system-side; no
+  /// human creates these directly. ANALISTA + AUXILIAR can READ + UPDATE
+  /// (set cashed/classified FKs, fix typos, attach a bank account when the
+  /// upload couldn't auto-bind). DELETE is soft + ANALISTA-gated per D21.
+  /// CEO read-only.
+  issued_cheque: {
+    MASTER: FULL_CRUD,
+    CEO: READ_ONLY,
+    ANALISTA: new Set(["READ", "UPDATE", "DELETE"]) as ReadonlySet<Action>,
+    AUXILIAR: new Set(["READ", "UPDATE"]) as ReadonlySet<Action>,
   },
 };
 

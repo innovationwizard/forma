@@ -75,6 +75,12 @@ enum ExpenditureStatus {
   PENDING
   FLAGGED
   VOIDED
+  /// Per Detalle egresos finding #14: ANULADO is the source workbook's
+  /// own discriminator for cancelled events (preserved with zero values,
+  /// red font in the source). Distinct from VOIDED which is for app-internal
+  /// voids (a user marks a row they entered by mistake as voided). Both
+  /// preserve history per D21.
+  ANULADO
 }
 
 enum AuditAction {
@@ -143,6 +149,126 @@ enum CapAdjustmentReason {
   LEGAL_REQUEST_OTHER
 }
 
+// ─── Batch 4.5 additions per D31, D32, D33, D34 ──────────────────────────────
+
+/// Kinds of data-quality issues the parser may detect in the source xlsx.
+/// Per D31: the parser does NOT fail (loudly or silently) on data anomalies —
+/// it emits a row of this kind and continues. The app surfaces flags with
+/// provenance ("from xlsx" vs "from app calc"). New kinds are added as new
+/// anomaly classes are discovered; unknown anomalies use UNKNOWN_ANOMALY
+/// rather than throwing.
+enum DataQualityFlagKind {
+  MISSING_PARTIDA
+  PARTIDA_FLAGGED_FOR_REVIEW
+  UNIT_STATUS_CONTRADICTS_REFUND
+  CATEGORY_MISLABEL
+  TIMELINE_MISALIGNMENT
+  CALENDAR_GAP
+  STALE_FORMULA_WINDOW
+  STALE_LABEL
+  FLOATING_POINT_RESIDUE
+  TC_AMBIGUITY
+  OVERSPEND
+  LARGE_NEGATIVE_REVENUE
+  MIXED_CURRENCY_SUM_VALIDATED_GTQ
+  MISSING_BANCO_INTENTIONAL
+  UNUSED_BUDGET_FORMULA
+  OUTLIER_PRICING
+  CELL_COMMENT
+  CROSS_SHEET_RECONCILIATION
+  UNKNOWN_ANOMALY
+  /// REFLUJO Batch 13a: a silver-promotion candidate hit the natural-key
+  /// UNIQUE constraint — Ronny re-exported a date range that included rows
+  /// already imported in a prior file. Bronze captured; silver skipped per
+  /// Jorge directive #3.
+  DUPLICATE_OF_PRIOR_IMPORT
+  /// REFLUJO Batch 13a: bank-adapter raised a structured warning (date
+  /// unparseable, sign-convention ambiguous, sheet header missing, etc.).
+  /// The specific sub-kind is in `humanMessage`. Generic so each adapter
+  /// can emit its own taxonomy without a schema migration per addition.
+  BANK_PARSER_WARNING
+}
+
+enum DataQualityFlagSeverity {
+  INFO
+  WARNING
+  ERROR_VISIBLE
+  ERROR_BLOCKING
+}
+
+/// Per D33: partner equity flows. CASH_PURCHASE distinguishes the 2025
+/// terreno cash payment from a CASH_CALL (regular capital contribution).
+enum PartnerContributionKind {
+  CASH_CALL
+  DISTRIBUTION
+  IN_KIND_ASSET
+  CASH_PURCHASE
+}
+
+/// Per D33: composable contribution sources. A single PartnerContribution
+/// can carry multiple sources (forecast + actual + hybrid coexist).
+enum ContributionSourceKind {
+  FORECAST_FCFCASAS2
+  ACTUAL_LEDGER
+  HYBRID
+}
+
+/// Per D34 + D33: ISR payment patterns. Santa Elena is seeded as LUMP_END
+/// (the model's forecast); other patterns supported for future projects or
+/// when Q-ISR-TIMING resolves (tax advisor pending).
+enum IsrPaymentPattern {
+  LUMP_END
+  QUARTERLY
+  ANNUAL
+  CUSTOM_TRIGGER
+  COMPOSITE
+}
+
+/// Per D34: INTERNAL discriminator for ISR rates. UI NEVER displays this —
+/// UI uses the literal `IsrObligation.uiLabel` ("ISR 18", "ISR 25") verbatim
+/// per [[feedback_literal_labels_when_multiple_values]].
+enum IsrRateKind {
+  EFFECTIVE
+  NOMINAL
+  REGIMEN_SPECIFIC
+}
+
+/// Per D33: amortization mechanism enum on AmortizationRule. Allows a single
+/// CreditFacility to carry multiple rules over its life (e.g. revolvente
+/// híbrido during construction, fixed amortization post-completion).
+enum AmortizationMechanism {
+  REVOLVENTE_HIBRIDO
+  FIXED_AMORTIZATION
+  BULLET
+  INTEREST_ONLY
+}
+
+/// Per Detalle egresos finding #7: expenditures fall into three semantic
+/// kinds. RESUMEN block distinguishes operating expenses (CON IVA + SIN IVA)
+/// from cash movements (CON IVA only, e.g. DEVOLUCIÓN, TRASLADO de FONDOS)
+/// and equity events (the 2018 aportación no dineraria — but those are
+/// PartnerContribution rows, not Expenditure rows; this kind exists for
+/// completeness).
+enum ExpenditureKind {
+  OPERATING_EXPENSE
+  CASH_MOVEMENT
+  EQUITY_EVENT
+}
+
+/// Per Detalle egresos finding #5: the Empresa column carries 5 distinct
+/// functional categories. This enum complements (does NOT replace) the
+/// existing `PartnerType` enum which describes legal entity type
+/// (COMPANY / INDIVIDUAL / GOVERNMENT). A Partner has BOTH a legal type
+/// AND a functional category — e.g., Marroquin Perez is (COMPANY, VENDOR);
+/// Aguedo Escobar is (INDIVIDUAL, INTERNAL_INDIVIDUAL).
+enum PartnerCategory {
+  VENDOR
+  TAX_AUTHORITY
+  BANK_AS_COUNTERPARTY
+  INTERNAL_ENTITY
+  INTERNAL_INDIVIDUAL
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // SINGLETON CONFIG: project-level constants
 // ═══════════════════════════════════════════════════════════════════════════
@@ -152,26 +278,60 @@ enum CapAdjustmentReason {
 /// `project_id` FK — the schema is single-project until a second FORMA
 /// project arrives.
 model Project {
-  id                  String   @id @default(uuid()) @db.Uuid
-  name                String // "Condominio Santa Elena"
-  legalEntityName     String   @map("legal_entity_name") // "Condominio Antigua Panorama, S.A."
-  company             String // "FORMA Capital Inmobiliario"
-  location            String // "Antigua Guatemala"
-  currencyPrimary     Currency @default(USD) @map("currency_primary")
-  currencySecondary   Currency @default(GTQ) @map("currency_secondary")
-  /// Locked TC for budget comparisons (D6). Field exists for the SDD's 7.7;
-  /// the TC=7.8 reference in Ppto Inversion is flagged as N2 advisory.
-  lockedExchangeRate  Decimal  @db.Decimal(10, 6) @map("locked_exchange_rate")
-  ivaRate             Decimal  @db.Decimal(5, 4) @map("iva_rate") // 0.12 (12% Guatemala IVA)
-  /// SDD §3.2.1 says 0.18. Unusual for Guatemalan RE developers; flagged Q1.
-  /// Field exists; no calculation consumes it until Q1 is resolved.
-  isrRate             Decimal  @db.Decimal(5, 4) @map("isr_rate")
-  startDate           DateTime @db.Date @map("start_date")
-  projectedEndDate    DateTime @db.Date @map("projected_end_date")
-  createdAt           DateTime @default(now()) @map("created_at")
-  updatedAt           DateTime @updatedAt @map("updated_at")
+  id                           String    @id @default(uuid()) @db.Uuid
+  name                         String // "Condominio Santa Elena"
+  legalEntityName              String    @map("legal_entity_name") // "Condominio Antigua Panorama, S.A."
+  company                      String // "FORMA Capital Inmobiliario"
+  location                     String // "Antigua Guatemala"
+  /// Full property address per Detalle egresos row 138 + Ppto Inversion finding #10.
+  /// "5TA AVE. SUR FINAL, FINCA PAVON Y MATAMBO LOTE 3, SAN PEDRO EL PANORAMA,
+  /// ANTIGUA GUATEMALA, SACATEPEQUEZ".
+  address                      String?   @db.Text
+  currencyPrimary              Currency  @default(USD) @map("currency_primary")
+  currencySecondary            Currency  @default(GTQ) @map("currency_secondary")
+  /// Per Ppto Inversion finding #7 + SDD §7.7 v0.4: there are FOUR distinct
+  /// TC values in the source. `lockedExchangeRate` is the "advertised"
+  /// reference rate (Ppto Inversion!G2 = 7.7) used for budget comparisons.
+  /// The other two are tcBudgetaryLabel + tcEffectiveTerrenoHistorical.
+  /// Per-transaction TC values live on Expenditure.exchangeRateAtTransaction.
+  lockedExchangeRate           Decimal   @map("locked_exchange_rate") @db.Decimal(10, 6)
+  /// Text label "TC 7.8 PARA PRESUPUESTO" from Ppto Inversion!I2 (informational).
+  tcBudgetaryLabel             String?   @map("tc_budgetary_label")
+  /// Implied historical effective TC from Ppto Inversion!N4 = N9/H3 = 7.6922
+  /// (2018 terreno math). For audit / context only; not used in computation.
+  tcEffectiveTerrenoHistorical Decimal?  @map("tc_effective_terreno_historical") @db.Decimal(10, 6)
+  ivaRate                      Decimal   @map("iva_rate") @db.Decimal(5, 4) // 0.12 (12% Guatemala IVA)
+  /// Per D34: `Project.isrRate` removed. Both ISR 18 AND ISR 25 are deliberate
+  /// per Federico (resolves Q1 disposition). Each rate lives as its own
+  /// `IsrObligation` row with literal UI labels per
+  /// [[feedback_literal_labels_when_multiple_values]].
+  startDate                    DateTime  @map("start_date") @db.Date
+  projectedEndDate             DateTime  @map("projected_end_date") @db.Date
+  /// Per D30: handwritten internal FORMA approval date for the 11-house plan
+  /// (the original 12-house plan was rejected by the municipality).
+  internalApprovalDate         DateTime? @map("internal_approval_date") @db.Date
+  /// Per D30: free-text history note. e.g. "Original plan was 12 houses;
+  /// municipality rejected, reduced to 11 (internal approval 2025-04-22)".
+  regulatoryHistoryNote        String?   @map("regulatory_history_note") @db.Text
+  /// Per D30: workbook author / editor metadata captured for the audit trail.
+  modelAuthorName              String?   @map("model_author_name")
+  modelRecentEditorName        String?   @map("model_recent_editor_name")
+  legalRepresentativeName      String?   @map("legal_representative_name")
+  /// Per Detalle egresos finding #10: the original landowner who received
+  /// the 2025 cash payment. e.g. "ANA DIAZ DURAN DURAN".
+  originalLandowner            String?   @map("original_landowner")
+  /// Per D32: the author's verbatim NOTAS from FCFCasas2!A105:A110.
+  /// Spanish strings preserved as-is per
+  /// [[feedback_intent_vs_implementation]]. Never translate or paraphrase.
+  /// Stored as a JSON array of strings; 5 entries for Santa Elena.
+  modelNotes                   Json?     @map("model_notes")
+  createdAt                    DateTime  @default(now()) @map("created_at")
+  updatedAt                    DateTime  @updatedAt @map("updated_at")
   /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
-  deletedAt DateTime? @map("deleted_at")
+  deletedAt                    DateTime? @map("deleted_at")
+
+  isrObligations       IsrObligation[]
+  partnerContributions PartnerContribution[]
 
   @@index([deletedAt])
   @@map("project")
@@ -190,23 +350,29 @@ model Project {
 /// changes through the Settings → User Management UI (Batch 17), which
 /// updates both `auth.users.app_metadata.role` and `users.role` atomically.
 model User {
-  id        String   @id @db.Uuid // matches auth.users.id
-  email     String   @unique
-  fullName  String   @map("full_name")
+  id        String    @id @db.Uuid // matches auth.users.id
+  email     String    @unique
+  fullName  String    @map("full_name")
   role      Role
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
   /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
   deletedAt DateTime? @map("deleted_at")
 
-  expendituresCreated    Expenditure[]     @relation("ExpenditureCreatedBy")
-  reservationsCreated    RvReservation[]   @relation("RvReservationCreatedBy")
-  reservationsDecided    RvReservation[]   @relation("RvReservationDecidedBy")
-  freezeRequestsCreated  RvFreezeRequest[] @relation("RvFreezeRequestCreatedBy")
-  freezeRequestsReleased RvFreezeRequest[] @relation("RvFreezeRequestReleasedBy")
-  capAdjustments         CapAdjustment[]
-  auditLogs              AuditLog[]
+  expendituresCreated        Expenditure[]         @relation("ExpenditureCreatedBy")
+  reservationsCreated        RvReservation[]       @relation("RvReservationCreatedBy")
+  reservationsDecided        RvReservation[]       @relation("RvReservationDecidedBy")
+  freezeRequestsCreated      RvFreezeRequest[]     @relation("RvFreezeRequestCreatedBy")
+  freezeRequestsReleased     RvFreezeRequest[]     @relation("RvFreezeRequestReleasedBy")
+  capAdjustments             CapAdjustment[]
+  auditLogs                  AuditLog[]
+  dataQualityFlagsResolved   DataQualityFlag[]
+  /// REFLUJO Batch 13a back-relations.
+  bankStatementImports       BankStatementImport[] @relation("BankStatementImportUploadedBy")
+  bankTransactionsClassified BankTransaction[]     @relation("BankTransactionClassifiedBy")
+  /// REFLUJO Batch 13b back-relation.
+  rvPaymentsCreated          RvPayment[]           @relation("RvPaymentCreatedBy")
 
   @@index([deletedAt])
   @@map("users") // plural to avoid PG `user` reserved keyword
@@ -217,23 +383,32 @@ model User {
 /// `isVendor` and `isBuyer` flags mirror Odoo's `supplier_rank` / `customer_rank`
 /// pattern (simplified to boolean for the pilot).
 model Partner {
-  id        String      @id @default(uuid()) @db.Uuid
+  id        String           @id @default(uuid()) @db.Uuid
   name      String
-  taxId     String?     @map("tax_id") // NIT in Guatemala
+  taxId     String?          @map("tax_id") // NIT in Guatemala
+  /// Legal entity type. Independent axis from `category` (functional role).
   type      PartnerType
-  isVendor  Boolean     @default(false) @map("is_vendor") // FORMA pays this entity
-  isBuyer   Boolean     @default(false) @map("is_buyer") // this entity pays FORMA
-  notes     String?     @db.Text
-  createdAt DateTime    @default(now()) @map("created_at")
-  updatedAt DateTime    @updatedAt @map("updated_at")
+  /// Per Detalle egresos finding #5: the 5-category functional role discovered
+  /// in the Empresa column. Complements `type` (legal); a single Partner can be
+  /// (COMPANY, VENDOR), (INDIVIDUAL, INTERNAL_INDIVIDUAL), (GOVERNMENT,
+  /// TAX_AUTHORITY), etc. Nullable so historical Partner rows (pre-Batch 4.5)
+  /// don't break; Batch 6 seed populates from the inspection mapping.
+  category  PartnerCategory? @map("category")
+  isVendor  Boolean          @default(false) @map("is_vendor") // FORMA pays this entity
+  isBuyer   Boolean          @default(false) @map("is_buyer") // this entity pays FORMA
+  notes     String?          @db.Text
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
   /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
-  deletedAt DateTime? @map("deleted_at")
+  deletedAt DateTime?        @map("deleted_at")
 
-  expenditures Expenditure[]
-  rvUnits      RvUnit[]        @relation("RvUnitBuyer")
-  reservations RvReservation[]
+  expenditures  Expenditure[]
+  rvUnits       RvUnit[]              @relation("RvUnitBuyer")
+  reservations  RvReservation[]
+  contributions PartnerContribution[]
 
   @@index([name])
+  @@index([category])
   @@index([deletedAt])
   @@map("partner")
 }
@@ -241,18 +416,28 @@ model Partner {
 /// Bank accounts FORMA operates. Referenced by every Expenditure for
 /// reconciliation against bank-statement imports.
 model BankAccount {
-  id            String   @id @default(uuid()) @db.Uuid
-  bankName      String   @map("bank_name") // "G&T", "PROMERICA", "BAC", "INDUSTRIAL"
-  accountNumber String   @unique @map("account_number") // normalized: "002-9900597-5"
+  id            String    @id @default(uuid()) @db.Uuid
+  bankName      String    @map("bank_name") // "G&T", "PROMERICA", "BAC", "INDUSTRIAL"
+  accountNumber String    @unique @map("account_number") // normalized: "002-9900597-5"
   currency      Currency
-  displayName   String   @map("display_name") // "G&T (USD)", "PROMERICA (QTZ)"
-  isActive      Boolean  @default(true) @map("is_active")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  displayName   String    @map("display_name") // "G&T (USD)", "PROMERICA (QTZ)"
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
   /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
-  deletedAt DateTime? @map("deleted_at")
+  deletedAt     DateTime? @map("deleted_at")
 
-  expenditures Expenditure[]
+  expenditures     Expenditure[]
+  /// Per REFLUJO Batch 13a: a bank account can be the destination of many
+  /// parser-detected statement sheets (one per upload-period).
+  statementSheets  BankStatementSheet[] @relation("BankStatementSheetDetectedAccount")
+  /// Per REFLUJO Batch 13a: silver layer — every normalized bank movement
+  /// references the account it belongs to. UNIQUE (bankAccountId, date,
+  /// reference, amountSigned) on BankTransaction is the dedup gate.
+  bankTransactions BankTransaction[]
+  /// Per REFLUJO Batch 13d: cheques drawn on this account (from FORMA's
+  /// internal check register, not from the bank's statement).
+  issuedCheques    IssuedCheque[]
 
   @@index([deletedAt])
   @@map("bank_account")
@@ -266,12 +451,12 @@ model BankAccount {
 /// Detalle egresos and Ppto Inversion. Examples: "PLANIFICACION",
 /// "COMERCIALIZACION / VENTAS", "OTROS PAGOS".
 model BudgetExecutionPartition {
-  id        String   @id @default(uuid()) @db.Uuid
-  code      String   @unique
+  id        String    @id @default(uuid()) @db.Uuid
+  code      String    @unique
   name      String
-  sortOrder Int      @map("sort_order")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  sortOrder Int       @map("sort_order")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
   /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
   deletedAt DateTime? @map("deleted_at")
 
@@ -285,26 +470,27 @@ model BudgetExecutionPartition {
 /// L2 — PARTIDA GENERAL. The 11 SDD §3.2.2 budget categories with totals.
 /// Examples: "TERRENOS", "MERCADEO", "COMISIONES DE VENTA".
 model BudgetCategory {
-  id               String                   @id @default(uuid()) @db.Uuid
-  partitionId      String                   @db.Uuid @map("partition_id")
-  code             String                   @unique
+  id               String    @id @default(uuid()) @db.Uuid
+  partitionId      String    @map("partition_id") @db.Uuid
+  code             String    @unique
   name             String
-  budgetAmountUsd  Decimal                  @db.Decimal(18, 2) @map("budget_amount_usd")
-  budgetPercentage Decimal                  @db.Decimal(7, 4) @map("budget_percentage") // up to 999.9999%
+  budgetAmountUsd  Decimal   @map("budget_amount_usd") @db.Decimal(18, 2)
+  budgetPercentage Decimal   @map("budget_percentage") @db.Decimal(7, 4) // up to 999.9999%
   /// Only set for COMISIONES DE VENTA per SDD §3.2.2 (5%).
-  commissionRate   Decimal?                 @db.Decimal(5, 4) @map("commission_rate")
+  commissionRate   Decimal?  @map("commission_rate") @db.Decimal(5, 4)
   /// Per SDD §2.1: dashboard is an anomaly detector, not a summary. Predictable
   /// categories (IMPUESTOS, TRASLADOS) are hidden from Level 0.
-  dashboardVisible Boolean                  @default(true) @map("dashboard_visible")
-  sortOrder        Int                      @map("sort_order")
-  createdAt        DateTime                 @default(now()) @map("created_at")
-  updatedAt        DateTime                 @updatedAt @map("updated_at")
+  dashboardVisible Boolean   @default(true) @map("dashboard_visible")
+  sortOrder        Int       @map("sort_order")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
   /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
-  deletedAt DateTime? @map("deleted_at")
+  deletedAt        DateTime? @map("deleted_at")
 
-  partition    BudgetExecutionPartition @relation(fields: [partitionId], references: [id])
-  subItems     BudgetSubItem[]
-  expenditures Expenditure[]
+  partition            BudgetExecutionPartition @relation(fields: [partitionId], references: [id])
+  subItems             BudgetSubItem[]
+  expenditures         Expenditure[]
+  partnerContributions PartnerContribution[]
 
   @@index([deletedAt])
   @@map("budget_category")
@@ -313,19 +499,19 @@ model BudgetCategory {
 /// L3 — PARTIDA INTERNA / Ppto Inversion line items. Examples:
 /// "LICENCIA DE CONSTRUCCION", "MERCADO y PUBLICIDAD - Marketing".
 model BudgetSubItem {
-  id           String   @id @default(uuid()) @db.Uuid
-  categoryId   String   @db.Uuid @map("category_id")
+  id           String    @id @default(uuid()) @db.Uuid
+  categoryId   String    @map("category_id") @db.Uuid
   code         String /// not globally unique; unique within category
   description  String
   unit         String?
-  quantity     Decimal? @db.Decimal(18, 4)
-  unitPriceUsd Decimal? @db.Decimal(18, 2) @map("unit_price_usd")
-  totalUsd     Decimal  @db.Decimal(18, 2) @map("total_usd")
-  totalGtq     Decimal  @db.Decimal(18, 2) @map("total_gtq")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  quantity     Decimal?  @db.Decimal(18, 4)
+  unitPriceUsd Decimal?  @map("unit_price_usd") @db.Decimal(18, 2)
+  totalUsd     Decimal   @map("total_usd") @db.Decimal(18, 2)
+  totalGtq     Decimal   @map("total_gtq") @db.Decimal(18, 2)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
   /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
-  deletedAt DateTime? @map("deleted_at")
+  deletedAt    DateTime? @map("deleted_at")
 
   category     BudgetCategory @relation(fields: [categoryId], references: [id])
   expenditures Expenditure[]
@@ -340,54 +526,99 @@ model BudgetSubItem {
 // ═══════════════════════════════════════════════════════════════════════════
 
 model Expenditure {
-  id               String            @id @default(uuid()) @db.Uuid
-  bankAccountId    String            @db.Uuid @map("bank_account_id")
+  id                        String            @id @default(uuid()) @db.Uuid
+  /// Nullable per Detalle egresos finding #8 + Batch 4.5 SDD §3.2.4 v0.4:
+  /// 11 of 242 transactions have no Banco/Cuenta tag — legitimate non-cash
+  /// events (aportación, cross-company PA transfers, 2018-era pre-banking
+  /// setup). Per D31 those rows are PRESERVED, not skipped — making the FK
+  /// nullable is the right shape. (Batch 4.5 oversight, fixed in Batch 6.5.)
+  bankAccountId             String?           @map("bank_account_id") @db.Uuid
   /// Nullable: not all transactions are linked to a Partner yet (xlsx vendors
   /// arrive as free-text strings). The reconciliation step in Batch 5/6 fills this.
-  partnerId        String?           @db.Uuid @map("partner_id")
+  partnerId                 String?           @map("partner_id") @db.Uuid
   /// The original vendor string from xlsx/CSV. Preserved for audit even after
   /// `partnerId` is filled in. Lets us trace import provenance.
-  vendorRaw        String            @map("vendor_raw")
-  date             DateTime          @db.Date
-  amountConIva     Decimal           @db.Decimal(18, 2) @map("amount_con_iva")
-  amountSinIva     Decimal           @db.Decimal(18, 2) @map("amount_sin_iva")
-  ivaAmount        Decimal           @db.Decimal(18, 2) @map("iva_amount")
-  currency         Currency
-  /// Actual GTQ/USD rate on the transaction date. For USD transactions, stored
-  /// as 1.0. For GTQ transactions, the rate at the time of the transaction
-  /// (from xlsx historical or BANGUAT).
-  exchangeRate     Decimal           @db.Decimal(10, 6) @map("exchange_rate")
-  amountUsd        Decimal           @db.Decimal(18, 2) @map("amount_usd")
-  description      String            @db.Text
+  vendorRaw                 String            @map("vendor_raw")
+  date                      DateTime          @db.Date
+  amountConIva              Decimal           @map("amount_con_iva") @db.Decimal(18, 2)
+  amountSinIva              Decimal           @map("amount_sin_iva") @db.Decimal(18, 2)
+  ivaAmount                 Decimal           @map("iva_amount") @db.Decimal(18, 2)
+  /// Per Detalle egresos finding #1 (Jorge's visual review): the MONTO values
+  /// are GTQ regardless of which bank account paid (verified via 12.00% IVA
+  /// ratio on USD-account rows). The `currency` field therefore describes the
+  /// BANK ACCOUNT's denomination (which is also on BankAccount.currency), NOT
+  /// the amount's currency. Retained for source fidelity + cross-checks.
+  currency                  Currency
+  /// Actual GTQ/USD rate on the transaction date. For USD-account transactions,
+  /// stored as 1.0 historically; per Detalle egresos finding #11 the actual
+  /// per-tx TC (when extractable) lives on `exchangeRateAtTransaction` below.
+  exchangeRate              Decimal           @map("exchange_rate") @db.Decimal(10, 6)
+  /// Per Detalle egresos finding #11: ~20+ transactions encode their actual TC
+  /// in the Descripción text via `(T.C. - Q.X.XXXXXX)` pattern. The parser
+  /// regex-extracts this; populates here when found. Null means "use project
+  /// fallback rate." Without this, USD reconstruction is off 0.5–1% per tx.
+  exchangeRateAtTransaction Decimal?          @map("exchange_rate_at_transaction") @db.Decimal(10, 6)
+  amountUsd                 Decimal           @map("amount_usd") @db.Decimal(18, 2)
+  description               String            @db.Text
+  /// Per Detalle egresos finding #3 + [[feedback_intent_vs_implementation]]:
+  /// `description` is preserved verbatim from the source (whitespace anomalies,
+  /// non-breaking spaces, trailing chars all preserved). `descriptionNormalized`
+  /// is the trimmed + whitespace-collapsed form used for matching / search.
+  /// App uses `description` for display, `descriptionNormalized` for queries.
+  descriptionNormalized     String?           @map("description_normalized") @db.Text
+  /// Per Detalle egresos finding #7: semantic kind. Most expenditures are
+  /// OPERATING_EXPENSE. DEVOLUCIÓN-class and TRASLADO de FONDOS rows are
+  /// CASH_MOVEMENT (CON IVA populated, SIN IVA = 0). Default = OPERATING_EXPENSE.
+  kind                      ExpenditureKind   @default(OPERATING_EXPENSE)
   /// 3-level categorization per N4.
-  partitionId      String            @db.Uuid @map("partition_id") // L1
-  categoryId       String            @db.Uuid @map("category_id") // L2
+  partitionId               String            @map("partition_id") @db.Uuid // L1
+  categoryId                String            @map("category_id") @db.Uuid // L2
   /// L3 — nullable because some transactions are categorized only at L1+L2
   /// (esp. IMPUESTOS and TRASLADOS-style entries with no sub-detail).
-  subItemId        String?           @db.Uuid @map("sub_item_id")
-  checkNumber      String?           @map("check_number")
-  invoiceReference String?           @map("invoice_reference")
-  source           ExpenditureSource
-  status           ExpenditureStatus @default(PENDING)
-  showOnDashboard  Boolean           @default(true) @map("show_on_dashboard")
-  createdByUserId  String            @db.Uuid @map("created_by_user_id")
-  createdAt        DateTime          @default(now()) @map("created_at")
-  updatedAt        DateTime          @updatedAt @map("updated_at")
+  subItemId                 String?           @map("sub_item_id") @db.Uuid
+  checkNumber               String?           @map("check_number")
+  invoiceReference          String?           @map("invoice_reference")
+  source                    ExpenditureSource
+  /// Natural key from the Batch 5 parser bundle (e.g., "Detalle egresos!row 9").
+  /// Unique across the project's lifetime. Lets the Batch 6 seeder be safely
+  /// idempotent without relying on (date, amount, partner) tuples that can
+  /// collide for same-day round-number same-vendor pairs (e.g., TESORERIA
+  /// NACIONAL ISR notes). NULL allowed only for non-xlsx-imported rows
+  /// (manual entry in Batch 12, bank-CSV imports in Batch 13+).
+  sourceWorkbookRef         String?           @unique @map("source_workbook_ref")
+  status                    ExpenditureStatus @default(PENDING)
+  showOnDashboard           Boolean           @default(true) @map("show_on_dashboard")
+  /// REFLUJO Batch 13b: nullable FK back to the silver row that this
+  /// Expenditure was promoted from. Nullable because Expenditure rows
+  /// can also arrive via xlsx import (Batch 5/6) or manual entry
+  /// (Batch 12) without ever passing through a bank-statement parse.
+  /// When set, the classifying user picked this bank-transaction from
+  /// the inbox and chose "classify as Expenditure."
+  sourceBankTransactionId   String?           @map("source_bank_transaction_id") @db.Uuid
+  createdByUserId           String            @map("created_by_user_id") @db.Uuid
+  createdAt                 DateTime          @default(now()) @map("created_at")
+  updatedAt                 DateTime          @updatedAt @map("updated_at")
   /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
-  deletedAt DateTime? @map("deleted_at")
+  deletedAt                 DateTime?         @map("deleted_at")
 
-  bankAccount   BankAccount              @relation(fields: [bankAccountId], references: [id])
-  partner       Partner?                 @relation(fields: [partnerId], references: [id])
-  partition     BudgetExecutionPartition @relation(fields: [partitionId], references: [id])
-  category      BudgetCategory           @relation(fields: [categoryId], references: [id])
-  subItem       BudgetSubItem?           @relation(fields: [subItemId], references: [id])
-  createdBy     User                     @relation("ExpenditureCreatedBy", fields: [createdByUserId], references: [id])
-  disbursements Disbursement[]
+  bankAccount           BankAccount?             @relation(fields: [bankAccountId], references: [id])
+  partner               Partner?                 @relation(fields: [partnerId], references: [id])
+  partition             BudgetExecutionPartition @relation(fields: [partitionId], references: [id])
+  category              BudgetCategory           @relation(fields: [categoryId], references: [id])
+  subItem               BudgetSubItem?           @relation(fields: [subItemId], references: [id])
+  createdBy             User                     @relation("ExpenditureCreatedBy", fields: [createdByUserId], references: [id])
+  sourceBankTransaction BankTransaction?         @relation("ExpenditureSourceBankTransaction", fields: [sourceBankTransactionId], references: [id])
+  disbursements         Disbursement[]
+  /// Per REFLUJO Batch 13d: cheques classified into this Expenditure
+  /// (typically 0..1; many only if the same expenditure was paid with
+  /// multiple cheques, an edge case the schema permits).
+  classifiedFromCheques IssuedCheque[]           @relation("ExpenditureClassifiedFromCheque")
 
   @@index([date])
   @@index([categoryId, date])
   @@index([partnerId])
   @@index([status])
+  @@index([sourceBankTransactionId])
   @@index([deletedAt])
   @@map("expenditure")
 }
@@ -400,14 +631,14 @@ model RvUnit {
   id                 String       @id @default(uuid()) @db.Uuid
   name               String       @unique // "Casa 1" .. "Casa 11"
   type               String // "A" for Santa Elena
-  areaM2             Decimal      @db.Decimal(10, 2) @map("area_m2")
+  areaM2             Decimal      @map("area_m2") @db.Decimal(10, 2)
   /// List price per m² (for available units). Null for units already sold at a different price point.
-  pricePerM2Usd      Decimal?     @db.Decimal(10, 2) @map("price_per_m2_usd")
+  pricePerM2Usd      Decimal?     @map("price_per_m2_usd") @db.Decimal(10, 2)
   /// Actual sale price for SOLD units. Null for unsold units.
-  salePriceSinIvaUsd Decimal?     @db.Decimal(18, 2) @map("sale_price_sin_iva_usd")
-  engancheRate       Decimal      @db.Decimal(5, 4) @default(0.25) @map("enganche_rate")
+  salePriceSinIvaUsd Decimal?     @map("sale_price_sin_iva_usd") @db.Decimal(18, 2)
+  engancheRate       Decimal      @default(0.25) @map("enganche_rate") @db.Decimal(5, 4)
   status             RvUnitStatus @default(AVAILABLE)
-  buyerId            String?      @db.Uuid @map("buyer_id")
+  buyerId            String?      @map("buyer_id") @db.Uuid
   /// Sales rep / agent name. Free-text for now; in a multi-tenant future
   /// FORMA system this becomes a User reference.
   vendedor           String?
@@ -418,11 +649,13 @@ model RvUnit {
   createdAt          DateTime     @default(now()) @map("created_at")
   updatedAt          DateTime     @updatedAt @map("updated_at")
   /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
-  deletedAt DateTime? @map("deleted_at")
+  deletedAt          DateTime?    @map("deleted_at")
 
   buyer          Partner?          @relation("RvUnitBuyer", fields: [buyerId], references: [id])
   reservations   RvReservation[]
   freezeRequests RvFreezeRequest[]
+  /// REFLUJO Batch 13b: actual buyer payments (per-house installments).
+  payments       RvPayment[]
 
   @@index([status])
   @@index([deletedAt])
@@ -431,18 +664,18 @@ model RvUnit {
 
 model RvReservation {
   id              String              @id @default(uuid()) @db.Uuid
-  unitId          String              @db.Uuid @map("unit_id")
-  partnerId       String              @db.Uuid @map("partner_id") // prospective buyer
+  unitId          String              @map("unit_id") @db.Uuid
+  partnerId       String              @map("partner_id") @db.Uuid // prospective buyer
   status          RvReservationStatus @default(PENDING_REVIEW)
   reservedAt      DateTime            @default(now()) @map("reserved_at")
   decidedAt       DateTime?           @map("decided_at")
   notes           String?             @db.Text
-  createdByUserId String              @db.Uuid @map("created_by_user_id")
-  decidedByUserId String?             @db.Uuid @map("decided_by_user_id")
+  createdByUserId String              @map("created_by_user_id") @db.Uuid
+  decidedByUserId String?             @map("decided_by_user_id") @db.Uuid
   createdAt       DateTime            @default(now()) @map("created_at")
   updatedAt       DateTime            @updatedAt @map("updated_at")
   /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
-  deletedAt DateTime? @map("deleted_at")
+  deletedAt       DateTime?           @map("deleted_at")
 
   unit      RvUnit  @relation(fields: [unitId], references: [id])
   partner   Partner @relation(fields: [partnerId], references: [id])
@@ -458,17 +691,17 @@ model RvReservation {
 
 model RvFreezeRequest {
   id               String                @id @default(uuid()) @db.Uuid
-  unitId           String                @db.Uuid @map("unit_id")
+  unitId           String                @map("unit_id") @db.Uuid
   status           RvFreezeRequestStatus @default(ACTIVE)
   reason           String                @db.Text
   requestedAt      DateTime              @default(now()) @map("requested_at")
   releasedAt       DateTime?             @map("released_at")
-  createdByUserId  String                @db.Uuid @map("created_by_user_id")
-  releasedByUserId String?               @db.Uuid @map("released_by_user_id")
+  createdByUserId  String                @map("created_by_user_id") @db.Uuid
+  releasedByUserId String?               @map("released_by_user_id") @db.Uuid
   createdAt        DateTime              @default(now()) @map("created_at")
   updatedAt        DateTime              @updatedAt @map("updated_at")
   /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
-  deletedAt DateTime? @map("deleted_at")
+  deletedAt        DateTime?             @map("deleted_at")
 
   unit       RvUnit @relation(fields: [unitId], references: [id])
   createdBy  User   @relation("RvFreezeRequestCreatedBy", fields: [createdByUserId], references: [id])
@@ -481,35 +714,103 @@ model RvFreezeRequest {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// INVESTMENT PHASING (FORMA capital-deployment milestones)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// FORMA's internal investment phases — capital-deployment milestones, NOT
+/// the universal 3-phase sale model (reserva → enganche → bank credit) from
+/// `reference_sale_phases`. Two different concepts that share the word
+/// "phase" by accident:
+///
+///   - Sale phases (from [[reference_sale_phases]]): track an individual
+///     buyer's progress through the sale. Buyer-side.
+///   - Investment phases (this model): track FORMA's capital deployment
+///     across the project's lifecycle. Operator-side.
+///
+/// SE template (from the `resumen` sheet of the canonical workbook):
+///   Fase 1 — Capital necesario primeros 6 meses
+///   Fase 2 — Capital necesario Licencias y arranque / Mes 8 - 12
+///   Fase 3 — Capital necesario construccion Primera fase obra gris
+///   Fase 4 — Capital necesario construccion fase acabados
+///   Fase 5 — Capital necesario para cerrar proyecto
+///
+/// Day-1 scope is "track which fase the project is currently in." Aggregating
+/// actual capital spent per fase (by joining Expenditure.date against the
+/// fase's planned month range) is derivable at query time; no FK on
+/// Expenditure for now.
+model InvestmentPhase {
+  id                String                @id @default(uuid()) @db.Uuid
+  code              String                @unique // "FASE_1" .. "FASE_5"
+  name              String // "Fase 1", "Fase 2"
+  description       String                @db.Text // "Capital necesario primeros 6 meses"
+  sortOrder         Int                   @unique @map("sort_order")
+  /// 1-indexed project month when this fase is expected to begin (relative to
+  /// `Project.startDate`). Nullable — boundaries may not be known up front.
+  plannedStartMonth Int?                  @map("planned_start_month")
+  plannedEndMonth   Int?                  @map("planned_end_month")
+  /// Budgeted capital for this fase. Null when no formal budget has been set.
+  plannedCapitalUsd Decimal?              @map("planned_capital_usd") @db.Decimal(18, 2)
+  status            InvestmentPhaseStatus @default(NOT_STARTED)
+  notes             String?               @db.Text
+  /// Soft-delete marker. Per project invariant: deletes are never hard.
+  deletedAt         DateTime?             @map("deleted_at")
+  createdAt         DateTime              @default(now()) @map("created_at")
+  updatedAt         DateTime              @updatedAt @map("updated_at")
+
+  @@index([deletedAt])
+  @@index([sortOrder])
+  @@map("investment_phase")
+}
+
+enum InvestmentPhaseStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  ON_HOLD
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // MONTHLY PROJECTION (FCFCasas2 timeline)
 // ═══════════════════════════════════════════════════════════════════════════
 
-/// 36-month projection imported from the FCFCasas2 sheet. Per SDD §3.2.6,
+/// Monthly projection imported from the FCFCasas2 sheet. Per SDD §3.2.6,
 /// costs are stored as one column per category (denormalized). This matches
 /// the xlsx layout and the dashboard's rendering. The detailed per-house
 /// monthly revenue lives in `revenuePerHouse` JSONB.
+///
+/// Per D26: the timeline length is NOT fixed. The xlsx started at 36 months
+/// (May-25 → May-28) but the budget can be re-forecasted at any time,
+/// including extending the timeline by inserting new month columns. The
+/// durable key is `monthDate` (a specific calendar month — May-28 is May-28
+/// regardless of where it sits in the xlsx grid). `monthNumber` is a
+/// convenience for ordering / display but should never be treated as a
+/// fixed-domain enum.
 model MonthlyProjection {
   id          String   @id @default(uuid()) @db.Uuid
-  monthNumber Int      @unique @map("month_number") // 1-36
-  monthDate   DateTime @db.Date @map("month_date")
+  /// Project-relative month index (1 = first month of the project). Unique
+  /// because each month appears once. Range is open-ended; the parser
+  /// discovers it dynamically from the xlsx headers.
+  monthNumber Int      @unique @map("month_number")
+  /// Calendar month this row represents. The durable identity.
+  monthDate   DateTime @map("month_date") @db.Date
 
   // Per-category costs (USD sin IVA, monthly)
-  costTerrenos           Decimal @default(0) @db.Decimal(18, 2) @map("cost_terrenos")
-  costLicencias          Decimal @default(0) @db.Decimal(18, 2) @map("cost_licencias")
-  costPlanificacion      Decimal @default(0) @db.Decimal(18, 2) @map("cost_planificacion")
-  costConstruccionesComp Decimal @default(0) @db.Decimal(18, 2) @map("cost_construcciones_comp")
-  costConstruccion       Decimal @default(0) @db.Decimal(18, 2) @map("cost_construccion")
-  costMercadeo           Decimal @default(0) @db.Decimal(18, 2) @map("cost_mercadeo")
-  costComisiones         Decimal @default(0) @db.Decimal(18, 2) @map("cost_comisiones")
-  costHonorarios         Decimal @default(0) @db.Decimal(18, 2) @map("cost_honorarios")
-  costGastosLegales      Decimal @default(0) @db.Decimal(18, 2) @map("cost_gastos_legales")
-  costDevFee             Decimal @default(0) @db.Decimal(18, 2) @map("cost_dev_fee")
-  costImprevistos        Decimal @default(0) @db.Decimal(18, 2) @map("cost_imprevistos")
+  costTerrenos           Decimal @default(0) @map("cost_terrenos") @db.Decimal(18, 2)
+  costLicencias          Decimal @default(0) @map("cost_licencias") @db.Decimal(18, 2)
+  costPlanificacion      Decimal @default(0) @map("cost_planificacion") @db.Decimal(18, 2)
+  costConstruccionesComp Decimal @default(0) @map("cost_construcciones_comp") @db.Decimal(18, 2)
+  costConstruccion       Decimal @default(0) @map("cost_construccion") @db.Decimal(18, 2)
+  costMercadeo           Decimal @default(0) @map("cost_mercadeo") @db.Decimal(18, 2)
+  costComisiones         Decimal @default(0) @map("cost_comisiones") @db.Decimal(18, 2)
+  costHonorarios         Decimal @default(0) @map("cost_honorarios") @db.Decimal(18, 2)
+  costGastosLegales      Decimal @default(0) @map("cost_gastos_legales") @db.Decimal(18, 2)
+  costDevFee             Decimal @default(0) @map("cost_dev_fee") @db.Decimal(18, 2)
+  costImprevistos        Decimal @default(0) @map("cost_imprevistos") @db.Decimal(18, 2)
 
-  totalCostSinIva      Decimal @default(0) @db.Decimal(18, 2) @map("total_cost_sin_iva")
-  ivaOnCosts           Decimal @default(0) @db.Decimal(18, 2) @map("iva_on_costs")
-  totalCostConIva      Decimal @default(0) @db.Decimal(18, 2) @map("total_cost_con_iva")
-  cumulativeCostConIva Decimal @default(0) @db.Decimal(18, 2) @map("cumulative_cost_con_iva")
+  totalCostSinIva      Decimal @default(0) @map("total_cost_sin_iva") @db.Decimal(18, 2)
+  ivaOnCosts           Decimal @default(0) @map("iva_on_costs") @db.Decimal(18, 2)
+  totalCostConIva      Decimal @default(0) @map("total_cost_con_iva") @db.Decimal(18, 2)
+  cumulativeCostConIva Decimal @default(0) @map("cumulative_cost_con_iva") @db.Decimal(18, 2)
 
   /// Per-house monthly revenue. Shape: `{ "Casa 1": 48719.12, "Casa 2": 49862.76, ... }`.
   /// JSONB instead of a normalized table because (a) houses are a fixed set
@@ -517,18 +818,18 @@ model MonthlyProjection {
   /// (c) the dashboard renders all 11 columns together.
   revenuePerHouse Json @default("{}") @map("revenue_per_house")
 
-  totalRevenueSinIva Decimal @default(0) @db.Decimal(18, 2) @map("total_revenue_sin_iva")
-  cumulativeRevenue  Decimal @default(0) @db.Decimal(18, 2) @map("cumulative_revenue")
+  totalRevenueSinIva Decimal @default(0) @map("total_revenue_sin_iva") @db.Decimal(18, 2)
+  cumulativeRevenue  Decimal @default(0) @map("cumulative_revenue") @db.Decimal(18, 2)
 
-  ebitdaConIva Decimal @default(0) @db.Decimal(18, 2) @map("ebitda_con_iva")
+  ebitdaConIva Decimal @default(0) @map("ebitda_con_iva") @db.Decimal(18, 2)
   ebitda       Decimal @default(0) @db.Decimal(18, 2)
 
-  creditBalance    Decimal @default(0) @db.Decimal(18, 2) @map("credit_balance")
-  interestPayment  Decimal @default(0) @db.Decimal(18, 2) @map("interest_payment")
-  principalPayment Decimal @default(0) @db.Decimal(18, 2) @map("principal_payment")
+  creditBalance    Decimal @default(0) @map("credit_balance") @db.Decimal(18, 2)
+  interestPayment  Decimal @default(0) @map("interest_payment") @db.Decimal(18, 2)
+  principalPayment Decimal @default(0) @map("principal_payment") @db.Decimal(18, 2)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
   /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
   deletedAt DateTime? @map("deleted_at")
 
@@ -547,48 +848,78 @@ model CreditFacility {
   /// SE-specific: DEVELOPMENT_DRAWDOWN_WITH_REVALUATION (per N1).
   mechanism     CreditFacilityMechanism @default(DEVELOPMENT_DRAWDOWN_WITH_REVALUATION)
   /// Initial cap set at facility origination. For SE this is USD 7M.
-  initialCapUsd Decimal                 @db.Decimal(18, 2) @map("initial_cap_usd")
+  initialCapUsd Decimal                 @map("initial_cap_usd") @db.Decimal(18, 2)
   /// Current cap = initial + sum(CapAdjustment). Denormalized for fast reads;
   /// trigger or app-layer recompute keeps it in sync.
-  currentCapUsd Decimal                 @db.Decimal(18, 2) @map("current_cap_usd")
-  annualRate    Decimal                 @db.Decimal(7, 6) @map("annual_rate") // 0.0725
-  ltvRatio      Decimal                 @db.Decimal(5, 4) @map("ltv_ratio") // 0.80
-  ltcCeiling    Decimal                 @db.Decimal(5, 4) @map("ltc_ceiling") // 0.90
+  currentCapUsd Decimal                 @map("current_cap_usd") @db.Decimal(18, 2)
+  annualRate    Decimal                 @map("annual_rate") @db.Decimal(7, 6) // 0.0725
+  ltvRatio      Decimal                 @map("ltv_ratio") @db.Decimal(5, 4) // 0.80
+  ltcCeiling    Decimal                 @map("ltc_ceiling") @db.Decimal(5, 4) // 0.90
   isActive      Boolean                 @default(true) @map("is_active")
   createdAt     DateTime                @default(now()) @map("created_at")
   updatedAt     DateTime                @updatedAt @map("updated_at")
   /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
-  deletedAt DateTime? @map("deleted_at")
+  deletedAt     DateTime?               @map("deleted_at")
 
-  appraisals     Appraisal[]
-  capAdjustments CapAdjustment[]
+  appraisals        Appraisal[]
+  capAdjustments    CapAdjustment[]
+  amortizationRules AmortizationRule[]
 
   @@index([deletedAt])
   @@map("credit_facility")
+}
+
+/// Per D33: a CreditFacility may carry multiple amortization rules over its
+/// life (e.g. revolvente híbrido during construction, fixed amortization
+/// post-completion). Each rule applies for a window of project months.
+/// Santa Elena currently seeds ONE rule: REVOLVENTE_HIBRIDO from month 1
+/// onward with verbatim conditions text from the author's note 2:
+/// "amortiza solo cuando EBITDA mensual es positivo (excedentes)".
+model AmortizationRule {
+  id               String                @id @default(uuid()) @db.Uuid
+  facilityId       String                @map("facility_id") @db.Uuid
+  /// 1-based project month index (e.g. month 1 = May 2025 for Santa Elena).
+  appliesFromMonth Int                   @map("applies_from_month")
+  /// Inclusive end month. Null = open-ended (rule applies from start onwards).
+  appliesToMonth   Int?                  @map("applies_to_month")
+  mechanism        AmortizationMechanism
+  /// Verbatim conditions text from the workbook / contract / author. Spanish
+  /// preserved as-is per [[feedback_intent_vs_implementation]].
+  conditionsNote   String                @map("conditions_note") @db.Text
+  createdAt        DateTime              @default(now()) @map("created_at")
+  updatedAt        DateTime              @updatedAt @map("updated_at")
+  /// Soft-delete marker. Per project invariant: deletes are never hard.
+  deletedAt        DateTime?             @map("deleted_at")
+
+  facility CreditFacility @relation(fields: [facilityId], references: [id])
+
+  @@index([facilityId])
+  @@index([deletedAt])
+  @@map("amortization_rule")
 }
 
 /// One row per revaluation cycle. The 1st appraisal values raw land; later
 /// appraisals incorporate construction progress and raise the available
 /// drawdown envelope.
 model Appraisal {
-  id                  String   @id @default(uuid()) @db.Uuid
-  facilityId          String   @db.Uuid @map("facility_id")
-  appraisalDate       DateTime @db.Date @map("appraisal_date")
-  appraiserName       String?  @map("appraiser_name")
-  appraisedValueUsd   Decimal  @db.Decimal(18, 2) @map("appraised_value_usd")
+  id                  String    @id @default(uuid()) @db.Uuid
+  facilityId          String    @map("facility_id") @db.Uuid
+  appraisalDate       DateTime  @map("appraisal_date") @db.Date
+  appraiserName       String?   @map("appraiser_name")
+  appraisedValueUsd   Decimal   @map("appraised_value_usd") @db.Decimal(18, 2)
   /// LTV applied to this appraisal (usually equals the facility's ltvRatio,
   /// but stored per-cycle in case the bank adjusts).
-  ltvAtAppraisal      Decimal  @db.Decimal(5, 4) @map("ltv_at_appraisal")
+  ltvAtAppraisal      Decimal   @map("ltv_at_appraisal") @db.Decimal(5, 4)
   /// Computed: appraisedValueUsd × ltvAtAppraisal − Σ(disbursements before this cycle).
   /// Stored so the available envelope can be rendered without recomputation.
-  availableForDrawUsd Decimal  @db.Decimal(18, 2) @map("available_for_draw_usd")
+  availableForDrawUsd Decimal   @map("available_for_draw_usd") @db.Decimal(18, 2)
   /// 1, 2, 3 ... for this facility.
-  cycleNumber         Int      @map("cycle_number")
-  notes               String?  @db.Text
-  createdAt           DateTime @default(now()) @map("created_at")
-  updatedAt           DateTime @updatedAt @map("updated_at")
+  cycleNumber         Int       @map("cycle_number")
+  notes               String?   @db.Text
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
   /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
-  deletedAt DateTime? @map("deleted_at")
+  deletedAt           DateTime? @map("deleted_at")
 
   facility      CreditFacility @relation(fields: [facilityId], references: [id])
   disbursements Disbursement[]
@@ -601,16 +932,16 @@ model Appraisal {
 /// Each drawdown event against an appraisal cycle. Optionally linked to the
 /// expenditure it funded so the full "credit → spend" chain is traceable.
 model Disbursement {
-  id            String   @id @default(uuid()) @db.Uuid
-  appraisalId   String   @db.Uuid @map("appraisal_id")
-  expenditureId String?  @db.Uuid @map("expenditure_id") // funds disbursement → spend
-  date          DateTime @db.Date
-  amountUsd     Decimal  @db.Decimal(18, 2) @map("amount_usd")
+  id            String    @id @default(uuid()) @db.Uuid
+  appraisalId   String    @map("appraisal_id") @db.Uuid
+  expenditureId String?   @map("expenditure_id") @db.Uuid // funds disbursement → spend
+  date          DateTime  @db.Date
+  amountUsd     Decimal   @map("amount_usd") @db.Decimal(18, 2)
   notes         String?
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
   /// Soft-delete marker. Per project invariant: deletes are never hard; rows are marked deleted_at = NOW() and filtered out of queries.
-  deletedAt DateTime? @map("deleted_at")
+  deletedAt     DateTime? @map("deleted_at")
 
   appraisal   Appraisal    @relation(fields: [appraisalId], references: [id])
   expenditure Expenditure? @relation(fields: [expenditureId], references: [id])
@@ -624,13 +955,13 @@ model Disbursement {
 /// raised by legal request based on (a) units sold or (b) market revaluation.
 model CapAdjustment {
   id               String              @id @default(uuid()) @db.Uuid
-  facilityId       String              @db.Uuid @map("facility_id")
-  priorCapUsd      Decimal             @db.Decimal(18, 2) @map("prior_cap_usd")
-  newCapUsd        Decimal             @db.Decimal(18, 2) @map("new_cap_usd")
+  facilityId       String              @map("facility_id") @db.Uuid
+  priorCapUsd      Decimal             @map("prior_cap_usd") @db.Decimal(18, 2)
+  newCapUsd        Decimal             @map("new_cap_usd") @db.Decimal(18, 2)
   reason           CapAdjustmentReason
   justification    String              @db.Text
   adjustedAt       DateTime            @default(now()) @map("adjusted_at")
-  adjustedByUserId String              @db.Uuid @map("adjusted_by_user_id")
+  adjustedByUserId String              @map("adjusted_by_user_id") @db.Uuid
   /// Soft-delete marker. Per project invariant: deletes are never hard.
   deletedAt        DateTime?           @map("deleted_at")
 
@@ -652,7 +983,7 @@ model CapAdjustment {
 model ExchangeRate {
   id            String             @id @default(uuid()) @db.Uuid
   date          DateTime           @unique @db.Date
-  rateGtqPerUsd Decimal            @db.Decimal(10, 6) @map("rate_gtq_per_usd")
+  rateGtqPerUsd Decimal            @map("rate_gtq_per_usd") @db.Decimal(10, 6)
   source        ExchangeRateSource
   fetchedAt     DateTime           @default(now()) @map("fetched_at")
   /// True when BANGUAT was unreachable and the resolver fell back to the
@@ -676,13 +1007,13 @@ model ExchangeRate {
 model AuditLog {
   id         String      @id @default(uuid()) @db.Uuid
   timestamp  DateTime    @default(now())
-  userId     String      @db.Uuid @map("user_id")
+  userId     String      @map("user_id") @db.Uuid
   entityType String      @map("entity_type") // "Expenditure", "RvUnit", etc.
-  entityId   String      @db.Uuid @map("entity_id")
+  entityId   String      @map("entity_id") @db.Uuid
   action     AuditAction
   fieldName  String?     @map("field_name") // null for CREATE / DELETE / IMPORT
-  oldValue   String?     @db.Text @map("old_value") // JSON-serialized
-  newValue   String?     @db.Text @map("new_value") // JSON-serialized
+  oldValue   String?     @map("old_value") @db.Text // JSON-serialized
+  newValue   String?     @map("new_value") @db.Text // JSON-serialized
   context    String?     @db.Text // e.g., "Initial xlsx import 2026-05-22"
 
   user User @relation(fields: [userId], references: [id])
@@ -691,4 +1022,621 @@ model AuditLog {
   @@index([userId])
   @@index([timestamp])
   @@map("audit_log")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PARTNER CONTRIBUTIONS (per D33 + foundational events)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Partner equity flows — capital calls, distributions, and in-kind asset
+/// contributions. Per D33: composable via 1-to-many `ContributionSource`.
+///
+/// Santa Elena seeds AT LEAST two foundational events (per
+/// Detalle egresos findings):
+///   - 2018-02-15: Q9,096,780 IN_KIND_ASSET (land contribution by
+///                 Condominio Antigua Panorama, S.A.)
+///   - 2025-06-16: Q1,535,506 CASH_PURCHASE (land payment to
+///                 Ana Diaz Duran Duran, the original landowner)
+/// Combined Q10,632,286 reconciles to Ppto Inversion!ED8 TERRENO actuals.
+model PartnerContribution {
+  id                      String                  @id @default(uuid()) @db.Uuid
+  projectId               String                  @map("project_id") @db.Uuid
+  partnerId               String                  @map("partner_id") @db.Uuid
+  date                    DateTime                @db.Date
+  /// Signed Decimal: distributions are NEGATIVE, contributions POSITIVE.
+  amountGtq               Decimal                 @map("amount_gtq") @db.Decimal(18, 2)
+  /// Derived using TC at date (per-tx TC if available, project rate otherwise).
+  amountUsd               Decimal                 @map("amount_usd") @db.Decimal(18, 2)
+  kind                    PartnerContributionKind
+  /// REQUIRED for kind = IN_KIND_ASSET; null otherwise. e.g. "Bien inmueble
+  /// (terreno Santa Elena, 5TA AVE. SUR FINAL, FINCA PAVON Y MATAMBO LOTE 3)".
+  assetDescription        String?                 @map("asset_description") @db.Text
+  /// Workbook source reference for the audit trail. e.g. "Detalle egresos!row 267".
+  sourceWorkbookRef       String?                 @map("source_workbook_ref")
+  /// Per Batch 7.5: optional FK to BudgetCategory. Lets the budget-health
+  /// calc roll PartnerContribution amounts (e.g. the 2018 + 2025 terreno
+  /// events) into the TERRENOS category's "spent" total. For Santa Elena
+  /// both PCs map to TERRENOS; for future projects + future PC kinds
+  /// (CASH_CALL / DISTRIBUTION), this stays nullable.
+  categoryId              String?                 @map("category_id") @db.Uuid
+  notes                   String?                 @db.Text
+  /// REFLUJO Batch 13b: nullable FK back to the silver bank-transaction
+  /// this PartnerContribution was promoted from (inbox classification).
+  /// Nullable for historical PCs from Batch 6 seed (Santa Elena's 2 terreno
+  /// events pre-date the bank-statement ingestion path).
+  sourceBankTransactionId String?                 @map("source_bank_transaction_id") @db.Uuid
+  createdAt               DateTime                @default(now()) @map("created_at")
+  updatedAt               DateTime                @updatedAt @map("updated_at")
+  /// Soft-delete marker. Per project invariant: deletes are never hard.
+  deletedAt               DateTime?               @map("deleted_at")
+
+  project               Project              @relation(fields: [projectId], references: [id])
+  partner               Partner              @relation(fields: [partnerId], references: [id])
+  category              BudgetCategory?      @relation(fields: [categoryId], references: [id])
+  sources               ContributionSource[]
+  sourceBankTransaction BankTransaction?     @relation("PartnerContributionSourceBankTransaction", fields: [sourceBankTransactionId], references: [id])
+
+  @@index([projectId])
+  @@index([partnerId])
+  @@index([categoryId])
+  @@index([date])
+  @@index([kind])
+  @@index([sourceBankTransactionId])
+  @@index([deletedAt])
+  @@map("partner_contribution")
+}
+
+/// Per D33: composable sources for a PartnerContribution. A single
+/// contribution can have multiple sources (forecast + actual + hybrid coexist).
+/// `weight` allows fractional attribution between sources.
+model ContributionSource {
+  id             String                 @id @default(uuid()) @db.Uuid
+  contributionId String                 @map("contribution_id") @db.Uuid
+  sourceKind     ContributionSourceKind @map("source_kind")
+  /// 0.0 to 1.0 — portion of the parent contribution attributed to this source.
+  /// For a single-source contribution this is 1.0.
+  weight         Decimal                @db.Decimal(5, 4)
+  notes          String?                @db.Text
+  createdAt      DateTime               @default(now()) @map("created_at")
+  updatedAt      DateTime               @updatedAt @map("updated_at")
+  /// Soft-delete marker. Per project invariant: deletes are never hard.
+  deletedAt      DateTime?              @map("deleted_at")
+
+  contribution PartnerContribution @relation(fields: [contributionId], references: [id])
+
+  @@index([contributionId])
+  @@index([deletedAt])
+  @@map("contribution_source")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ISR OBLIGATIONS (per D34 — both ISR 18 + ISR 25 seeded literally)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Per D34: both ISR rates from the source workbook are deliberate per
+/// Federico (resolves Q1 disposition). The schema captures BOTH; the UI
+/// surfaces them as the LITERAL strings "ISR 18" and "ISR 25" — never as
+/// "Effective" / "Nominal" or any interpretive label
+/// (per [[feedback_literal_labels_when_multiple_values]]).
+///
+/// Santa Elena seeds two rows:
+///   - uiLabel = "ISR 18", rate = 0.18, sourceCell = "FCFCasas2!G79",
+///     rateKind = EFFECTIVE (USED by the model's calculation at AT79)
+///   - uiLabel = "ISR 25", rate = 0.25, sourceCell = "FCFCasas2!A79",
+///     rateKind = NOMINAL (LABEL on the line, "25% sobre utilidad antes
+///     de impuestos")
+///
+/// Field-usage logic (when to apply which rate) lives in the calc layer
+/// and is implemented when Federico clarifies. Schema fields stay
+/// unchanged regardless of his answer.
+model IsrObligation {
+  id                 String            @id @default(uuid()) @db.Uuid
+  projectId          String            @map("project_id") @db.Uuid
+  /// LITERAL user-facing label per D34 — NEVER abbreviated to interpretive
+  /// labels. Examples: "ISR 18", "ISR 25". Unique within a project.
+  uiLabel            String            @map("ui_label")
+  rate               Decimal           @db.Decimal(5, 4)
+  /// INTERNAL discriminator only — UI uses `uiLabel` verbatim per D34.
+  rateKind           IsrRateKind       @map("rate_kind")
+  /// Workbook source cell for the rate. e.g. "FCFCasas2!G79" or "FCFCasas2!A79".
+  sourceCell         String            @map("source_cell")
+  /// Verbatim source text — for labels, the full Spanish string; for numeric
+  /// cells, the value as it appears. Preserved per
+  /// [[feedback_intent_vs_implementation]].
+  sourceTextVerbatim String            @map("source_text_verbatim") @db.Text
+  /// Per D33: schema supports any payment pattern. Santa Elena seeded as
+  /// LUMP_END per the model's forecast (Federico's model treats ISR as a
+  /// single lump payment at month 36). Q-ISR-TIMING (tax advisor) pending.
+  paymentPattern     IsrPaymentPattern @map("payment_pattern")
+  notes              String?           @db.Text
+  isActive           Boolean           @default(true) @map("is_active")
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
+  /// Soft-delete marker. Per project invariant: deletes are never hard.
+  deletedAt          DateTime?         @map("deleted_at")
+
+  project Project @relation(fields: [projectId], references: [id])
+
+  @@unique([projectId, uiLabel])
+  @@index([projectId])
+  @@index([deletedAt])
+  @@map("isr_obligation")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DATA QUALITY FLAGS (per D31 — parser emits, app surfaces)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// First-class entity for parser-detected anomalies per D31:
+///   THE PARSER DOES NOT FAIL — neither loudly nor silently.
+/// Every cell with content is captured verbatim; anomalies become rows in
+/// this table. The app reads them and surfaces with provenance ("from xlsx"
+/// vs "from app calc"). NEW kinds are added to the enum as new anomaly
+/// classes are discovered; unknown anomalies use UNKNOWN_ANOMALY rather
+/// than throwing.
+///
+/// Severity drives UX urgency:
+///   - INFO: cosmetic / observational
+///   - WARNING: noteworthy but doesn't block (e.g. stale formula window)
+///   - ERROR_VISIBLE: contradiction requiring human review (e.g. unit
+///                     status contradicts refund event)
+///   - ERROR_BLOCKING: structural failure breaking core invariants (rare)
+///
+/// Resolution workflow: analyst opens the flag, applies a fix in the
+/// source data or in the app, sets `resolvedAt` + `resolutionNote`.
+/// Resolved flags stay in the table for audit trail.
+model DataQualityFlag {
+  id                String                  @id @default(uuid()) @db.Uuid
+  kind              DataQualityFlagKind
+  severity          DataQualityFlagSeverity
+  /// Workbook source location, e.g. "FCFCasas2!I97" or "Detalle egresos!row 64".
+  /// For app-runtime flags (post-seed), describes where the issue was raised.
+  sourceWorkbookRef String                  @map("source_workbook_ref")
+  /// Verbatim value from the source (text or stringified number).
+  sourceValue       String?                 @map("source_value") @db.Text
+  /// Recomputed / corrected value when the app provides one (e.g. for the
+  /// TIRi flag: "21.23%" vs "30.95%").
+  recomputedValue   String?                 @map("recomputed_value") @db.Text
+  /// Short human-readable explanation. Bilingual OK; Spanish preferred for
+  /// source-derived flags per [[feedback_intent_vs_implementation]].
+  humanMessage      String                  @map("human_message") @db.Text
+  /// Optional polymorphic FK: which entity is this flag "about"?
+  /// e.g. relatedEntityType = "RvUnit", relatedEntityId = <Casa 6 UUID>.
+  relatedEntityType String?                 @map("related_entity_type")
+  relatedEntityId   String?                 @map("related_entity_id") @db.Uuid
+  raisedAt          DateTime                @default(now()) @map("raised_at")
+  /// Analyst marks the flag resolved with a note. Resolved flags remain in
+  /// the table (no hard delete) for audit per D21.
+  resolvedAt        DateTime?               @map("resolved_at")
+  resolvedByUserId  String?                 @map("resolved_by_user_id") @db.Uuid
+  resolutionNote    String?                 @map("resolution_note") @db.Text
+  createdAt         DateTime                @default(now()) @map("created_at")
+  updatedAt         DateTime                @updatedAt @map("updated_at")
+  /// Soft-delete marker. Per project invariant: deletes are never hard.
+  deletedAt         DateTime?               @map("deleted_at")
+
+  resolvedBy User? @relation(fields: [resolvedByUserId], references: [id])
+
+  @@index([kind])
+  @@index([severity])
+  @@index([relatedEntityType, relatedEntityId])
+  @@index([resolvedAt])
+  @@index([deletedAt])
+  @@map("data_quality_flag")
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// REFLUJO — bank-statement ingestion (Batch 13a)
+//
+// 3-layer medallion architecture per REFLUJO_DESIGN.md:
+//   - BRONZE: BankStatementImport → BankStatementSheet → BankStatementRawRow
+//             (immutable raw capture; every cell preserved via JSONB)
+//   - SILVER: BankTransaction
+//             (normalized canonical stream; signed amounts; dedup via
+//              UNIQUE natural key; Jorge directive #3 — overlapping
+//              re-exports rejected here)
+//   - GOLD:   existing Expenditure / PartnerContribution / future RvPayment
+//             (gold-side FKs land in Batch 13b)
+//
+// Twin-sheet handling: BankStatementSheet.isCanonical is a user toggle
+// (Jorge directive #2). Silver derives only from canonical sheets.
+// Bronze captures all sheets unconditionally.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Bank identity per the parser registry. UNKNOWN means the detect pass
+/// could not identify the bank — the file still imports to bronze with
+/// raw rows preserved, but no silver promotion happens until a human
+/// classifies the bank manually.
+enum BankName {
+  GT_CONTINENTAL
+  PROMERICA
+  BAC
+  INDUSTRIAL
+  UNKNOWN
+}
+
+/// Discriminator inside a bank for the document type. CHECK_REGISTER is
+/// the cheque-log file shape from `0426. CORRELATIVO ...` (separate
+/// adapter family from current-account statements).
+enum StatementType {
+  CURRENT_ACCOUNT
+  CHECK_REGISTER
+  CREDIT_CARD
+  SAVINGS
+  UNKNOWN
+}
+
+/// Why a sheet didn't produce silver candidates. PARSED is the happy
+/// path; UNPARSEABLE means the parser couldn't locate a header row or
+/// data rows; EMPTY means the sheet had < 2 non-empty rows.
+enum SheetParseStatus {
+  PARSED
+  UNPARSEABLE
+  EMPTY
+}
+
+/// Per-row parse outcome. OK means the bronze row was normalized into
+/// at least one silver candidate. UNPARSEABLE means the row was preserved
+/// verbatim in bronze but couldn't be turned into a BankTransaction
+/// (e.g., a malformed date, a row that's actually a sub-total). Per D31
+/// nothing is dropped — UNPARSEABLE rows still exist in bronze + emit a
+/// DataQualityFlag for human review.
+enum RawRowParseStatus {
+  OK
+  UNPARSEABLE
+}
+
+/// Direction discriminator at silver. Derived from the source's Débito /
+/// Crédito columns (G&T) or equivalent for other banks. Always in agreement
+/// with the sign of `amountSigned` (DEBIT ⇒ negative, CREDIT ⇒ positive).
+enum BankTransactionDirection {
+  DEBIT
+  CREDIT
+}
+
+/// Classification lifecycle for a silver BankTransaction. UNCLASSIFIED is
+/// the inbox state (Batch 13b classification queue). The other values land
+/// when a user maps the row into a gold-side entity OR explicitly tags it
+/// as a non-business-event (INTERNAL_TRANSFER, INTEREST, FEE, TAX).
+/// IGNORED is the "I looked at this and decided we don't track it" exit.
+enum BankTransactionClassificationStatus {
+  UNCLASSIFIED
+  EXPENDITURE
+  RV_PAYMENT
+  PARTNER_CONTRIBUTION
+  INTERNAL_TRANSFER
+  INTEREST
+  FEE
+  TAX
+  IGNORED
+}
+
+/// Per REFLUJO Batch 13b: RvPayment reconciliation against the per-house
+/// installment schedule (MonthlyProjection.revenuePerHouse). 13b ships
+/// payments unmatched; 13c does the schedule join. The enum is here from
+/// 13b so 13c doesn't need a follow-up migration.
+enum RvPaymentReconciliationStatus {
+  MATCHED
+  OVERPAYMENT
+  UNDERPAYMENT
+  UNMATCHED
+}
+
+// ── BRONZE ──────────────────────────────────────────────────────────────────
+
+/// One row per uploaded statement file. Idempotent on `fileSha256` UNIQUE —
+/// a re-uploaded file is rejected at the action layer (the duplicate hash
+/// check), not via DB constraint violation, so we can give the user a
+/// friendly message + a link to the existing import.
+model BankStatementImport {
+  id               String    @id @default(uuid()) @db.Uuid
+  fileName         String    @map("file_name")
+  fileSha256       String    @unique @map("file_sha256")
+  fileSizeBytes    Int       @map("file_size_bytes")
+  uploadedAt       DateTime  @default(now()) @map("uploaded_at")
+  uploadedByUserId String    @map("uploaded_by_user_id") @db.Uuid
+  /// Registry detection result for the file as a whole. May be UNKNOWN if
+  /// no adapter matched — sheets are still captured in bronze, just without
+  /// any silver promotion.
+  detectedBank     BankName  @default(UNKNOWN) @map("detected_bank")
+  /// Soft-delete: a user (MASTER only by RBAC) can hide a bad upload from
+  /// queries, but the rows persist for audit per D21.
+  deletedAt        DateTime? @map("deleted_at")
+
+  uploadedBy User                 @relation("BankStatementImportUploadedBy", fields: [uploadedByUserId], references: [id])
+  sheets     BankStatementSheet[]
+
+  @@index([uploadedByUserId])
+  @@index([uploadedAt])
+  @@index([deletedAt])
+  @@map("bank_statement_import")
+}
+
+/// One row per sheet inside an import. Sheet names are preserved verbatim
+/// (per the xlsx parser convention — trailing spaces, weird auto-generated
+/// G&T export IDs, etc.). Detection metadata populated by the parser
+/// registry pass.
+model BankStatementSheet {
+  id                    String           @id @default(uuid()) @db.Uuid
+  importId              String           @map("import_id") @db.Uuid
+  sheetName             String           @map("sheet_name")
+  /// 0-based position inside the workbook.
+  sheetIndex            Int              @map("sheet_index")
+  rowCount              Int              @map("row_count")
+  statementType         StatementType    @default(UNKNOWN) @map("statement_type")
+  /// FK to the bank account this sheet's data belongs to. Nullable when
+  /// the parser couldn't match the sheet's #Cuenta cell to an existing
+  /// BankAccount row — surfaces as a "needs operator review" state.
+  detectedBankAccountId String?          @map("detected_bank_account_id") @db.Uuid
+  detectedCurrency      Currency?        @map("detected_currency")
+  detectedPeriodStart   DateTime?        @map("detected_period_start") @db.Date
+  detectedPeriodEnd     DateTime?        @map("detected_period_end") @db.Date
+  parseStatus           SheetParseStatus @map("parse_status")
+  parseNote             String?          @map("parse_note") @db.Text
+  /// Twin-sheet decision per Jorge directive #2. UI toggle: when there are
+  /// N sheets representing the same data in different conventions, exactly
+  /// one is canonical; silver derives only from that one. Default true so
+  /// single-sheet files Just Work; the upload action sets the alternates
+  /// to false at insert time.
+  isCanonical           Boolean          @default(true) @map("is_canonical")
+  /// Links alternates back to the canonical sheet within the same import
+  /// (e.g. the "(2)" twin sheets in G&T monthlies). Nullable for canonical
+  /// sheets themselves.
+  alternatesLinkId      String?          @map("alternates_link_id") @db.Uuid
+  createdAt             DateTime         @default(now()) @map("created_at")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
+
+  import              BankStatementImport   @relation(fields: [importId], references: [id])
+  detectedBankAccount BankAccount?          @relation("BankStatementSheetDetectedAccount", fields: [detectedBankAccountId], references: [id])
+  alternatesLink      BankStatementSheet?   @relation("SheetAlternates", fields: [alternatesLinkId], references: [id])
+  alternates          BankStatementSheet[]  @relation("SheetAlternates")
+  rawRows             BankStatementRawRow[]
+
+  @@index([importId])
+  @@index([detectedBankAccountId])
+  @@index([alternatesLinkId])
+  @@map("bank_statement_sheet")
+}
+
+/// One row per source data row, raw cells preserved as JSONB. Append-only:
+/// once a bronze row lands it is NEVER modified. If silver derivation needs
+/// to change (e.g. we improve the parser), we re-run the silver build pass
+/// against the same bronze rows — never edit bronze.
+model BankStatementRawRow {
+  id              String            @id @default(uuid()) @db.Uuid
+  sheetId         String            @map("sheet_id") @db.Uuid
+  /// 1-based row index in the source spreadsheet so the operator can
+  /// cross-reference with the original file if something looks wrong.
+  sourceRowNumber Int               @map("source_row_number")
+  /// Verbatim cell capture. Shape: { "A": "...", "B": 123, "C": null, ... }
+  /// where keys are spreadsheet column letters. Per D31 we never coerce
+  /// types at this layer — strings stay strings, numbers stay numbers,
+  /// nulls stay nulls. Type interpretation happens at silver-build.
+  rawCells        Json              @map("raw_cells")
+  parseStatus     RawRowParseStatus @map("parse_status")
+  /// Operator-facing explanation when parseStatus = UNPARSEABLE.
+  parseNote       String?           @map("parse_note") @db.Text
+  createdAt       DateTime          @default(now()) @map("created_at")
+
+  sheet         BankStatementSheet @relation(fields: [sheetId], references: [id])
+  /// A bronze row can produce 0, 1, or many silver rows. 0 when the row
+  /// is a sub-total or header. 1 is the common case. Many is reserved for
+  /// future complex banks (e.g., a combined-currency row that needs splitting).
+  silverRows    BankTransaction[]
+  /// Per REFLUJO Batch 13d: CHECK_REGISTER sheets promote rows into
+  /// `IssuedCheque` instead of `BankTransaction`. A bronze row produces
+  /// 0..1 cheques (header / total rows produce 0).
+  issuedCheques IssuedCheque[]
+
+  @@index([sheetId])
+  @@index([parseStatus])
+  @@map("bank_statement_raw_row")
+}
+
+// ── SILVER ──────────────────────────────────────────────────────────────────
+
+/// Normalized canonical bank movement. Signed amount (positive = inflow,
+/// negative = outflow) is the canonical representation; the source's
+/// per-row Débito/Crédito columns are interpreted at silver-build.
+///
+/// The UNIQUE constraint at the bottom is the dedup gate per Jorge
+/// directive #3 — overlapping re-exports of the same date range hit this
+/// constraint and the duplicates are surfaced as DataQualityFlag rows.
+///
+/// Provenance: `bronzeRowId` is REQUIRED. Every silver row traces back to
+/// exactly one bronze row. To re-derive silver from bronze, soft-delete
+/// the silver rows and re-run the silver-build pass.
+///
+/// Classification: starts at UNCLASSIFIED. Gold-side FKs (Expenditure /
+/// RvPayment / PartnerContribution) land in Batch 13b — for 13a only the
+/// status enum + classifier note exist; the FKs are nullable additions in
+/// the next migration.
+model BankTransaction {
+  id                   String                              @id @default(uuid()) @db.Uuid
+  bankAccountId        String                              @map("bank_account_id") @db.Uuid
+  transactionDate      DateTime                            @map("transaction_date") @db.Date
+  /// Signed amount in the account's native currency. POSITIVE = inflow
+  /// (Crédito); NEGATIVE = outflow (Débito). Always in agreement with
+  /// `direction`.
+  amountSigned         Decimal                             @map("amount_signed") @db.Decimal(18, 2)
+  currency             Currency
+  /// Reference number from the source (cheque #, ACH ref, system ID).
+  /// Nullable because some bank events lack one (interest accrual, fees);
+  /// when null, `naturalKey` substitutes a hash of the description so the
+  /// UNIQUE constraint still bites.
+  reference            String?
+  description          String                              @db.Text
+  agencia              String?
+  direction            BankTransactionDirection
+  /// Running balance reported by the source AFTER this row. Optional;
+  /// when present, used by the parser to verify our row-level sign
+  /// interpretation (Δsaldo should equal amount_signed).
+  saldoAfter           Decimal?                            @map("saldo_after") @db.Decimal(18, 2)
+  /// Provenance — REQUIRED per D31. Always traceable back to one bronze row.
+  bronzeRowId          String                              @map("bronze_row_id") @db.Uuid
+  /// Computed deterministically at insert time:
+  ///   `${bankAccountId}|${date.toISOString()}|${reference ?? sha256(description)}|${amountSigned}`
+  /// This is the actual UNIQUE column (Postgres treats NULL as distinct,
+  /// so a raw 4-tuple constraint wouldn't dedup null-reference rows).
+  naturalKey           String                              @unique @map("natural_key")
+  classificationStatus BankTransactionClassificationStatus @default(UNCLASSIFIED) @map("classification_status")
+  classifierNote       String?                             @map("classifier_note") @db.Text
+  classifiedByUserId   String?                             @map("classified_by_user_id") @db.Uuid
+  classifiedAt         DateTime?                           @map("classified_at")
+  createdAt            DateTime                            @default(now()) @map("created_at")
+  updatedAt            DateTime                            @updatedAt @map("updated_at")
+  /// Soft-delete marker per D21. Re-deriving silver from bronze
+  /// soft-deletes prior rows and inserts fresh ones (preserving history).
+  deletedAt            DateTime?                           @map("deleted_at")
+
+  bankAccount          BankAccount           @relation(fields: [bankAccountId], references: [id])
+  bronzeRow            BankStatementRawRow   @relation(fields: [bronzeRowId], references: [id])
+  classifiedBy         User?                 @relation("BankTransactionClassifiedBy", fields: [classifiedByUserId], references: [id])
+  /// REFLUJO Batch 13b back-relations. A bank-transaction can produce 0..N
+  /// gold-side rows (typically 0..1 — a cheque split across two budget
+  /// categories would be 2 Expenditures sharing this same source row).
+  expenditures         Expenditure[]         @relation("ExpenditureSourceBankTransaction")
+  rvPayments           RvPayment[]
+  partnerContributions PartnerContribution[] @relation("PartnerContributionSourceBankTransaction")
+  /// Per REFLUJO Batch 13d: cheques whose cashing event this bank-tx
+  /// represents (matched by chequeNumber ↔ bank-tx reference; the
+  /// matching pass itself is future work in 13e+).
+  cashedCheques        IssuedCheque[]        @relation("ChequeCashedByBankTransaction")
+
+  @@index([bankAccountId, transactionDate])
+  @@index([classificationStatus])
+  @@index([bronzeRowId])
+  @@index([deletedAt])
+  @@map("bank_transaction")
+}
+
+// ── REFLUJO Batch 13b: GOLD addition — RvPayment ────────────────────────────
+
+/// Per-house installment payment. Connects an `RvUnit` (sold house) to the
+/// silver bank-transaction it was settled with. Replaces the manual `CASA`
+/// column Ronny maintains today on the consolidated workbook's `$ abr26` +
+/// `Q abr26` sheets.
+///
+/// Reconciliation against the planned-cuota schedule (per-house monthly
+/// projection) is computed at read time in Batch 13c. For 13b every payment
+/// defaults to `UNMATCHED`.
+///
+/// `bankTransactionId` is nullable for the future case of a manually-entered
+/// payment without a parsed source statement (e.g., the analyst confirms a
+/// payment they saw in WhatsApp but the statement hasn't arrived yet).
+model RvPayment {
+  id                   String                        @id @default(uuid()) @db.Uuid
+  rvUnitId             String                        @map("rv_unit_id") @db.Uuid
+  bankTransactionId    String?                       @map("bank_transaction_id") @db.Uuid
+  paymentDate          DateTime                      @map("payment_date") @db.Date
+  amountUsd            Decimal                       @map("amount_usd") @db.Decimal(18, 2)
+  amountGtq            Decimal                       @map("amount_gtq") @db.Decimal(18, 2)
+  /// TC actually used to reconcile GTQ ↔ USD for this payment. Comes from
+  /// the source BankTransaction's account currency context (USD-account
+  /// payments use 1.0; GTQ payments use the BANGUAT-cached rate at date).
+  exchangeRateUsed     Decimal                       @map("exchange_rate_used") @db.Decimal(10, 6)
+  reconciliationStatus RvPaymentReconciliationStatus @default(UNMATCHED) @map("reconciliation_status")
+  notes                String?                       @db.Text
+  createdByUserId      String                        @map("created_by_user_id") @db.Uuid
+  createdAt            DateTime                      @default(now()) @map("created_at")
+  updatedAt            DateTime                      @updatedAt @map("updated_at")
+  /// Soft-delete marker per D21.
+  deletedAt            DateTime?                     @map("deleted_at")
+
+  rvUnit          RvUnit           @relation(fields: [rvUnitId], references: [id])
+  bankTransaction BankTransaction? @relation(fields: [bankTransactionId], references: [id])
+  createdBy       User             @relation("RvPaymentCreatedBy", fields: [createdByUserId], references: [id])
+
+  @@index([rvUnitId])
+  @@index([bankTransactionId])
+  @@index([paymentDate])
+  @@index([deletedAt])
+  @@map("rv_payment")
+}
+
+// ── REFLUJO Batch 13d: GOLD addition — IssuedCheque ────────────────────────
+
+/// FORMA's internal check register. Tracks cheques DRAWN against a bank
+/// account, parallel to but separate from the bank-statement stream.
+///
+/// Lifecycle:
+///   1. Cheque is issued (entered in `0426. CORRELATIVO ...` xlsx by Ronny).
+///      Lands here via the REFLUJO check-register adapter (Batch 13d).
+///   2. Cheque is cashed (appears on the bank statement as a debit with
+///      `Referencia = cheque_number`). Future work matches cheque ↔ bank-tx
+///      and sets `cashedByBankTransactionId`.
+///   3. Cheque's expense is classified (via `/inbox/[id]` when classifying
+///      the cashing bank-tx as Expenditure). `classifiedExpenditureId` is
+///      then set.
+///
+/// ANULADO rows are preserved verbatim per D31: `payeeName="ANULADO"`,
+/// `amountSigned=0`, `isVoided=true`. They never become Expenditures but
+/// they DO occupy a cheque-number slot in the issuing sequence — Ronny
+/// needs to see them to track which numbers were burned.
+///
+/// `bankAccountId` is nullable because the source file's title carries
+/// only the legal entity ("CONDOMINIO ANTIGUA PANORAMA"), not the bank
+/// account. The parser binds USD sheets to the only G&T USD account
+/// when there's exactly one match; QTZ sheets stay unbound until a user
+/// resolves them via the UI.
+model IssuedCheque {
+  id                        String    @id @default(uuid()) @db.Uuid
+  /// Cheque number from NO. CHEQUE column. Unique within (account, currency).
+  chequeNumber              String    @map("cheque_number")
+  /// Date of issue (FECHA column). Null when source had empty or
+  /// unparseable value (e.g. literal "XXXX" or undated ANULADO).
+  issueDate                 DateTime? @map("issue_date") @db.Date
+  /// Currency drawn — derived from the sheet title (`USD` or `Q`).
+  currency                  Currency
+  /// FK to the bank account this cheque is drawn on. Nullable when the
+  /// parser couldn't bind a specific account (multi-candidate or unknown).
+  bankAccountId             String?   @map("bank_account_id") @db.Uuid
+  /// Payee from NOMBRE — verbatim. "ANULADO" stays as-is for voided rows.
+  payeeName                 String    @map("payee_name")
+  /// Cheque amount, always positive. Zero for ANULADO.
+  amountSigned              Decimal   @map("amount_signed") @db.Decimal(18, 2)
+  /// CONCEPTO column — the description.
+  concepto                  String    @db.Text
+  /// SOLICITUD reference (often empty).
+  solicitud                 String?
+  /// PARTIDA categorization from source — free-text. Connected to budget
+  /// categories at classification time (via `classifiedExpenditureId`).
+  partida                   String?
+  /// CXC reference (cuenta-por-cobrar), often empty.
+  cxc                       String?
+  /// Running balance after this cheque from SALDO column.
+  saldoAfter                Decimal?  @map("saldo_after") @db.Decimal(18, 2)
+  /// True when the source flagged this cheque as ANULADO (voided).
+  /// Per D31 the underlying source data (payeeName="ANULADO" etc.) is
+  /// preserved verbatim; this boolean is the derived convenience for
+  /// downstream queries.
+  isVoided                  Boolean   @default(false) @map("is_voided")
+  /// Provenance — REQUIRED. Every IssuedCheque traces to a bronze row.
+  bronzeRowId               String    @map("bronze_row_id") @db.Uuid
+  /// Natural-key UNIQUE for dedup against overlapping re-imports. Format:
+  /// `${currency}|${chequeNumber}|${bankAccountId ?? bronzeRowId}`. When
+  /// the bank account is known, the natural key catches semantic dedup
+  /// across files. When unbound, falls back to bronze_row_id (no semantic
+  /// dedup — each ingest gets its own row).
+  naturalKey                String    @unique @map("natural_key")
+  /// Optional FK to the BankTransaction that cashed this cheque. Match
+  /// logic (cheque number ↔ bank-tx reference) is future work.
+  cashedByBankTransactionId String?   @map("cashed_by_bank_transaction_id") @db.Uuid
+  /// Optional FK to the Expenditure classified from the cashing bank-tx.
+  classifiedExpenditureId   String?   @map("classified_expenditure_id") @db.Uuid
+  createdAt                 DateTime  @default(now()) @map("created_at")
+  updatedAt                 DateTime  @updatedAt @map("updated_at")
+  deletedAt                 DateTime? @map("deleted_at")
+
+  bankAccount             BankAccount?        @relation(fields: [bankAccountId], references: [id])
+  bronzeRow               BankStatementRawRow @relation(fields: [bronzeRowId], references: [id])
+  cashedByBankTransaction BankTransaction?    @relation("ChequeCashedByBankTransaction", fields: [cashedByBankTransactionId], references: [id])
+  classifiedExpenditure   Expenditure?        @relation("ExpenditureClassifiedFromCheque", fields: [classifiedExpenditureId], references: [id])
+
+  @@index([bankAccountId, currency, chequeNumber])
+  @@index([bronzeRowId])
+  @@index([cashedByBankTransactionId])
+  @@index([isVoided])
+  @@index([deletedAt])
+  @@map("issued_cheque")
 }

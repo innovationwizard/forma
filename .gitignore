@@ -2,6 +2,10 @@
 # Per `docs/README.md`, this directory is the holding's source data vault.
 docs/
 
+# XLSX parser output bundles (Batch 5). Contains parsed PII / financials per D3 + D31.
+# Each run produces a timestamped JSON + a parse-latest.json symlink. Local-only.
+scripts/xlsx/output/
+
 # Dependencies
 /node_modules
 /.pnp

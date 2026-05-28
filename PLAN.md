@@ -132,48 +132,121 @@ Total: **19 batches**. Each sized so a single session can plausibly finish it. G
 - **Risks / Open:**
   - **Gate 4.1:** Confirm ISR rate. SDD §3.2.1 says `isr_rate: 0.18`. Guatemalan real-estate developers typically use 5%/7% regimen optativo or 25% on net. 18% is unusual — needs confirmation before any tax-aware calculation. Until confirmed, the field exists but no calc consumes it.
 
+### Batch 4.5 — Schema extensions for D29-D35 + inspection findings
+
+> **Inserted 2026-05-25 as a mini-batch between Batch 4 and Batch 5.** Required because the Batch 5 parser produces output for entities that didn't yet exist in the Batch 4 schema. Architectural decision 2026-05-25: "Batch 4.5 first" — cleanest separation; keeps Batch 5 parser-only as PLAN.md intends.
+
+- **Goal:** extend `prisma/schema.prisma` with all entities + fields required by D29-D35 and the 14 inspection findings, so Batch 5's parser output bundle has unambiguous schema targets and Batch 6's seed script has tables to write to.
+
+- **Inputs / Gates:** Batch 4 done. No external gates.
+
+- **Deliverables:**
+  - **9 new enums** in `prisma/schema.prisma`: `DataQualityFlagKind` (19 values per the 16+ enumerated flag kinds in SDD §3.2.9), `DataQualityFlagSeverity`, `PartnerContributionKind`, `ContributionSourceKind`, `IsrPaymentPattern`, `IsrRateKind` (internal — UI uses literal `uiLabel`), `AmortizationMechanism`, `ExpenditureKind`, `PartnerCategory`.
+  - **1 enum extension:** `ExpenditureStatus + ANULADO` (preserves source workbook's discriminator per [[feedback_literal_labels_when_multiple_values]]; distinct from VOIDED which is app-internal).
+  - **5 new models:** `DataQualityFlag` (D31), `PartnerContribution` + `ContributionSource` (D33 composable equity flows), `IsrObligation` (D34 both rates literal), `AmortizationRule` (D33 CreditFacility 1-to-many).
+  - **`Project` field additions per D30:** `internalApprovalDate`, `regulatoryHistoryNote`, `modelAuthorName`, `modelRecentEditorName`, `legalRepresentativeName`, `address`, `originalLandowner`, `modelNotes` (JSONB array). Plus TC ambiguity: `tcBudgetaryLabel`, `tcEffectiveTerrenoHistorical`. **Drop `isrRate`** per D34 (replaced by `IsrObligation`; no data loss — column was unseeded).
+  - **`Expenditure` field additions:** `kind ExpenditureKind` (default OPERATING_EXPENSE), `exchangeRateAtTransaction Decimal?` (per-tx TC from regex extraction per Detalle egresos finding #11), `descriptionNormalized Text?` (parallel to `description` per [[feedback_intent_vs_implementation]]).
+  - **`Partner.category PartnerCategory?`** — the 5-value functional typology (independent axis from `Partner.type` legal enum). Nullable; seed populates from inspection mapping.
+  - **2 migrations** generated via D23 workflow:
+    - `prisma/migrations/<ts>_batch_4_5_schema_extensions/migration.sql`
+    - `prisma/migrations/<ts>_batch_4_5_rls_policies/migration.sql` (filtered to the 5 new resources only)
+  - **`src/lib/rbac/matrix.ts` extended** with 5 new resources, slotted into the existing D14/D22 pattern. `data_quality_flag` uses a custom action set (ANALISTA: READ + UPDATE + DELETE; no CREATE — parser/system writes via MASTER bypass).
+
+- **Acceptance:**
+  - `pnpm prisma validate` — schema valid.
+  - `pnpm prisma migrate deploy` — applies both migrations cleanly.
+  - `pnpm tsx scripts/verify-rbac.ts` — all checks pass (matrix-driven; new resources expand coverage automatically).
+  - `pnpm tsx scripts/verify-rls.ts` — all RLS checks pass (matrix-driven; new policies match the matrix).
+  - `GET /api/health` → 200, DB layer intact across schema extension.
+
+- **Risks / Open:**
+  - **Env-var loading for `migrate diff`:** observed gotcha — `pnpm prisma migrate diff --from-url $DATABASE_URL` requires explicit env source (e.g., `source <(grep -E "^DATABASE_URL=" .env)`) BEFORE the command. Otherwise generates an error-message-as-SQL file that fails downstream. Documented for future mini-batches.
+  - **None blocking Batch 5.** Schema is shape-stable; field additions are backward-compatible (nullable). Existing Batch 4 entities + migrations untouched.
+
+---
+
 ### Batch 5 — XLSX parser
 
-- **Goal:** A standalone, testable parser that reads the workbook and emits normalized, validated records ready for seeding. No DB writes in this batch.
-- **Inputs / Gates:** **Gate 5.1** — user drops the actual `.xlsx` into the repo (filename TBD; will be added to `.gitignore` if it contains PII).
+> **Spec updated 2026-05-25 after deep inspection (PROGRESS.md D26, D31, D32, D33, D34, D35 + 14 inspection findings consolidated in `docs/REFLUJO/04. MODELO PRESUPUESTARIO AL 210526 terminado (rrivas) vr2 — MANIFEST.md`).** The original v0.3 spec assumed a fail-loud validator and stale SDD parity numbers; both replaced.
+
+- **Goal:** A standalone, testable parser that reads the workbook and emits a normalized output bundle ready for seeding. **No DB writes in this batch.** Parser is **total + faithful** per D31: it does NOT fail (no exceptions, no exit codes ≠ 0) AND it does NOT silently drop data (no skipped rows, no lossy normalization, no filtered values). Every input cell with content is captured verbatim; anomalies become `DataQualityFlag` rows in the output.
+
+- **Inputs / Gates:**
+  - **Gate 5.1 (RESOLVED 2026-05-22):** xlsx already in `docs/REFLUJO/04. MODELO PRESUPUESTARIO AL 210526 terminado (rrivas) vr2.xlsx`; directory is gitignored. Per D3, parser never echoes contents to logs/chat.
+  - **Gate 5.2 (NEW):** schema extensions per D33+D34 must exist before Batch 6 can consume parser output. Whether they're added inline (Batch 5) or as a Batch 4.5 mini-batch is TBD. Parser itself can produce JSON without DB schema being final.
+
 - **Deliverables:**
-  - `scripts/xlsx/parse.ts` — entry point
-  - `scripts/xlsx/sheets/fcfcasas2.ts` — extracts: project totals, 12 categories with budgets, 11 houses with payment schedules, 36-month monthly projection, credit facility params
-  - `scripts/xlsx/sheets/ppto-inversion.ts` — extracts: budget sub-items per category with unit/qty/price
-  - `scripts/xlsx/sheets/detalle-egresos.ts` — extracts: all transactions with bank, date, vendor, amounts, IVA, internal/general category, source flags
-  - `scripts/xlsx/normalize.ts` — maps xlsx category names → canonical `BudgetCategory.code` per SDD §6; flags any unmapped rows for human review
-  - `scripts/xlsx/validate.ts` — internal consistency checks:
-    - Sum of category budgets equals project total sin IVA
-    - Sum of category percentages ≈ 100% (±0.01)
-    - All transactions reference a known bank account
-    - All transactions have a resolvable category (or are flagged `IMPUESTOS`/`ANULADO`/`DEVOLUCIÓN`/`TRASLADO` per §6)
-  - `scripts/xlsx/report.ts` — human-readable summary printed when parser runs: counts per sheet, unmapped rows, total executed
-- **Acceptance:** `pnpm xlsx:parse <path>` outputs:
-  - 12 categories totaling $11,228,641.51 sin IVA
-  - 11 houses totaling $12,639,661.49 projected revenue
-  - 242 transactions totaling **$1,988,922.82** executed (the SDD §3.2.4 number)
-  - Zero unflagged unmapped rows
-  - Exits non-zero if any validation fails
+  - `scripts/xlsx/parse.ts` — entry point; CLI + library API. Writes timestamped JSON to `scripts/xlsx/output/` (gitignored).
+  - `scripts/xlsx/sheets/fcfcasas2.ts` — extracts per D25/D27/D28 dashboard blocks: project metadata (banner, date, internal approval, author/editor/legal-rep names per D30), 11 budget categories (CEO view) with budgets, 11 RvUnits with payment schedules + per-unit Phase 2/3 month indexes from cols I/J, 36-month monthly projection grid (label-based per D26, NOT position), credit facility params per D33's `AmortizationRule` shape, partner cash flows (rows 89-97), the 5 verbatim NOTAS (rows 105-110) per D32, the historical scenario comparison (rows 112-124) including the abandoned 27-unit alternative as `Project.historicalAlternativesNote`.
+  - `scripts/xlsx/sheets/ppto-inversion.ts` — extracts: 10 numbered budget categories with 3-level hierarchy (PARTIDA EJECUCIÓN > PARTIDA GENERAL > PARTIDA INTERNA per N4), monthly grid (label-based; identifies Santa Elena window inside the 10-year template starting at column DD = May 2025), summary columns ED (TOTAL A LA FECHA) + EE (POR EJECUTAR), EJECUTADO Q/$ frozen snapshot (rows 90-135) tagged as historical snapshot not live, cash flow rollup (rows 76-87), Federico Franco's cell comment at F20 ("Ya Cotizado final") + any other cell comments encountered, and per-row USD totals discovered via H → G → (I÷TC) fallback chain.
+  - `scripts/xlsx/sheets/detalle-egresos.ts` — extracts all 242 transactions (rows 8-271, hidden + visible) into `Expenditure`-shaped records: `Banco`, `No. Cta`, `Fecha`, `Empresa`, MONTO CON IVA, MONTO SIN IVA, IVA, Descripción (verbatim), `PARTIDA INTERNA` (L3), `PARTIDA GENERAL` (L2), `PARTIDA EJECUCIÓN PRESUPUESTARIA` (L1), `NOTA / OTROS`, `SOLICITUD`. Preserves negative amounts, ANULADO statuses, missing-bank rows, and cells with theme-color fills (the broken Nomenclatura VLOOKUP affected rows).
+  - `scripts/xlsx/extract/tc-from-description.ts` — regex extractor for per-transaction TC values embedded in Descripción (`T\.?C\.?\s*[-:=]?\s*Q?\.?\s*([0-9]+\.[0-9]+)`). Populates `Expenditure.exchangeRateAtTransaction` for the ~20 affected transactions per Detalle egresos finding #11.
+  - `scripts/xlsx/extract/cell-color.ts` — detects non-default fills (BOTH RGB and theme palette — openpyxl mishandles theme; TypeScript via SheetJS handles both correctly). Emits `DataQualityFlag(kind='PARTIDA_FLAGGED_FOR_REVIEW')` rows for highlighted PARTIDA INTERNA cells.
+  - `scripts/xlsx/extract/cell-comments.ts` — captures cell comments (e.g., Federico Franco's F20 signoff). Stored alongside their source cell in output.
+  - `scripts/xlsx/reconcile.ts` — cross-sheet reconciliations: e.g., Casa 6 refund in Detalle egresos row 64 cross-references `Ppto Inversion!DK76` negative revenue, terreno aportación row 267 + cash payment row 138 reconcile to `Ppto Inversion!ED8` total. Emits `crossSheetReconciliations[]` in output (informational, not flags).
+  - `scripts/xlsx/flags.ts` — `DataQualityFlag` shape + factory. Flag kinds enumerated: `MISSING_PARTIDA` (broken Nomenclatura VLOOKUP rows), `PARTIDA_FLAGGED_FOR_REVIEW` (color-coded cells), `UNIT_STATUS_CONTRADICTS_REFUND` (Casa 6 + note 5), `CATEGORY_MISLABEL` (Ppto Inversion row 131 mismatch), `TIMELINE_MISALIGNMENT` (FCFCasas2 ends May-28 vs Ppto Inversion ends Apr-27), `CALENDAR_GAP` (Nov-27 missing in FCFCasas2 row 5), `STALE_FORMULA_WINDOW` (TIRi truncated at K..AN95), `STALE_LABEL` (E112=12 vs actual 11 units), `FLOATING_POINT_RESIDUE` (Ppto Inversion H64 = 0.006), `TC_AMBIGUITY` (3-way 7.7/7.8/7.6922 + per-tx values), `OVERSPEND` (TERRENO actuals > budget, Impuestos w/o budget), `LARGE_NEGATIVE_REVENUE` (Ppto Inversion DK76), `MIXED_CURRENCY_SUM_VALIDATED_GTQ` (Detalle egresos F5 sum confirmed GTQ-only via 12% IVA ratio test), `MISSING_BANCO_INTENTIONAL` (non-cash events, cross-company transfers), `UNUSED_BUDGET_FORMULA` (Detalle egresos row 1/3 Pendiente formula referencing zero budget).
+  - `scripts/xlsx/normalize.ts` — maps source partida strings → canonical app IDs; **NEVER drops or filters** rows with unmapped values — instead emits `MISSING_PARTIDA` flag with row pointer. Whitespace normalization happens in parallel fields (`raw*` + `normalized*`).
+  - `scripts/xlsx/validate.ts` — invariant checks. **All produce flags, none throw.** Checks: budget category totals reconcile to project total sin IVA, transactions reference known banks (or emit `MISSING_BANCO_INTENTIONAL`), per-row B×C ≈ H sanity (or emit `OUTLIER_PRICING` like Casa 5), calendar continuity (or emit `CALENDAR_GAP`), per-cell formula extracted vs cached value match (or emit `FORMULA_MISMATCH`).
+  - `scripts/xlsx/report.ts` — human-readable summary printed when parser runs: counts per sheet, flags-by-severity, totals + provenance, recognized vs unmapped partidas. Exits 0 always (per D31). Non-zero only on real I/O failures.
+
+- **Acceptance criteria (UPDATED — supersedes original v0.3 acceptance):**
+  - `pnpm xlsx:parse` produces a JSON bundle under `scripts/xlsx/output/parse-<timestamp>.json` containing:
+    - **11 budget categories** (CEO view from FCFCasas2) totaling **$11,228,641.51 sin IVA** _(verified parity with FCFCasas2!H22, Ppto Inversion!H62, Ppto Inversion row 135 grand budget)_
+    - **11 RvUnits** with sale-month + delivery-month + sale price; sold ⊆ {1, 2, 5, 6, 7, 11} per D29 + workbook note 5 (Casa 5 operational override per D29; Casa 6 retains sold-bucket membership pending Q-CASA-6-STATUS resolution per recent inspection finding)
+    - Projected revenue total **$12,639,661.49** _(FCFCasas2!H47 = Ppto Inversion!H76)_
+    - **242 Expenditure rows** totaling **$2,001,163.72 USD** _(Ppto Inversion row 135 grand actuals — per N3, this LIVE total supersedes the stale SDD §3.2.4 $1,988,922.82 figure)_
+    - At least **2 PartnerContribution rows**: row 267 (2018-02-15, Q9,096,780, IN_KIND_ASSET, Condominio Antigua Panorama S.A.) + row 138 (2025-06-16, Q1,535,506, CASH, Ana Diaz Duran Duran)
+    - **9 BankAccount rows** (6 active + 3 legacy) per Detalle egresos finding #2
+    - **5 NOTAS captured verbatim** per D32 in `Project.modelNotes[]` Spanish strings
+    - Per-transaction TC successfully extracted from at least 20 Descripción cells per finding #11
+    - **`DataQualityFlag[]` populated** with the expected kinds (none of these are blockers; they're surfaced for app/dashboard)
+  - Parser **exits 0 on every successful read** regardless of data anomalies. Exits non-zero ONLY on file-missing / file-unreadable / OOM. No middle ground.
+  - Re-running the parser against the same xlsx produces a byte-identical output bundle except for the timestamp (deterministic ordering of records).
+
 - **Risks / Open:**
-  - If xlsx structure differs from SDD's reverse-engineering, parser exits with a precise diff (which sheet, which cell range). No silent fallbacks.
-  - PII concern: vendor names may include individuals. Decide gitignore policy when file lands.
+  - **No risk of parser failure on data issues** (D31). The risk is the opposite: omitted anomalies. Mitigation = the validate.ts checks emit flags for every known anomaly class; new anomalies discovered later become new flag kinds.
+  - **Schema-extension sequencing (Gate 5.2):** until schema entities exist (`DataQualityFlag`, `PartnerContribution`, `IsrObligation`, `AmortizationRule`, extended `Counterparty`/`Partner.type`, new `Project` fields per D30), Batch 6 cannot consume the parser output. Decision pending: (a) Batch 4.5 schema-extension mini-batch first, (b) bundle schema extensions into Batch 5, (c) schema-agnostic JSON output deferred to Batch 6 for mapping.
+  - **PII concern:** vendor + buyer names are real individuals. `docs/REFLUJO/` is gitignored per D3; `scripts/xlsx/output/` MUST be too. Parser output is local-machine artifact only.
 
-### Batch 6 — Seed script + validation against SDD §10 Phase 2
+### Batch 6 — Seed script + validation against live xlsx totals
 
-- **Goal:** Idempotent seeder writes the parsed xlsx into the real DB with full audit trail. The output reproduces the xlsx's Ppto Inversion summary numbers exactly.
-- **Inputs / Gates:** Batches 4 + 5 done.
+> **Spec updated 2026-05-25 after deep inspection.** Entity names corrected (`House` → `RvUnit` per D9), parity numbers updated to live totals (per N3), new entity seeds added per D29-D35 + 14 inspection findings, sold-bucket override per D29 + Casa 6 pending status per Q-CASA-6-STATUS.
+
+- **Goal:** Idempotent seeder writes the parsed xlsx output (from Batch 5) into the real DB with full audit trail. The seed reproduces the xlsx's live actual totals (Ppto Inversion row 135 grand totals) exactly. **Replays of the seed against the same parser output produce zero diffs.**
+
+- **Inputs / Gates:**
+  - Batch 4 done + schema-extension dependencies satisfied (Gate 5.2 from Batch 5).
+  - Batch 5 done with successful parse output at `scripts/xlsx/output/parse-latest.json`.
+
 - **Deliverables:**
-  - `scripts/seed/index.ts` — orchestrator; runs in a single Prisma transaction per logical group
-  - Creates the synthetic `XLSX_IMPORT` user (role: `SYSTEM`, marked `is_login_disabled: true`) — single source of attribution for historical rows
-  - Seeds in order: `Project` → `BudgetCategory` → `BudgetSubItem` → `House` → `MonthlyProjection` → `CreditFacility` → `Expenditure`
-  - Each insert emits an `AuditLog` row with `action=IMPORT`, `user_id=XLSX_IMPORT`, `context="Initial xlsx import <date>"`
-  - Idempotency: re-running the seed against the same xlsx produces zero diffs (uses content-hash keys on natural identifiers like `BudgetCategory.code`, `Expenditure (bank + date + amount + vendor)`)
-  - `scripts/seed/validate.ts` — runs SDD §10 Phase 2 assertions directly against the seeded DB:
-    - Total executed = $1,988,922.82
-    - Total remaining = $9,239,718.69
-    - Each category's actual matches xlsx within $0.01
-- **Acceptance:** `pnpm seed` from a clean DB lands all data, audit log shows N=(categories+subitems+houses+projections+expenditures) IMPORT entries, validator passes all assertions, second run is a no-op.
-- **Risks / Open:** None blocking. **Gate 6.1** (advisory): exchange rate column on historical GTQ transactions — use the rate stored in the xlsx for that row; do not refetch from BANGUAT for historical seeding (preserves audit fidelity).
+  - `scripts/seed/index.ts` — orchestrator; runs each entity group in a single Prisma transaction.
+  - Creates the synthetic `XLSX_IMPORT` user (role: `MASTER` per D14 — `SYSTEM` is not a defined role; `is_active: false`) — single attribution source for historical rows per D8.
+  - Seeds in order: `Project` (with all D30 metadata + both ISR rates per D34) → `BudgetExecutionPartition` → `BudgetCategory` → `BudgetSubItem` → `BankAccount` (9 rows per Detalle egresos finding #2) → `Counterparty` (or extended `Partner`, per Q1 schema decision) → `RvUnit` (11 units) → `RvReservation` (per workbook note 5 + D29 sold-bucket override) → `MonthlyProjection` (with calendar continuity per D31) → `CreditFacility` + `AmortizationRule` (per D33) → `IsrObligation` (per D34, with `ISR 18` + `ISR 25` literal labels) → `PartnerContribution` (2018 aportación + 2025 cash) → `Expenditure` (242 rows + preserved ANULADO + negative-MONTO row 242) → `InvestmentPhase` (per D24) → `DataQualityFlag` (all flags from the parse output) → `AuditLog` (one per insert).
+  - Per D30, `Project` gets seeded with: `internalApprovalDate = 2025-04-22`, `regulatoryHistoryNote` (12→11 forced revision), `modelAuthorName = "Lic. Federico Javier Franco Jimenez"`, `modelRecentEditorName = "Ronny Rivas"`, `legalRepresentativeName = "Aguedo Ivan Escobar Velasquez"`, `address = "5TA AVE. SUR FINAL, FINCA PAVON Y MATAMBO LOTE 3, SAN PEDRO EL PANORAMA, ANTIGUA GUATEMALA, SACATEPEQUEZ"`, `originalLandowner = "ANA DIAZ DURAN DURAN"`, `modelNotes` (5 verbatim Spanish notes per D32).
+  - Per D29, `RvUnit.classification` for Casa 5 set to `SOLD` via operational override (annotated in seed comment + DataQualityFlag); Casa 6 stays `SOLD` per Casa 5 precedent pending Q-CASA-6-STATUS resolution (also annotated + flagged).
+  - Per D34, `IsrObligation` rows: one row for ISR 18 (effective) + one row for ISR 25 (nominal label) — both literal labels surface in UI per the D34 directive.
+  - Each insert emits `AuditLog { action: IMPORT, userId: XLSX_IMPORT, context: "Initial xlsx import 2026-05-25" }` per D8.
+  - **Idempotency:** content-hash keys on natural identifiers — `BudgetCategory.code`, `Expenditure (bankAccountId + date + amount + counterpartyId + description-hash)`. Re-running the seed against the same parse output is a no-op.
+  - `scripts/seed/validate.ts` — runs assertions directly against the seeded DB. **All produce structured pass/fail records; no exceptions. Exit non-zero only if budget reconciliation fails (a real correctness issue, not a data-quality flag).**
+
+- **Acceptance criteria (UPDATED):**
+  - `pnpm seed` from a clean DB lands all data; second run is a no-op.
+  - Audit log shows N IMPORT entries where N = sum of seeded rows across all entity types.
+  - Validator assertions (all GTQ via D31's "values are GTQ" finding):
+    - **`SUM(Expenditure.amountGtq WHERE NOT deleted_at)` = `15,408,960.63 GTQ`** (matches Ppto Inversion ED71 + Detalle egresos F5)
+    - **`USD-converted actuals` = `$2,001,163.72 USD`** (matches Ppto Inversion row 135) using per-transaction TC where available + default 7.7 fallback
+    - **`SUM(BudgetCategory.budgetUsd)` = `$11,228,641.51`** (matches FCFCasas2!H22)
+    - **`SUM(RvUnit.priceUsd)` = `$12,639,661.49`** (matches FCFCasas2!H47)
+    - `Project.modelNotes.length == 5` per D32
+    - `PartnerContribution.count >= 2` (the 2018 + 2025 terreno events)
+    - `BankAccount.count == 9` per finding #2
+    - `IsrObligation` contains exactly 2 rows with literal labels `"ISR 18"` and `"ISR 25"` per D34
+  - `DataQualityFlag` table is populated (count > 0) — the seed PRESERVES every flag from the parse output. Counts are surfaced in the validator report but do NOT block.
+
+- **Risks / Open:**
+  - **Gate 6.1 (advisory, unchanged):** exchange rate on historical GTQ transactions — use the per-transaction TC from Descripción extraction (per finding #11) when available; fall back to `Project.tcAdvertised = 7.7` otherwise. Do NOT refetch from BANGUAT for historical seeding (audit fidelity).
+  - **Schema-extension dependency:** if Batch 5 emits JSON for entities that don't yet exist in the schema, this batch is blocked. Gate 5.2 must be resolved first.
+  - **Casa 6 operational status (Q-CASA-6-STATUS):** if Federico confirms Casa 6 is currently unsold (original buyer withdrew, no re-sale), Casa 6's `RvReservation` row gets soft-deleted + flag updated. This is a 1-row seed update.
 
 ---
 

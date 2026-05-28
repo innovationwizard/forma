@@ -30,6 +30,11 @@ const serverSchema = z.object({
 
   DATABASE_URL: z.string().url(),
   DIRECT_URL: z.string().url(),
+
+  /// Shared secret for cron route handlers (Vercel Cron sends this as a
+  /// Bearer token). Optional locally — manual curls can be allowed when
+  /// unset — required in production via deployment config.
+  CRON_SECRET: z.string().min(16).optional(),
 });
 
 function parseOrThrow<T>(schema: z.ZodType<T>, source: unknown, label: string): T {

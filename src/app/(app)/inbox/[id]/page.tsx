@@ -1,0 +1,112 @@
+/**
+ * Per-row classification page — Batch 13b.
+ *
+ *   /inbox/[id]
+ *
+ * Shows the BankTransaction in full + the 4-tab classification widget.
+ * Server-component shell; widget is `"use client"` for the tab state.
+ */
+
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+import { ClassifyWidget } from "@/components/inbox/ClassifyWidget";
+import { requireRole } from "@/lib/dal";
+import { prisma } from "@/lib/db";
+import { loadInboxItem } from "@/lib/queries/inbox";
+import { can } from "@/lib/rbac/matrix";
+import { formatIsoDate, formatUsd } from "@/lib/format";
+import { cn } from "@/lib/utils";
+
+export const dynamic = "force-dynamic";
+
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function InboxItemPage({ params }: PageProps) {
+  const { id } = await params;
+  const { role } = await requireRole();
+  const canClassify = can(role, "UPDATE", "bank_transaction");
+  const snapshot = await loadInboxItem(prisma, id);
+  if (snapshot == null) notFound();
+
+  const tx = snapshot.transaction;
+  const isInflow = tx.direction === "CREDIT";
+
+  return (
+    <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
+      <header>
+        <Link
+          href="/inbox"
+          className="text-foreground/60 hover:text-foreground inline-flex items-center gap-1 text-xs"
+        >
+          ← Back to inbox
+        </Link>
+        <h1 className="text-foreground mt-2 text-2xl font-semibold tracking-tight">
+          Classify bank transaction
+        </h1>
+      </header>
+
+      <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <div>
+            <span
+              className={cn(
+                "rounded-full px-2 py-0.5 text-[10px] font-medium tracking-wide uppercase ring-1 ring-inset",
+                isInflow
+                  ? "bg-emerald-50 text-emerald-900 ring-emerald-200"
+                  : "bg-zinc-100 text-zinc-700 ring-zinc-200",
+              )}
+            >
+              {tx.direction === "CREDIT" ? "Inflow" : "Outflow"}
+            </span>
+            <span className="text-foreground/40 ml-2 font-mono text-xs">
+              {tx.reference ?? "no ref"}
+            </span>
+          </div>
+          <span className="text-foreground text-2xl font-semibold tabular-nums">
+            {isInflow ? "+" : "−"}
+            {tx.currency === "USD" ? "$" : "Q"}
+            {Math.abs(Number(tx.amountSigned)).toFixed(2)}
+          </span>
+        </div>
+
+        <p className="text-foreground/70 mt-3 text-sm whitespace-pre-line">{tx.description}</p>
+
+        <dl className="text-foreground mt-5 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
+          <Stat label="Date" value={formatIsoDate(tx.transactionDate)} />
+          <Stat label="Account" value={tx.bankAccount.displayName} />
+          <Stat label="Currency" value={tx.currency} />
+          <Stat label="USD est." value={formatUsd(tx.amountAbsUsd)} />
+          {tx.agencia != null ? <Stat label="Agencia" value={tx.agencia} /> : null}
+          {tx.saldoAfter != null ? <Stat label="Saldo after" value={tx.saldoAfter} /> : null}
+          <Stat
+            label="Source file"
+            value={`${tx.importFileName} · ${tx.sheetName} · row ${tx.sourceRowNumber}`}
+          />
+        </dl>
+      </section>
+
+      {canClassify ? (
+        <ClassifyWidget snapshot={snapshot} />
+      ) : (
+        <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
+          <p className="text-foreground/70 text-sm">
+            Your role ({role}) cannot classify bank transactions. The server
+            enforces this; the classification widgets are hidden.
+          </p>
+        </section>
+      )}
+    </main>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-foreground/50 text-[10px] tracking-wide uppercase">{label}</dt>
+      <dd className="text-foreground mt-0.5 text-sm font-medium">{value}</dd>
+    </div>
+  );
+}
