@@ -53,9 +53,8 @@ export interface SalesGridSnapshot {
 }
 
 export async function loadSalesGrid(prisma: PrismaClient): Promise<SalesGridSnapshot> {
-  const units = await prisma.rvUnit.findMany({
+  const rawUnits = await prisma.rvUnit.findMany({
     where: { deletedAt: null },
-    orderBy: { name: "asc" },
     include: {
       buyer: { select: { id: true, name: true } },
       payments: {
@@ -63,6 +62,18 @@ export async function loadSalesGrid(prisma: PrismaClient): Promise<SalesGridSnap
         select: { amountUsd: true },
       },
     },
+  });
+
+  // Sort by the numeric suffix in `name` ("Casa 1" → 1, "Casa 10" → 10) so the
+  // grid reads Casa 1, 2, 3, …, 11 instead of the lexical 1, 10, 11, 2, 3, …
+  // Names without a numeric suffix fall back to lexical at the end.
+  const units = [...rawUnits].sort((a, b) => {
+    const an = extractCasaNumber(a.name);
+    const bn = extractCasaNumber(b.name);
+    if (an != null && bn != null) return an - bn;
+    if (an != null) return -1;
+    if (bn != null) return 1;
+    return a.name.localeCompare(b.name);
   });
 
   const rows: SalesGridRow[] = units.map((u) => {
@@ -251,4 +262,14 @@ export async function loadSalesDetail(
       engancheExpectedUsd: engancheExpected.toFixed(2),
     },
   };
+}
+
+/// Extract the trailing integer from a unit name like "Casa 1" / "Casa 11".
+/// Returns null if the name doesn't end in digits, so the sales grid can fall
+/// back to lexical ordering for non-standard names.
+function extractCasaNumber(name: string): number | null {
+  const m = name.match(/(\d+)\s*$/);
+  if (!m || m[1] == null) return null;
+  const n = Number(m[1]);
+  return Number.isFinite(n) ? n : null;
 }

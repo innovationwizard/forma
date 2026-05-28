@@ -145,6 +145,8 @@ export async function loadDashboardSnapshot(
       },
       orderBy: { monthNumber: "asc" },
     }),
+    // Sorted client-side by trailing casa number after the fetch so the L0
+    // RevenueBlock reads Casa 1, 2, …, 11 instead of lexical 1, 10, 11, 2, 3.
     prisma.rvUnit.findMany({
       where: { deletedAt: null },
       select: {
@@ -156,7 +158,6 @@ export async function loadDashboardSnapshot(
         deliveryMonth: true,
         engancheRate: true,
       },
-      orderBy: { name: "asc" },
     }),
     prisma.creditFacility.findFirst({
       where: { deletedAt: null, isActive: true },
@@ -227,7 +228,17 @@ export async function loadDashboardSnapshot(
   });
 
   // ── Block 2: revenue summary ──────────────────────────────────────────
-  const revenueMetrics = revenue(rvUnits, { projectStartDate: startDate, now });
+  // Sort by trailing casa number so the per-unit table reads Casa 1..11 in
+  // human order, not the lexical order Postgres returns ({1,10,11,2,3,…}).
+  const sortedRvUnits = [...rvUnits].sort((a, b) => {
+    const an = trailingNumber(a.name);
+    const bn = trailingNumber(b.name);
+    if (an != null && bn != null) return an - bn;
+    if (an != null) return -1;
+    if (bn != null) return 1;
+    return a.name.localeCompare(b.name);
+  });
+  const revenueMetrics = revenue(sortedRvUnits, { projectStartDate: startDate, now });
 
   // ── Block 3: financial bottom line ────────────────────────────────────
   const ebitda = ebitdaSnapshot(monthlyProjections, totalBudgetUsd);
@@ -293,4 +304,13 @@ function monthsBetween(start: Date, end: Date): number {
     (end.getUTCMonth() - start.getUTCMonth()) +
     1
   );
+}
+
+/// Extract the trailing integer from a string like "Casa 1" / "Casa 11".
+/// Returns null if no trailing digits — sort logic falls back to lexical.
+function trailingNumber(s: string): number | null {
+  const m = s.match(/(\d+)\s*$/);
+  if (!m || m[1] == null) return null;
+  const n = Number(m[1]);
+  return Number.isFinite(n) ? n : null;
 }
