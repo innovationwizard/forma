@@ -1,7 +1,7 @@
 /**
- * Per-house reflujo page — Batch 13c.
+ * Per-house conciliación page — Batch 13c.
  *
- *   /casa/[id]/reflujo
+ *   /casa/[id]/conciliacion
  *
  * Replaces the manual `C1` / `C2` / `C5-D` / `C6` / `C7` / `C11` sheets
  * Ronny maintains today. For each sold house, shows the planned cuota
@@ -19,7 +19,7 @@ import { notFound } from "next/navigation";
 import { reconciliationStyle } from "@/components/casa/reconciliation-style";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/db";
-import { loadCasaReflujo } from "@/lib/queries/casa-reflujo";
+import { loadCasaConciliacion } from "@/lib/queries/casa-conciliacion";
 import { formatIsoDate, formatPct, formatUsd } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -41,10 +41,10 @@ const STATUS_BADGE_ORDER: ReconciliationStatus[] = [
   "NO_ACTIVITY",
 ];
 
-export default async function CasaReflujoPage({ params }: PageProps) {
+export default async function CasaConciliacionPage({ params }: PageProps) {
   const { id } = await params;
   await requireRole();
-  const snapshot = await loadCasaReflujo(prisma, id);
+  const snapshot = await loadCasaConciliacion(prisma, id);
   if (snapshot == null) notFound();
 
   const { unit, project, report, noBuyerYet } = snapshot;

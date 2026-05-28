@@ -1,7 +1,7 @@
 /**
- * Per-house reflujo composite query — Batch 13c.
+ * Per-house conciliación composite query — Batch 13c.
  *
- *   /casa/[id]/reflujo
+ *   /casa/[id]/conciliacion
  *
  * Loads the RvUnit + its buyer + the 36 monthly projections (to extract
  * the planned cuota schedule for this house from `revenuePerHouse`) + all
@@ -22,7 +22,7 @@ import {
   type ReconciliationReport,
 } from "../calc/reconciliation";
 
-export interface CasaReflujoSnapshot {
+export interface CasaConciliacionSnapshot {
   unit: {
     id: string;
     name: string;
@@ -44,11 +44,11 @@ export interface CasaReflujoSnapshot {
   noBuyerYet: boolean;
 }
 
-export async function loadCasaReflujo(
+export async function loadCasaConciliacion(
   prisma: PrismaClient,
   id: string,
   options: { now?: Date } = {},
-): Promise<CasaReflujoSnapshot | null> {
+): Promise<CasaConciliacionSnapshot | null> {
   const now = options.now ?? new Date();
 
   const unit = await prisma.rvUnit.findFirst({

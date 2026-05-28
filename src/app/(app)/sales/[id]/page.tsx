@@ -3,7 +3,7 @@
  *
  *   /sales/[id]
  *
- * Buyer/lifecycle-focused view. Complements `/casa/[id]/reflujo` (the
+ * Buyer/lifecycle-focused view. Complements `/casa/[id]/conciliacion` (the
  * flow-focused view from Batch 13c). Both routes are valid entry points
  * to the same unit; users navigate between them via header links.
  */
@@ -59,10 +59,10 @@ export default async function SalesDetailPage({ params }: PageProps) {
             </span>
           </div>
           <Link
-            href={`/casa/${u.id}/reflujo`}
+            href={`/casa/${u.id}/conciliacion`}
             className="text-foreground/60 hover:text-foreground text-xs underline"
           >
-            Ver reflujo →
+            Ver conciliación →
           </Link>
         </div>
         <p className="text-foreground/60 mt-1 text-sm">

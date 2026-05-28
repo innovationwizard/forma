@@ -167,12 +167,12 @@ Total: **19 batches**. Each sized so a single session can plausibly finish it. G
 
 ### Batch 5 — XLSX parser
 
-> **Spec updated 2026-05-25 after deep inspection (PROGRESS.md D26, D31, D32, D33, D34, D35 + 14 inspection findings consolidated in `docs/REFLUJO/04. MODELO PRESUPUESTARIO AL 210526 terminado (rrivas) vr2 — MANIFEST.md`).** The original v0.3 spec assumed a fail-loud validator and stale SDD parity numbers; both replaced.
+> **Spec updated 2026-05-25 after deep inspection (PROGRESS.md D26, D31, D32, D33, D34, D35 + 14 inspection findings consolidated in `docs/CONCILIACIÓN/04. MODELO PRESUPUESTARIO AL 210526 terminado (rrivas) vr2 — MANIFEST.md`).** The original v0.3 spec assumed a fail-loud validator and stale SDD parity numbers; both replaced.
 
 - **Goal:** A standalone, testable parser that reads the workbook and emits a normalized output bundle ready for seeding. **No DB writes in this batch.** Parser is **total + faithful** per D31: it does NOT fail (no exceptions, no exit codes ≠ 0) AND it does NOT silently drop data (no skipped rows, no lossy normalization, no filtered values). Every input cell with content is captured verbatim; anomalies become `DataQualityFlag` rows in the output.
 
 - **Inputs / Gates:**
-  - **Gate 5.1 (RESOLVED 2026-05-22):** xlsx already in `docs/REFLUJO/04. MODELO PRESUPUESTARIO AL 210526 terminado (rrivas) vr2.xlsx`; directory is gitignored. Per D3, parser never echoes contents to logs/chat.
+  - **Gate 5.1 (RESOLVED 2026-05-22):** xlsx already in `docs/CONCILIACIÓN/04. MODELO PRESUPUESTARIO AL 210526 terminado (rrivas) vr2.xlsx`; directory is gitignored. Per D3, parser never echoes contents to logs/chat.
   - **Gate 5.2 (NEW):** schema extensions per D33+D34 must exist before Batch 6 can consume parser output. Whether they're added inline (Batch 5) or as a Batch 4.5 mini-batch is TBD. Parser itself can produce JSON without DB schema being final.
 
 - **Deliverables:**
@@ -206,7 +206,7 @@ Total: **19 batches**. Each sized so a single session can plausibly finish it. G
 - **Risks / Open:**
   - **No risk of parser failure on data issues** (D31). The risk is the opposite: omitted anomalies. Mitigation = the validate.ts checks emit flags for every known anomaly class; new anomalies discovered later become new flag kinds.
   - **Schema-extension sequencing (Gate 5.2):** until schema entities exist (`DataQualityFlag`, `PartnerContribution`, `IsrObligation`, `AmortizationRule`, extended `Counterparty`/`Partner.type`, new `Project` fields per D30), Batch 6 cannot consume the parser output. Decision pending: (a) Batch 4.5 schema-extension mini-batch first, (b) bundle schema extensions into Batch 5, (c) schema-agnostic JSON output deferred to Batch 6 for mapping.
-  - **PII concern:** vendor + buyer names are real individuals. `docs/REFLUJO/` is gitignored per D3; `scripts/xlsx/output/` MUST be too. Parser output is local-machine artifact only.
+  - **PII concern:** vendor + buyer names are real individuals. `docs/CONCILIACIÓN/` is gitignored per D3; `scripts/xlsx/output/` MUST be too. Parser output is local-machine artifact only.
 
 ### Batch 6 — Seed script + validation against live xlsx totals
 

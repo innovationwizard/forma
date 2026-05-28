@@ -1,4 +1,4 @@
-# REFLUJO Design — Bank-Statement Ingestion Pipeline
+# CONCILIACIÓN Design — Bank-Statement Ingestion Pipeline
 
 > Architecture for replacing Ronny's xlsx-based bank-statement workflow with
 > an in-app pipeline. **Signed off 2026-05-27 by Jorge** on all 4 §8
@@ -18,15 +18,15 @@ Legend: ⬜ NOT_STARTED · 🟨 IN_PROGRESS · ✅ DONE · 🛑 BLOCKED
 | # | Deliverable | Status | Notes |
 |---|---|---|---|
 | 13a.1 | Prisma schema: 4 new tables + 6 new enums + indexes + 2 dq-flag enum extensions | ✅ DONE | All formatted + validated |
-| 13a.2 | Migrations 13.1 (bronze+silver) + 13.1b (dqflag enum) — via `migrate diff` per D23 | ✅ DONE | `20260527193908_batch_13a_reflujo_bronze_silver` + `20260527195044_batch_13a_dqflag_enum_extensions` applied |
+| 13a.2 | Migrations 13.1 (bronze+silver) + 13.1b (dqflag enum) — via `migrate diff` per D23 | ✅ DONE | `20260527193908_batch_13a_conciliación_bronze_silver` + `20260527195044_batch_13a_dqflag_enum_extensions` applied |
 | 13a.3 | RBAC matrix additions (4 resources) + `verify-rbac` green | ✅ DONE | `bank_statement_import`, `bank_statement_sheet`, `bank_statement_raw_row`, `bank_transaction` |
-| 13a.4 | RLS policies for new tables + `verify-rls` green | ✅ DONE | Migration `20260527194107_batch_13a_reflujo_rls`. All bronze read-only for non-MASTER; silver UPDATE for ANALISTA + AUXILIAR |
+| 13a.4 | RLS policies for new tables + `verify-rls` green | ✅ DONE | Migration `20260527194107_batch_13a_conciliación_rls`. All bronze read-only for non-MASTER; silver UPDATE for ANALISTA + AUXILIAR |
 | 13a.5 | `xlsx` SheetJS dep + `src/lib/import/` registry skeleton + workbook abstraction | ✅ DONE | `xlsx ^0.18.5`. Registry has 4 adapters: 1 enabled (G&T), 3 disabled stubs |
 | 13a.6 | G&T adapter — `detect` + `parse` + 20 vitest cases (test suite 85/85+2 skipped) | ✅ DONE | Content-anchored header search; sign-convention drift handled per-row; D31-compliant (every source row → bronze, even trailing totals) |
 | 13a.7 | Disabled stubs for PROMERICA / BAC / INDUSTRIAL | ✅ DONE | Each has its own folder + README + 1-file stub that throws on parse(). Drop-in pattern for future banks |
 | 13a.8 | Upload page `/import/new` + server action | ✅ DONE | Role-gated (CREATE bank_statement_import). 10 MB file limit; `.xls`+`.xlsx` only. SHA-256 dedup before insert |
 | 13a.9 | Import detail page `/import/[id]` + twin-sheet `is_canonical` toggle action | ✅ DONE | `flipCanonicalAction` atomically soft-deletes prior silver, flips canonical flag on requested sheet + alternates, re-derives silver from new canonical's bronze. Audited |
-| 13a.10 | End-to-end validation against the 6 real G&T samples in `docs/REFLUJO/` | ✅ DONE | **132 bronze rows + 41 silver rows captured across 11 sheets. 0 parser warnings. 6/6 re-uploads correctly rejected by file-hash UNIQUE.** Smoke script cleaned up real data afterward (data smoke, no residue) |
+| 13a.10 | End-to-end validation against the 6 real G&T samples in `docs/CONCILIACIÓN/` | ✅ DONE | **132 bronze rows + 41 silver rows captured across 11 sheets. 0 parser warnings. 6/6 re-uploads correctly rejected by file-hash UNIQUE.** Smoke script cleaned up real data afterward (data smoke, no residue) |
 | 13a.11 | PROGRESS.md + this tracker updated | ✅ DONE | |
 
 #### 13a metrics from the real-data acceptance run
@@ -79,9 +79,9 @@ Cleanup: 1+1+6+35+2+1+3 rows hard-deleted; zero residue.
 | # | Deliverable | Status | Notes |
 |---|---|---|---|
 | 13c.1 | Reconciliation calc (pure function): planned cuotas + `RvPayment` rows → per-month rows + cumulative + 7 status types | ✅ DONE | `src/lib/calc/reconciliation.ts` |
-| 13c.2 | Composite query `loadCasaReflujo(id)` | ✅ DONE | Reads `RvUnit` + buyer + 36 `MonthlyProjection` rows (extracts `revenuePerHouse[casaName]`) + all `RvPayment` rows |
-| 13c.3 | `/casa/[id]/reflujo` page | ✅ DONE | Header + status badge counts + monthly reconciliation table with payment sub-rows + cumulative balance column |
-| 13c.4 | Wire links from L0 RevenueBlock | ✅ DONE | RvUnit names now link to `/casa/[id]/reflujo` from the L0 dashboard. Added `id` to `RevenueMetrics.perUnit` (revenue.ts + types.ts + dashboard query); patched the existing revenue spec |
+| 13c.2 | Composite query `loadCasaConciliación(id)` | ✅ DONE | Reads `RvUnit` + buyer + 36 `MonthlyProjection` rows (extracts `revenuePerHouse[casaName]`) + all `RvPayment` rows |
+| 13c.3 | `/casa/[id]/conciliación` page | ✅ DONE | Header + status badge counts + monthly reconciliation table with payment sub-rows + cumulative balance column |
+| 13c.4 | Wire links from L0 RevenueBlock | ✅ DONE | RvUnit names now link to `/casa/[id]/conciliación` from the L0 dashboard. Added `id` to `RevenueMetrics.perUnit` (revenue.ts + types.ts + dashboard query); patched the existing revenue spec |
 | 13c.5 | Vitest cases for reconciliation calc | ✅ DONE | 12 new cases covering all 7 status types + cumulative math + edge cases (pre-project payments, zero schedule, MISSED/UPCOMING boundary). Suite total 97/97 + 2 skipped |
 | 13c.6 | End-to-end smoke against real seeded data | ✅ DONE | Casa 1 (SOLD): planned $974,382.47 = sale price; 12 MISSED past months + 5 UPCOMING + 19 NO_ACTIVITY (months with planned=0). Casa 3 (AVAILABLE): `noBuyerYet=true`, planned $1.275M shows as UPCOMING throughout |
 | 13c.7 | PROGRESS.md + this tracker updated | ✅ DONE | |
@@ -178,7 +178,7 @@ which is not on the horizon).
 
 ---
 
-## 2. Data shapes observed in `docs/REFLUJO/` (from MANIFEST scans 2026-05-22)
+## 2. Data shapes observed in `docs/CONCILIACIÓN/` (from MANIFEST scans 2026-05-22)
 
 ### 2.1 G&T monthly statements (`.xls`, 2 sheets per file)
 
@@ -330,7 +330,7 @@ src/lib/import/
       __fixtures__/             ← captured-byte fixtures from real probes (gitignored if PII)
     promerica/
       detect.ts                 ← STUB — returns { match: false }
-      README.md                 ← "fill in when a sample arrives in docs/REFLUJO/"
+      README.md                 ← "fill in when a sample arrives in docs/CONCILIACIÓN/"
     bac/
       detect.ts                 ← STUB
       README.md
@@ -423,7 +423,7 @@ interface ParseResult {
   - "Internal transfer" / "Interest" / "Fee" / "Tax" → flags the row, no gold-side row created
   - "Skip" → keeps as UNCLASSIFIED with a `reviewer_note`
 
-### 5.4 Per-house reconciliation (`/casa/[id]/reflujo`)
+### 5.4 Per-house reconciliation (`/casa/[id]/conciliación`)
 
 - Replaces `C1` / `C2` / `C5-D` / `C6` / `C7` / `C11` sheets
 - Planned cuotas (from RvUnit's payment schedule) vs RvPayment rows
@@ -469,7 +469,7 @@ If you sign off on this design:
 3. `src/app/(app)/import/new/page.tsx` + `actions.ts` — upload + confirm
 4. `src/app/(app)/import/[id]/page.tsx` — twin-sheet toggle UI
 5. `src/app/(app)/inbox/page.tsx` — classification queue
-6. `src/app/(app)/casa/[id]/reflujo/page.tsx` — per-house reconciliation
+6. `src/app/(app)/casa/[id]/conciliación/page.tsx` — per-house reconciliation
 7. Tests: registry detection, G&T adapter against captured fixtures, silver
    dedup against overlapping-export scenarios
 
@@ -484,7 +484,7 @@ Reality is bigger — splitting into 4 sub-batches:
 |---|---|---|
 | 13a | Bronze + silver schema + G&T adapter + upload UI + dedup | Migrations 13.1+13.3, registry skeleton + G&T real adapter + 3 disabled stubs, `/import/new` + `/import/[id]` UI |
 | 13b | Gold additions + classification queue | Migration 13.2, `/inbox` UI, gold-side FKs wired up |
-| 13c | Per-house reconciliation | `/casa/[id]/reflujo` UI, RvPayment matching to planned cuotas |
+| 13c | Per-house reconciliation | `/casa/[id]/conciliación` UI, RvPayment matching to planned cuotas |
 | 13d | Check-register adapter | Different schema; separate adapter; gold-side mapping to Expenditure with check_number FK |
 
 Each lands separately with its own PROGRESS.md entry. Ronny gets value at

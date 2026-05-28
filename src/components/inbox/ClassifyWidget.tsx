@@ -345,7 +345,7 @@ function RvPaymentForm({ snapshot }: { snapshot: InboxItemSnapshot }) {
       <p className="text-foreground/60 text-xs">
         Crea un <code>Pago de casa</code> vinculando este ingreso con una casa
         vendida. La conciliación contra el calendario planeado vive aparte
-        en cada página de reflujo.
+        en cada página de conciliación de la casa.
       </p>
 
       <fieldset className="grid grid-cols-1 gap-4 sm:grid-cols-2" disabled={pending}>

@@ -2,7 +2,7 @@
  * G&T cell-normalization unit tests.
  *
  * The shapes covered here are observed-real from the manifest scans on
- * 2026-05-22 (see `docs/REFLUJO/*.MANIFEST.md`). All values are synthetic
+ * 2026-05-22 (see `docs/CONCILIACION/*.MANIFEST.md`). All values are synthetic
  * (no PII) — only the SHAPES are from real data.
  */
 

@@ -4,7 +4,7 @@
 
 ### Version 0.4 — May 25, 2026 (Post-deep-inspection corrections)
 
-> **What changed v0.3 → v0.4:** comprehensive deep + visual + cross-sheet inspection of the canonical workbook, plus a Ronny interview (analyst-level questions) and 6 corrections from the user during specification lock. **35+ findings** changed the data model, parity numbers, calculation semantics, and the parser/seed architecture. Highlights below; full per-decision detail in [PROGRESS.md](PROGRESS.md) Section 2 (D1-D35) and the workbook manifest at `docs/REFLUJO/04. MODELO PRESUPUESTARIO AL 210526 terminado (rrivas) vr2 — MANIFEST.md`.
+> **What changed v0.3 → v0.4:** comprehensive deep + visual + cross-sheet inspection of the canonical workbook, plus a Ronny interview (analyst-level questions) and 6 corrections from the user during specification lock. **35+ findings** changed the data model, parity numbers, calculation semantics, and the parser/seed architecture. Highlights below; full per-decision detail in [PROGRESS.md](PROGRESS.md) Section 2 (D1-D35) and the workbook manifest at `docs/CONCILIACIÓN/04. MODELO PRESUPUESTARIO AL 210526 terminado (rrivas) vr2 — MANIFEST.md`.
 
 ---
 

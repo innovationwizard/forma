@@ -2,7 +2,7 @@
  * G&T Continental adapter — Batch 13a real implementation.
  *
  * Signature observed across 6 monthly statements + the consolidated workbook
- * (see `docs/REFLUJO/*.MANIFEST.md` for the per-file scan notes):
+ * (see `docs/CONCILIACION/*.MANIFEST.md` for the per-file scan notes):
  *
  *   - Title row 1 cell A1 matches /ESTADO DE CUENTA POR RANGO DE FECHAS .* MONETARIO \((DOL|QTZ)\)/i
  *   - Row 3 cell A3 = "#Cuenta", row 3 cell C3 = the account number

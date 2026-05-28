@@ -109,7 +109,7 @@ export async function updateHouseStatusAction(
 
   revalidatePath("/sales");
   revalidatePath(`/sales/${data.id}`);
-  revalidatePath(`/casa/${data.id}/reflujo`);
+  revalidatePath(`/casa/${data.id}/conciliacion`);
   revalidatePath("/");
   return { ok: true };
 }
@@ -194,7 +194,7 @@ export async function recordPaymentAction(
 
   revalidatePath("/sales");
   revalidatePath(`/sales/${data.id}`);
-  revalidatePath(`/casa/${data.id}/reflujo`);
+  revalidatePath(`/casa/${data.id}/conciliacion`);
   revalidatePath("/");
   return { ok: true };
 }

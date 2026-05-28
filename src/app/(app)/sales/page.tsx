@@ -8,7 +8,7 @@
  *
  * Complementary to:
  *   - L0 dashboard's Revenue block (one-glance per-unit table)
- *   - `/casa/[id]/reflujo` (Batch 13c — flow-focused per-house view)
+ *   - `/casa/[id]/conciliacion` (Batch 13c — flow-focused per-house view)
  *
  * This grid is the buyer/lifecycle-focused entry point: status counts,
  * data-incomplete badges, click into per-unit detail with status actions.
@@ -52,7 +52,6 @@ export default async function SalesGridPage() {
         <p className="text-foreground/60 mt-1 text-sm">
           Estado por casa, vinculación con el comprador, y pagos recibidos a la fecha.
           Haz clic en cualquier tarjeta para ver el ciclo y el calendario de pagos.
-          El reflujo (plan vs real) vive aparte en <code>/casa/[id]/reflujo</code>.
         </p>
       </header>
 

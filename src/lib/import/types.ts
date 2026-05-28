@@ -1,5 +1,5 @@
 /**
- * REFLUJO parser-registry types — Batch 13a.
+ * CONCILIACIÓN parser-registry types — Batch 13a.
  *
  * The registry is the contract every bank adapter implements. Adding a new
  * bank later means dropping a new adapter file in `src/lib/import/banks/<name>/`
@@ -82,7 +82,7 @@ export interface ParseResult {
   /// linkage is by `bronzeRowIndex` (matches the position in `rawRows`).
   /// Empty when the sheet's statement type isn't CURRENT_ACCOUNT.
   silverCandidates: SilverCandidate[];
-  /// REFLUJO Batch 13d: CHECK_REGISTER silver candidates → promote to
+  /// CONCILIACIÓN Batch 13d: CHECK_REGISTER silver candidates → promote to
   /// `IssuedCheque`. Empty when the sheet's statement type isn't
   /// CHECK_REGISTER. A sheet can't be both — the dispatch happens in
   /// `BankAdapter.detect()`.
@@ -115,7 +115,7 @@ export interface SilverCandidate {
   saldoAfter: string | null;
 }
 
-/// REFLUJO Batch 13d: silver candidate for `IssuedCheque`. Same provenance
+/// CONCILIACIÓN Batch 13d: silver candidate for `IssuedCheque`. Same provenance
 /// pattern as `SilverCandidate` (bronzeRowIndex links back to the parent
 /// rawRows). Money is decimal-as-string per Rule 8.
 export interface IssuedChequeCandidate {

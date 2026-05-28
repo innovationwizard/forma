@@ -4,7 +4,7 @@
  *
  *   pnpm xlsx:parse [path]
  *
- * Default path: docs/REFLUJO/04. MODELO PRESUPUESTARIO AL 210526 terminado (rrivas) vr2.xlsx
+ * Default path: docs/CONCILIACION/04. MODELO PRESUPUESTARIO AL 210526 terminado (rrivas) vr2.xlsx
  *
  * Per D31:
  *   THE PARSER DOES NOT FAIL — neither loudly nor silently.
@@ -47,7 +47,7 @@ import type { ParseBundle, ParseSummary } from "./types";
 
 const DEFAULT_SOURCE = resolve(
   __dirname,
-  "../../docs/REFLUJO/04. MODELO PRESUPUESTARIO AL 210526 terminado (rrivas) vr2.xlsx",
+  "../../docs/CONCILIACION/04. MODELO PRESUPUESTARIO AL 210526 terminado (rrivas) vr2.xlsx",
 );
 
 async function main(): Promise<void> {

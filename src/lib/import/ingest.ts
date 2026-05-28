@@ -56,7 +56,7 @@ export interface IngestSummary {
   rawRowsCount: number;
   silverInsertedCount: number;
   silverDuplicatesCount: number;
-  /// Per REFLUJO Batch 13d: IssuedCheque-side promotion counts for
+  /// Per CONCILIACIÓN Batch 13d: IssuedCheque-side promotion counts for
   /// CHECK_REGISTER sheets. Parallel to the silver counters above.
   issuedChequesInsertedCount: number;
   issuedChequesDuplicatesCount: number;
@@ -281,7 +281,7 @@ export async function ingestBankStatement(
         }
       }
 
-      // ── REFLUJO Batch 13d: IssuedCheque promotion (CHECK_REGISTER sheets) ─
+      // ── CONCILIACIÓN Batch 13d: IssuedCheque promotion (CHECK_REGISTER sheets) ─
       //
       // CHECK_REGISTER sheets emit `issuedChequeCandidates` from the parser
       // and have empty `silverCandidates`. We promote each candidate into

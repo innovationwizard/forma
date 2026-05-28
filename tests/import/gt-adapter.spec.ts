@@ -2,7 +2,7 @@
  * G&T adapter integration tests.
  *
  * Builds a synthetic xlsx in-memory matching the SHAPES observed in real
- * G&T monthlies (per `docs/REFLUJO/*.MANIFEST.md` scans), runs the adapter,
+ * G&T monthlies (per `docs/CONCILIACION/*.MANIFEST.md` scans), runs the adapter,
  * asserts detect + parse behavior.
  *
  * No PII — every name / amount / reference is synthetic but the STRUCTURE

@@ -78,9 +78,9 @@ export function RevenueBlock({ revenue }: RevenueBlockProps) {
                 <tr key={u.name} className={cn(isSold ? "bg-emerald-50/40" : undefined)}>
                   <td className="text-foreground py-2 pr-3 font-medium">
                     <Link
-                      href={`/casa/${u.id}/reflujo`}
+                      href={`/casa/${u.id}/conciliacion`}
                       className="hover:underline"
-                      aria-label={`Abrir reflujo de ${u.name}`}
+                      aria-label={`Abrir conciliación de ${u.name}`}
                     >
                       {u.name}
                     </Link>

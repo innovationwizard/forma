@@ -285,7 +285,7 @@ export const MATRIX: Matrix = {
     AUXILIAR: READ_ONLY,
   },
 
-  // ── REFLUJO Batch 13a — bank-statement ingestion ─────────────────────────
+  // ── CONCILIACIÓN Batch 13a — bank-statement ingestion ─────────────────────────
 
   /// BRONZE: uploaded statement files. ANALISTA owns the full lifecycle.
   /// AUXILIAR can upload (CREATE) + view (READ) — a junior dropping files
@@ -339,7 +339,7 @@ export const MATRIX: Matrix = {
     AUXILIAR: new Set(["READ", "UPDATE"]) as ReadonlySet<Action>,
   },
 
-  // ── REFLUJO Batch 13b — gold addition: per-house payments ────────────────
+  // ── CONCILIACIÓN Batch 13b — gold addition: per-house payments ────────────────
 
   /// GOLD: per-house installment payments. Created via the classification
   /// queue at `/inbox` when an analyst maps an inflow BankTransaction to a
@@ -353,7 +353,7 @@ export const MATRIX: Matrix = {
     AUXILIAR: FULL_CRUD,
   },
 
-  // ── REFLUJO Batch 13d — issued cheques (FORMA's internal check register) ─
+  // ── CONCILIACIÓN Batch 13d — issued cheques (FORMA's internal check register) ─
 
   /// GOLD/SILVER hybrid: each row represents a cheque DRAWN against a bank
   /// account (FORMA-internal record, not bank-generated). CREATE happens via

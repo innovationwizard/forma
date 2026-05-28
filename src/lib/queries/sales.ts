@@ -9,7 +9,7 @@
  * buyer + reservation history + freeze history + RvPayments + projected
  * monthly schedule from `MonthlyProjection.revenuePerHouse`.
  *
- * Complements `loadCasaReflujo()` (Batch 13c). That query is flow-focused
+ * Complements `loadCasaConciliacion()` (Batch 13c). That query is flow-focused
  * (planned cuotas vs actuals); this one is buyer/lifecycle-focused.
  */
 

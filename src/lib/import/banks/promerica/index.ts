@@ -5,7 +5,7 @@
  * registry compiles; they never run because the registry skips disabled
  * adapters.
  *
- * **Fill in when a real PROMERICA statement lands in `docs/REFLUJO/`** —
+ * **Fill in when a real PROMERICA statement lands in `docs/CONCILIACION/`** —
  * follow the Dirty George principle: inspect first (read the manifest +
  * eyeball the file's structure), then write detect() to match the
  * signature, then write parse() to extract rows.
@@ -28,6 +28,6 @@ export const promericaAdapter: BankAdapter = {
     };
   },
   parse(): ParseResult {
-    throw new Error("PROMERICA adapter is a stub. Implement when real sample data lands in docs/REFLUJO/.");
+    throw new Error("PROMERICA adapter is a stub. Implement when real sample data lands in docs/CONCILIACION/.");
   },
 };
