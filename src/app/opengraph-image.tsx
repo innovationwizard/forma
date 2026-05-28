@@ -1,20 +1,22 @@
 /**
- * OG image generation for FORMA — Santa Elena.
+ * OG image generation for the FORMA · Santa Elena app.
  *
- * Static 1200×630 image rendered once at build time + cached.
- * Visible whenever the production URL is shared on Slack, WhatsApp,
- * LinkedIn, etc. Composition follows the brand manual's preferred
- * treatment: white isotipo + wordmark on the navy primary (#0c2530).
+ * Static 1200×630 image rendered + cached at the `/opengraph-image` route.
+ * Visible whenever the production URL is shared on WhatsApp, Slack, etc.
+ * Composition follows the brand manual: white isotipo + wordmark on the
+ * navy primary (#0c2530).
  *
- * Per the brand manual "Uso del ícono como elemento de diseño" (page 5)
- * the icon geometries may be used as design elements; here the third
- * underscore shape extends across the bottom edge as a subtle anchor.
+ * Per _THE_RULES.MD Rule 1 and [[project_naming_truth]]: every string
+ * rendered in this image is either verbatim from the SSOT (brand manual
+ * for "FORMA"/"Capital Inmobiliario", parsed xlsx for "Santa Elena") or
+ * approved by Jorge. No subtitles, taglines, or descriptive copy is
+ * authored on his behalf.
  */
 
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "FORMA — Santa Elena · Seguimiento presupuestal";
+export const alt = "Santa Elena — FORMA Capital Inmobiliario";
 export const size = { width: 1200, height: 630 } as const;
 export const contentType = "image/png";
 
@@ -72,31 +74,22 @@ export default async function Image() {
           </div>
         </div>
 
-        {/* Center: project name */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {/* Center: project name only — verbatim from [[project_naming_truth]] */}
+        <div style={{ display: "flex", flexDirection: "column" }}>
           <div
             style={{
-              fontSize: 96,
+              fontSize: 128,
               fontWeight: 500,
-              letterSpacing: -2,
-              lineHeight: 1.05,
+              letterSpacing: -3,
+              lineHeight: 1.0,
             }}
           >
-            Condominio Santa Elena
-          </div>
-          <div
-            style={{
-              fontSize: 28,
-              color: TEAL_LIGHT,
-              letterSpacing: 0.4,
-            }}
-          >
-            Seguimiento presupuestal · Antigua Guatemala
+            Santa Elena
           </div>
         </div>
 
-        {/* Bottom row: large icon-as-design-element underscore (per brand manual page 5) */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        {/* Bottom row: thin brand bar — no fabricated tagline */}
+        <div style={{ display: "flex", alignItems: "center" }}>
           <div
             style={{
               height: 6,
@@ -105,9 +98,6 @@ export default async function Image() {
               opacity: 0.5,
             }}
           />
-          <div style={{ display: "flex", fontSize: 18, color: TEAL_LIGHT, letterSpacing: 4 }}>
-            forma-santa-elena.vercel.app
-          </div>
         </div>
       </div>
     ),

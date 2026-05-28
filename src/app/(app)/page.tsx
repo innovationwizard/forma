@@ -61,7 +61,6 @@ export default async function DashboardPage() {
         <Link
           href="/"
           className="text-foreground hover:opacity-80 inline-flex w-fit transition-opacity"
-          aria-label="FORMA — Santa Elena · Tablero principal"
         >
           <FormaLogo variant="horizontal-full" />
         </Link>

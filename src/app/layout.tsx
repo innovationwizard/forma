@@ -25,35 +25,31 @@ const archivo = Archivo({
 const SITE_URL =
   process.env["NEXT_PUBLIC_SITE_URL"] ?? "https://forma-santa-elena.vercel.app";
 
+// Title + descriptive strings here are limited to SSOT-faithful tokens only:
+//   - "FORMA Capital Inmobiliario" — verbatim from Manual de Marca_Forma.pdf
+//   - "Santa Elena" — project name per [[project_naming_truth]]
+// No marketing copy is authored without Jorge's sign-off. Per _THE_RULES.MD
+// Rule 1 (no fabrications) + Rule 5 (no placeholders).
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "FORMA — Santa Elena",
-    template: "%s · FORMA Santa Elena",
+    default: "Santa Elena — FORMA Capital Inmobiliario",
+    template: "%s · Santa Elena",
   },
-  description:
-    "Seguimiento presupuestal del Condominio Santa Elena — FORMA Capital Inmobiliario, Antigua Guatemala.",
-  applicationName: "FORMA — Santa Elena",
+  applicationName: "Santa Elena",
   authors: [{ name: "FORMA Capital Inmobiliario" }],
   creator: "FORMA Capital Inmobiliario",
   publisher: "FORMA Capital Inmobiliario",
-  // App Router auto-discovers src/app/icon.svg + apple-icon.png + favicon.ico.
-  // Explicit `themeColor` paints the browser chrome / iOS status bar in the
-  // brand navy when the app is added to home screen.
   openGraph: {
     type: "website",
     locale: "es_GT",
     url: SITE_URL,
-    siteName: "FORMA — Santa Elena",
-    title: "FORMA — Santa Elena",
-    description:
-      "Seguimiento presupuestal del Condominio Santa Elena — FORMA Capital Inmobiliario, Antigua Guatemala.",
+    siteName: "Santa Elena — FORMA Capital Inmobiliario",
+    title: "Santa Elena — FORMA Capital Inmobiliario",
   },
   twitter: {
     card: "summary_large_image",
-    title: "FORMA — Santa Elena",
-    description:
-      "Seguimiento presupuestal del Condominio Santa Elena — FORMA Capital Inmobiliario.",
+    title: "Santa Elena — FORMA Capital Inmobiliario",
   },
   robots: {
     index: false,

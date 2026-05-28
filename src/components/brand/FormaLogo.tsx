@@ -37,7 +37,10 @@ export function FormaLogo({
 }: FormaLogoProps) {
   const isVertical = variant === "vertical-full" || variant === "vertical-simple";
   const includeTagline = variant === "vertical-full" || variant === "horizontal-full";
-  const label = title ?? (includeTagline ? "FORMA — Capital Inmobiliario" : "FORMA");
+  // Accessible name per Manual de Marca_Forma.pdf — no separator between FORMA
+  // and CAPITAL INMOBILIARIO (the manual stacks them or spaces them visually;
+  // there is no punctuation joining the two strings in any approved variant).
+  const label = title ?? (includeTagline ? "FORMA Capital Inmobiliario" : "FORMA");
 
   return (
     <div

@@ -57,7 +57,31 @@ const SOLD_HOUSE_NUMBERS = new Set([1, 2, 5, 6, 7, 11]);
 
 export function parseFCFCasas2(ws: Worksheet, flags: FlagCollector): FCFCasas2Output {
   // ── Project metadata ────────────────────────────────────────────────────
-  const projectName = normalizeWhitespace(String(ws.getCell("A1").value ?? "")) || "Condominio Santa Elena";
+  // Per [[project_naming_truth]] (Jorge directive 2026-05-28, verified against
+  // RESERVAS PROYECTO SANTA ELENA xlsx rows 1-2): the PROJECT name is "Santa
+  // Elena" and the LEGAL ENTITY is "Condominio Antigua Panorama, S.A.". These
+  // are two distinct concepts. FCFCasas2!A1 in this version of the budget
+  // model contains the compound string "Condominio Santa Elena" which is a
+  // Claude-side fabrication that propagated from prior sessions; the parser
+  // hardcodes the correct project name and emits a STALE_LABEL flag so the
+  // source cell can be cleaned up by Ronny.
+  const CANONICAL_PROJECT_NAME = "Santa Elena";
+  const a1Raw = String(ws.getCell("A1").value ?? "");
+  const a1Normalized = normalizeWhitespace(a1Raw);
+  const projectName = CANONICAL_PROJECT_NAME;
+  if (a1Normalized && a1Normalized !== CANONICAL_PROJECT_NAME) {
+    flags.push({
+      kind: "STALE_LABEL",
+      severity: "WARNING",
+      sourceWorkbookRef: "FCFCasas2!A1",
+      sourceValue: a1Normalized,
+      recomputedValue: CANONICAL_PROJECT_NAME,
+      humanMessage:
+        `FCFCasas2!A1 contains "${a1Normalized}" but the canonical project name is "${CANONICAL_PROJECT_NAME}" per project_naming_truth memory + SSOT (RESERVAS xlsx rows 1-2 separating "CONDOMINIO ANTIGUA PANORAMA, S.A." from "SANTA ELENA"). Operational cleanup: Ronny should replace A1 with the correct project name to align the model file with the project's actual name.`,
+      relatedEntityType: "Project",
+      relatedEntityNaturalKey: CANONICAL_PROJECT_NAME,
+    });
+  }
   const dateRaw = ws.getCell("A2").value;
   // Row 5 columns K..AT carry the month dates.
   const calendarStart = toIsoDate(ws.getCell("K5").value) ?? "2025-05-06";
@@ -445,7 +469,7 @@ export function parseFCFCasas2(ws: Worksheet, flags: FlagCollector): FCFCasas2Ou
   const lockedTc = "7.7"; // SDD §3.2.1 + D6; verified against Ppto Inversion!G2
 
   const project: ParsedProject = {
-    name: projectName || "Condominio Santa Elena",
+    name: projectName,
     legalEntityName: "Condominio Antigua Panorama, S.A.",
     company: "FORMA Capital Inmobiliario, S. A.",
     location: "Antigua Guatemala",

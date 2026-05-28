@@ -69,7 +69,6 @@ export default async function LoginPage({
 
       <div className="bg-background text-foreground w-full max-w-sm space-y-6 rounded-2xl p-6 shadow-2xl">
         <header className="space-y-1 text-center">
-          <h1 className="font-heading text-xl font-medium tracking-tight">Santa Elena</h1>
           <p className="text-muted-foreground text-sm">
             {stuckMissingRole ? `Sesión iniciada como ${existingUser.email}` : "Inicia sesión para continuar"}
           </p>
