@@ -18,6 +18,7 @@
 
 import Link from "next/link";
 
+import { FormaLogo } from "@/components/brand/FormaLogo";
 import { AnomalyBadges } from "@/components/dashboard/AnomalyBadges";
 import { BurnRateCard } from "@/components/dashboard/BurnRateCard";
 import { CategoryBars } from "@/components/dashboard/CategoryBars";
@@ -57,9 +58,16 @@ export default async function DashboardPage() {
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
       <header className="flex flex-col gap-3">
+        <Link
+          href="/"
+          className="text-foreground hover:opacity-80 inline-flex w-fit transition-opacity"
+          aria-label="FORMA — Santa Elena · Tablero principal"
+        >
+          <FormaLogo variant="horizontal-full" />
+        </Link>
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <div>
-            <h1 className="text-foreground text-2xl font-semibold tracking-tight">
+            <h1 className="font-heading text-foreground text-2xl font-semibold tracking-tight">
               {snapshot.project.name}
             </h1>
             <p className="text-foreground/60 mt-1 text-sm">

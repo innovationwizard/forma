@@ -100,9 +100,19 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  /* Fonts (per brand manual): Montserrat = body, Archivo (Archia substitute) = headings.
+     Both are loaded by next/font in layout.tsx which sets the variables on <html>. */
+  --font-sans: var(--font-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-heading: var(--font-heading), var(--font-sans), system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  /* Brand palette per Manual de Marca_Forma.pdf (page 7). */
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-teal: var(--brand-teal);
+  --color-brand-teal-light: var(--brand-teal-light);
+  --color-brand-emerald: var(--brand-emerald);
+  --color-brand-amber: var(--brand-amber);
+  --color-brand-coral: var(--brand-coral);
+  --color-brand-plum: var(--brand-plum);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -142,13 +152,26 @@
 }
 
 :root {
+  /* Brand palette (Manual de Marca_Forma.pdf §"Paleta de Colores", page 7). */
+  --brand-navy: #0c2530;        /* Primario · canonical FORMA brand color */
+  --brand-teal: #4a7781;        /* Primario · supporting teal */
+  --brand-teal-light: #6da3af;  /* Primario · lighter teal */
+  --brand-emerald: #5eb58e;     /* Secundario · success states */
+  --brand-amber: #fcb76f;       /* Secundario · warning states */
+  --brand-coral: #dd6359;       /* Secundario · error / over-budget */
+  --brand-plum: #844a78;        /* Secundario · accents */
+
   --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* Surgical brand application: --foreground (previously near-black) is the
+     brand navy. Everywhere `text-foreground` / `bg-foreground` rendered as
+     black now reads as #0c2530. Status pills + cards keep their neutral
+     surfaces; only text + buttons + navy surfaces shift. */
+  --foreground: #0c2530;
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: #0c2530;
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --popover-foreground: #0c2530;
+  --primary: #0c2530;
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);

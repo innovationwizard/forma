@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { FormaLogo } from "@/components/brand/FormaLogo";
 import { getRole, getUser } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
 
@@ -63,10 +64,12 @@ export default async function LoginPage({
   const message = reason ? REASON_MESSAGES[reason] : undefined;
 
   return (
-    <main className="bg-background flex min-h-screen flex-col items-center justify-center p-8">
-      <div className="w-full max-w-sm space-y-6">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-10 bg-[#0c2530] p-8 text-white">
+      <FormaLogo variant="vertical-full" className="text-white" />
+
+      <div className="bg-background text-foreground w-full max-w-sm space-y-6 rounded-2xl p-6 shadow-2xl">
         <header className="space-y-1 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">FORMA — Santa Elena</h1>
+          <h1 className="font-heading text-xl font-medium tracking-tight">Santa Elena</h1>
           <p className="text-muted-foreground text-sm">
             {stuckMissingRole ? `Sesión iniciada como ${existingUser.email}` : "Inicia sesión para continuar"}
           </p>

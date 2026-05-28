@@ -1678,6 +1678,127 @@ For nav buttons, status chips, table cells, body copy: single-line Spanish only.
 
 ---
 
+### Brand implementation — logo, palette, fonts, favicon, OG (2026-05-28)
+
+**Trigger**: Jorge dropped `docs/forma_logo.png` + `docs/Manual de Marca_Forma.pdf` and asked to implement them — including using the logo for favicon and OG images.
+
+**Brand inventory (per Manual de Marca_Forma.pdf, designed by CIB Design, 2022)**
+
+- **Isotipo**: three geometric shapes (large Γ + medium Γ + underscore) sharing a baseline. Per page 3, represents both the F of Forma and the silhouette of buildings rising from the ground.
+- **Logo variants** (page 4): vertical-full / horizontal-full (with `CAPITAL INMOBILIARIO` tagline) + vertical-simple / horizontal-simple (no tagline) + white variants for dark backgrounds.
+- **Fonts** (page 6): titles = **Archia**, body = **Montserrat**, fallback = Arial.
+- **Color palette** (page 7):
+  - Primarios: `#0c2530` (navy, canonical), `#4a7781` (teal), `#6da3af` (teal-light)
+  - Secundarios: `#5eb58e` (emerald), `#fcb76f` (amber), `#dd6359` (coral), `#844a78` (plum)
+- **Usage rules** (page 8): never use "FORMA" wordmark alone (must include isotipo); on photos use semi-transparent backgrounds for legibility; tagline can be detached but must stay legible.
+
+**Per-question decisions (Jorge's AskUserQuestion answers)**
+
+- **Color scope**: surgical accent. `--foreground` (and friends) shift from near-black to navy `#0c2530`; cards stay white; status pills (emerald / amber / red) keep their semantic meaning.
+- **Heading font**: Archivo as a free-Google-Fonts substitute for Archia. Body = Montserrat. Both via `next/font/google` with display: "swap". If/when licensed Archia `.woff2` files arrive, swap to `next/font/local` — comment in `layout.tsx` notes the migration path.
+- **Logo source**: recreated as clean SVG from the brand manual reference. Three filled rectangles per Γ shape, one for the underscore; viewBox 240×100; `fill="currentColor"` so callers control color via Tailwind text-* utility.
+
+**Files added**
+
+- `src/components/brand/FormaIsotipo.tsx` — the three-shapes SVG primitive.
+- `src/components/brand/FormaLogo.tsx` — isotipo + wordmark composite with 4 variants (vertical-full / horizontal-full / vertical-simple / horizontal-simple); rejects "wordmark only" per the brand manual rule.
+- `src/app/icon.svg` — favicon. Square viewBox with navy bg + white isotipo (robust across light + dark browser themes).
+- `src/app/opengraph-image.tsx` — dynamic 1200×630 OG image via `next/og` ImageResponse. Navy bg + white isotipo + FORMA wordmark + project name + URL footer. Generated on demand at the `/opengraph-image` route.
+
+**Files modified**
+
+- `src/app/layout.tsx` — Montserrat + Archivo via `next/font/google`; richer Metadata (template-based title, openGraph siteName/locale `es_GT`, twitter card, applicationName, `robots: noindex` for the private app); `viewport.themeColor = #0c2530`.
+- `src/app/globals.css` — added `--brand-navy` / `--brand-teal` / `--brand-teal-light` / `--brand-emerald` / `--brand-amber` / `--brand-coral` / `--brand-plum` CSS variables + matching `--color-brand-*` theme tokens for Tailwind utility generation; shifted `--foreground` + `--card-foreground` + `--popover-foreground` + `--primary` to navy; fixed self-referential `--font-sans` / `--font-heading` to properly chain through to system fallbacks.
+- `src/app/login/page.tsx` — navy full-page background, centered white card, `FormaLogo variant="vertical-full"` above the card (white text on navy bg per brand manual preferred treatment).
+- `src/app/(app)/page.tsx` — added `FormaLogo variant="horizontal-full"` (link to `/`) above the project header. Project name picks up the heading font.
+
+**Brand color application**
+
+- `bg-foreground` / `text-foreground` (everywhere previously rendered as near-black) now displays as navy `#0c2530`. Contrast ratio against white: ~14:1 (WCAG AAA).
+- `bg-primary` (server-action buttons, "+ Nueva transacción", etc.) also navy.
+- Status palette (emerald/amber/red/zinc for ON_TRACK / AT_RISK / OVER_BUDGET / NOT_STARTED) intentionally untouched — these are SEMANTIC colors, not brand-decorative, per the brand manual's distinction between primarios (brand) + secundarios (accents) + functional state.
+- Brand secondary colors (emerald/amber/coral/plum) exposed as `bg-brand-emerald` etc. utility classes for future use.
+
+**OG image preview** (`/opengraph-image` route at runtime):
+- Navy bg
+- Top-left: white isotipo + FORMA wordmark + CAPITAL INMOBILIARIO tagline
+- Center: "Condominio Santa Elena" headline + "Seguimiento presupuestal · Antigua Guatemala" subline
+- Bottom: thin teal-light bar + URL stamp
+
+**Verification**
+
+- `pnpm typecheck` clean.
+- `pnpm lint` clean.
+- `pnpm test` 199/199 + 2 skipped.
+- `pnpm build` clean (22 routes; `/opengraph-image` newly registered as `ƒ` dynamic).
+- Favicon picked up by Next.js auto-discovery (no `<link>` tags needed in layout).
+
+**Follow-ups not in this batch**
+
+- If/when licensed Archia `.woff2` files arrive: drop into `public/fonts/archia/`, swap `next/font/google` → `next/font/local` in `layout.tsx`. Visual diff between Archivo + Archia is subtle (both geometric sans, similar letter spacing); upgrading is low-risk.
+- The "icon as design element" technique (brand manual page 5) — using individual isotipo shapes as photo cutouts / watermarks — is available but not yet applied. Candidate for the Casa-detail page hero or the L0 anomaly banner.
+- Apple touch icon (`apple-icon.png`) and dynamic per-page OG images deferred — single static OG covers all sharing paths today.
+
+---
+
+### WhatsApp link-preview compliance audit (2026-05-28)
+
+**Trigger**: Jorge asked to research WhatsApp's most recent OG image requirements and verify compliance.
+
+**Sources** (2026):
+- Facebook/Meta WhatsApp Business Platform docs
+- [WhatsApp Link Preview Guide 2026](https://www.ogrilla.com/blog/whatsapp-link-preview-guide)
+- [WhatsApp Link Preview Image Size & Dimensions 2026](https://opengraphplus.com/consumers/whatsapp/images)
+
+**Result: fully compliant on every constraint — no code changes needed.**
+
+**Verified by running `pnpm next start` locally and inspecting both the generated PNG and the emitted meta tags:**
+
+| WhatsApp 2026 constraint | Spec | Measured | ✓ |
+|---|---|---|---|
+| `og:image` absolute HTTPS | required | resolves via `metadataBase` | ✓ |
+| Dimensions | 1200×630 (1.91:1) | exactly 1200×630 | ✓ |
+| File size | **< 300 KB** for reliable display | **37 KB** PNG | ✓ |
+| Format | PNG/JPG/WebP (no SVG/GIF) | PNG | ✓ |
+| Center-crop safety | important content in center 80% | brand+title+URL all centered with 80px+ margins | ✓ |
+| `og:image:width` + `og:image:height` | required | Next.js auto-emits from `size` export | ✓ |
+| `og:image:type` | recommended | `image/png` | ✓ |
+| `og:image:alt` | recommended | `FORMA — Santa Elena · Seguimiento presupuestal` | ✓ |
+| Single `og:image` | required (multiple causes unpredictable picks) | exactly one | ✓ |
+| Survives `/` → `/login` 307 redirect | scrapers follow redirects | `/login` inherits OG from root layout — same tags | ✓ |
+| WhatsApp UA fetch | works | tested with `User-Agent: WhatsApp/2.23.x` | ✓ |
+
+**Defensive notes**:
+
+1. **`robots: noindex, nofollow, nocache` does NOT block WhatsApp's preview scraper.** WhatsApp's link-preview crawler ignores `robots` (it's a search-indexing directive, not a "don't scrape" one). The noindex is appropriate for this private app and doesn't break previews.
+2. **`og:image:secure_url` is intentionally omitted** — only relevant when `og:image` is HTTP and a separate HTTPS variant exists. Since `og:image` is already HTTPS, this tag is redundant and Next.js correctly skips it.
+3. **Aspect ratio**: 1200/630 = 1.9048, the canonical "1.91:1" across Meta/Twitter/LinkedIn. No crop applied by WhatsApp.
+4. **WhatsApp aggressive caching**: previews cache ~7 days per URL. If the OG image is changed, existing shared messages keep the old preview. Next.js's auto-hashed URL (`/opengraph-image?<hash>`) busts server-side cache when the file changes, but WhatsApp's client-side preview cache is independent.
+5. **Cold start**: `next/og` ImageResponse on Vercel edge runtime renders in ~100–300ms — comfortably under WhatsApp's scraper timeout.
+
+**How to manually verify after deploy**:
+
+```bash
+# 1. Check the OG image directly
+curl -I https://forma-santa-elena.vercel.app/opengraph-image
+# Expect: 200 OK, content-type: image/png, content-length < 300000
+
+# 2. Check the meta tags on the root + on /login (where redirects land)
+curl -s https://forma-santa-elena.vercel.app/ | grep -E 'og:image[^>]*'
+curl -s https://forma-santa-elena.vercel.app/login | grep -E 'og:image[^>]*'
+# Both should return the same og:image, og:image:width=1200, og:image:height=630, og:image:type=image/png
+
+# 3. Simulate WhatsApp user-agent
+curl -sL -A "WhatsApp/2.23.x" https://forma-santa-elena.vercel.app/ | grep -E 'og:image[^>]*'
+
+# 4. Force-bust WhatsApp's client cache when previewing
+# Append a unique query string to the shared URL: https://forma-santa-elena.vercel.app/?v=2026-05-28
+```
+
+**No code changes required from this audit.** The Next.js metadata + `next/og` ImageResponse implementation done earlier already meets every WhatsApp 2026 requirement.
+
+---
+
 ## 6. Canonical File Manifest
 
 Tracks every file we own. Updated at the end of each batch. Empty until Batch 1 lands.
