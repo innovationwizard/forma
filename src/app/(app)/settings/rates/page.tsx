@@ -51,10 +51,7 @@ export default async function RatesSettingsPage() {
           <h1 className="text-foreground text-2xl font-semibold tracking-tight">
             TASAS Y TIPOS DE CAMBIO
           </h1>
-          <p className="text-foreground/40 text-[10px] italic">
-            (Parámetros base de los cálculos)
-          </p>
-        </div>
+                  </div>
         <p className="text-foreground/60 mt-1 text-sm">
           TC anclado del proyecto, IVA, y tasas de obligaciones de ISR. Base de todos
           los cálculos — los cambios requieren un motivo y se auditan.
@@ -64,8 +61,7 @@ export default async function RatesSettingsPage() {
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
         <div>
           <h2 className="text-foreground text-base font-semibold">TASAS DEL PROYECTO</h2>
-          <p className="text-foreground/40 text-[10px] italic">(TC anclado e IVA)</p>
-        </div>
+                  </div>
         <p className="text-foreground/50 mt-1 text-xs">
           El TC anclado es el respaldo cuando el TC por transacción no es extractable
           (Detalle egresos finding #11). La tasa de IVA impulsa todas las conversiones
@@ -83,8 +79,7 @@ export default async function RatesSettingsPage() {
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
         <div>
           <h2 className="text-foreground text-base font-semibold">OBLIGACIONES DE ISR</h2>
-          <p className="text-foreground/40 text-[10px] italic">(Tasas de ISR del proyecto)</p>
-        </div>
+                  </div>
         <p className="text-foreground/50 mt-1 text-xs">
           Por D34: las etiquetas son <strong>literales</strong> (<code>&quot;ISR 18&quot;</code>{" "}
           / <code>&quot;ISR 25&quot;</code>) — nunca abreviadas a

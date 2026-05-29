@@ -31,25 +31,30 @@ export function HealthHeader({ totalBudgetUsd, totalSpentUsd }: HealthHeaderProp
       className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm"
     >
       <div className="flex items-baseline justify-between gap-4">
-        <div>
-          <h2
-            id="health-header-title"
-            className="text-foreground/60 text-xs font-medium tracking-wider uppercase"
-          >
-            PRESUPUESTO
-          </h2>
-          <p className="text-foreground/40 text-[10px] italic">
-            (Salud del presupuesto)
-          </p>
-        </div>
+        <h2
+          id="health-header-title"
+          className="text-foreground/60 text-xs font-medium tracking-wider uppercase"
+        >
+          PRESUPUESTO EJECUTADO
+        </h2>
         <span className="text-foreground/60 text-xs">USD, sin IVA</span>
       </div>
 
-      <div className="mt-3 flex items-baseline gap-3">
-        <span className="text-foreground text-5xl font-semibold tracking-tight tabular-nums">
-          {formatPct(remainingFraction)}
-        </span>
-        <span className="text-foreground/60 text-base">restante</span>
+      {/* Both percentages above the bar: ejecutado on the left matches the
+          filled segment; restante on the right matches the empty segment. */}
+      <div className="mt-3 flex items-baseline justify-between gap-3">
+        <div className="flex items-baseline gap-2">
+          <span className="text-foreground text-5xl font-semibold tracking-tight tabular-nums">
+            {formatPct(spentFraction)}
+          </span>
+          <span className="text-foreground/60 text-base">ejecutado</span>
+        </div>
+        <div className="flex items-baseline gap-2">
+          <span className="text-foreground/60 text-base">restante</span>
+          <span className="text-foreground/70 text-3xl font-medium tracking-tight tabular-nums">
+            {formatPct(remainingFraction)}
+          </span>
+        </div>
       </div>
 
       <div
@@ -67,12 +72,8 @@ export function HealthHeader({ totalBudgetUsd, totalSpentUsd }: HealthHeaderProp
       </div>
 
       <div className="text-foreground/70 mt-3 flex flex-wrap items-baseline justify-between gap-2 text-sm tabular-nums">
-        <span>
-          {formatPct(spentFraction)} ejecutado · {formatUsd(spent)} de {formatUsd(budget)}
-        </span>
-        <span className="text-foreground/50">
-          {formatUsd(budget - spent)} restante
-        </span>
+        <span>{formatUsd(spent)} de {formatUsd(budget)}</span>
+        <span className="text-foreground/50">{formatUsd(budget - spent)} restante</span>
       </div>
     </section>
   );

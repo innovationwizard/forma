@@ -46,8 +46,7 @@ export function EditForm({
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
         <div>
           <h2 className="text-foreground text-base font-semibold">EDITAR</h2>
-          <p className="text-foreground/40 text-[10px] italic">(Modificar proveedor y descripción)</p>
-        </div>
+                  </div>
         <p className="text-foreground/60 mt-2 text-sm">
           Tu rol puede ver esta transacción pero no editarla.
         </p>
@@ -85,10 +84,7 @@ export function EditForm({
         <h2 id="tx-edit-title" className="text-foreground text-base font-semibold">
           EDITAR
         </h2>
-        <p className="text-foreground/40 text-[10px] italic">
-          (Modificar proveedor y descripción)
-        </p>
-      </div>
+              </div>
       <p className="text-foreground/50 mt-1 text-xs">
         Solo proveedor y descripción. La recategorización vive en Ajustes.
       </p>

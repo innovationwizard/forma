@@ -75,8 +75,7 @@ export default async function SalesDetailPage({ params }: PageProps) {
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
         <div>
           <h2 className="text-foreground text-base font-semibold">RESUMEN DE LA UNIDAD</h2>
-          <p className="text-foreground/40 text-[10px] italic">(Datos generales)</p>
-        </div>
+                  </div>
         <dl className="text-foreground mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
           <Stat label="Área (m²)" value={u.areaM2} />
           <Stat
@@ -97,8 +96,7 @@ export default async function SalesDetailPage({ params }: PageProps) {
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
         <div>
           <h2 className="text-foreground text-base font-semibold">COMPRADOR</h2>
-          <p className="text-foreground/40 text-[10px] italic">(Datos del adquiriente)</p>
-        </div>
+                  </div>
         {u.buyer != null ? (
           <dl className="text-foreground mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-3">
             <Stat label="Nombre" value={u.buyer.name} />
@@ -129,8 +127,7 @@ export default async function SalesDetailPage({ params }: PageProps) {
         <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
           <div>
             <h2 className="text-foreground text-base font-semibold">ACCIONES DE ESTADO</h2>
-            <p className="text-foreground/40 text-[10px] italic">(Cambios de estado validados por máquina de estados)</p>
-          </div>
+                      </div>
           <p className="text-foreground/50 mt-1 text-xs">
             Validado en el servidor. Solo se permiten transiciones desde{" "}
             <strong>{salesStatusLabel(u.status)}</strong>.
@@ -146,8 +143,7 @@ export default async function SalesDetailPage({ params }: PageProps) {
           <h2 className="text-foreground text-base font-semibold">
             PAGOS ({snapshot.payments.length})
           </h2>
-          <p className="text-foreground/40 text-[10px] italic">(Cuotas recibidas)</p>
-        </div>
+                  </div>
         {snapshot.payments.length === 0 ? (
           <p className="text-foreground/60 mt-3 text-sm">
             Sin pagos registrados todavía. Clasifica ingresos bancarios desde la{" "}

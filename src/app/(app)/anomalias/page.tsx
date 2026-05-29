@@ -78,10 +78,7 @@ export default async function AnomaliesPage({ searchParams }: PageProps) {
           <h1 className="text-foreground text-2xl font-semibold tracking-tight">
             ANOMALÍAS
           </h1>
-          <p className="text-foreground/40 text-[10px] italic">
-            (Banderas de calidad de datos por D31)
-          </p>
-        </div>
+                  </div>
         <p className="text-foreground/60 mt-1 text-sm">
           {snapshot.totalActive} bandera{snapshot.totalActive === 1 ? "" : "s"} activa
           {snapshot.totalActive === 1 ? "" : "s"} en total. Cada bandera describe una

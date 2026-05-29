@@ -51,10 +51,7 @@ export default async function BudgetSettingsPage() {
           <h1 className="text-foreground text-2xl font-semibold tracking-tight">
             CATEGORÍAS DEL PRESUPUESTO
           </h1>
-          <p className="text-foreground/40 text-[10px] italic">
-            (Editar montos por categoría)
-          </p>
-        </div>
+                  </div>
         <p className="text-foreground/60 mt-1 text-sm">
           {categories.length} categorías · presupuesto total{" "}
           <strong className="text-foreground tabular-nums">{formatUsd(total)}</strong>.

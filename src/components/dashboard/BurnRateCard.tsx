@@ -29,10 +29,7 @@ export function BurnRateCard({ burnRate }: BurnRateCardProps) {
         >
           RITMO DE GASTO
         </h2>
-        <p className="text-foreground/40 text-[10px] italic">
-          (Consumo mensual del presupuesto)
-        </p>
-      </div>
+              </div>
 
       <div className="mt-3 flex items-baseline gap-2">
         <span className="text-foreground text-3xl font-semibold tabular-nums">

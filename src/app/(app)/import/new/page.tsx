@@ -32,10 +32,7 @@ export default async function NewImportPage() {
           <h1 className="text-foreground text-2xl font-semibold tracking-tight">
             IMPORTAR ESTADO BANCARIO
           </h1>
-          <p className="text-foreground/40 text-[10px] italic">
-            (Cargar archivo de movimientos)
-          </p>
-        </div>
+                  </div>
         <p className="text-foreground/60 mt-1 text-sm">
           Ingreso CONCILIACIÓN bronce: cada fila de cada hoja se captura verbatim.
           La promoción a plata (deduplicada, montos firmados) sucede automáticamente

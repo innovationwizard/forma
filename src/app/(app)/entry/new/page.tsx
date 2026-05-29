@@ -41,10 +41,7 @@ export default async function NewExpenditurePage() {
             <h1 className="text-foreground text-2xl font-semibold tracking-tight">
               NUEVA TRANSACCIÓN
             </h1>
-            <p className="text-foreground/40 text-[10px] italic">
-              (Registrar gasto manualmente)
-            </p>
-          </div>
+                      </div>
           <p className="text-foreground/70 mt-3 text-sm">
             Tu rol ({role}) no puede crear gastos. Esto se aplica del lado del
             servidor — los botones no solo están ocultos, el endpoint de mutación
@@ -76,10 +73,7 @@ export default async function NewExpenditurePage() {
           <h1 className="text-foreground text-2xl font-semibold tracking-tight">
             NUEVA TRANSACCIÓN
           </h1>
-          <p className="text-foreground/40 text-[10px] italic">
-            (Registrar gasto manualmente)
-          </p>
-        </div>
+                  </div>
         <p className="text-foreground/60 mt-1 text-sm">
           Registra un gasto manual. Origen = MANUAL, Estado = PENDIENTE.
           El tipo de cambio BANGUAT se resuelve automáticamente por fecha;

@@ -44,10 +44,7 @@ export function FinancialBottomLine({
           <h2 id="bottom-line-title" className="text-foreground text-base font-semibold">
             RESULTADO FINANCIERO
           </h2>
-          <p className="text-foreground/40 text-[10px] italic">
-            (EBITDA · crédito · IVA · ISR)
-          </p>
-        </div>
+                  </div>
         <span className="text-foreground/50 text-xs">
           EBITDA · crédito · IVA · ISR
         </span>

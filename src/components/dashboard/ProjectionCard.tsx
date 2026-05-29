@@ -41,10 +41,7 @@ export function ProjectionCard({ burnRate, totalBudgetUsd }: ProjectionCardProps
         >
           CIERRE PROYECTADO
         </h2>
-        <p className="text-foreground/40 text-[10px] italic">
-          (Pronóstico al final del proyecto)
-        </p>
-      </div>
+              </div>
 
       <div className="mt-3 flex items-baseline gap-2">
         <span

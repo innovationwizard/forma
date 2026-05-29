@@ -61,10 +61,7 @@ export function CategoryTimeline({ timeline, currentMonth }: CategoryTimelinePro
           <h2 id="timeline-title" className="text-foreground text-base font-semibold">
             EJECUCIÓN ACUMULADA
           </h2>
-          <p className="text-foreground/40 text-[10px] italic">
-            (Gasto acumulado por mes)
-          </p>
-        </div>
+                  </div>
         <div className="text-foreground/60 flex items-center gap-4 text-xs">
           <LegendItem swatchClass="bg-emerald-500/60" label="Real" />
           <LegendItem swatchClass="bg-zinc-400" label="Plan" />

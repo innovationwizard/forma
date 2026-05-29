@@ -5,6 +5,25 @@ Update at the **start, middle, and end** of every batch. If a session is compact
 
 ---
 
+> ## ⚠ Non-negotiable: NO FABRICATED UI COPY
+>
+> Per [\_THE_RULES.MD](_THE_RULES.MD) Rule 1, every string a user sees must originate from:
+>
+> 1. The xlsx SSOT (verbatim cell value)
+> 2. The brand manual (`docs/Manual de Marca_Forma.pdf`)
+> 3. A Jorge-typed directive in chat
+> 4. Standard Spanish UI affordances (button labels, field labels)
+>
+> **No editorial subtitles. No marketing copy. No parenthesized clarifiers. No taglines. No composite names.** When in doubt, leave the string out and ask Jorge via `AskUserQuestion`.
+>
+> Recurring violations flagged on 2026-05-28 and 2026-05-29 (project naming compound "Condominio Santa Elena"; "Seguimiento presupuestal" descriptive copy; "Tablero principal" aria-flavor; "Orden canónico — anomalías resaltadas en su lugar" header subtitle; parenthesized italic clarifiers on most card headings; misuse of the Spanish word "reflujo" / acid reflux). The dual-label pattern (CAPS heading + parenthesized italic clarifier under it) is **withdrawn** unless the clarifier line is verbatim from SSOT.
+>
+> Operational test before writing any UI string: *Can I quote the SSOT cell, brand manual page, or Jorge directive that contains this exact string?* If no — don't write it.
+>
+> See [`feedback_no_fabricated_copy.md`](file:///Users/jorgeluiscontrerasherrera/.claude/projects/-Users-jorgeluiscontrerasherrera-Documents--git-forma/memory/feedback_no_fabricated_copy.md) for the full operational rule and the catalog of recurring fabrications.
+
+---
+
 ## 0. Session Resumption Protocol
 
 If you (Claude or human) just opened this project:

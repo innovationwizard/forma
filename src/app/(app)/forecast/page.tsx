@@ -51,10 +51,7 @@ export default async function ForecastPage() {
             <h1 className="text-foreground text-2xl font-semibold tracking-tight">
               PROYECCIÓN DE FLUJO DE CAJA
             </h1>
-            <p className="text-foreground/40 text-[10px] italic">
-              (Modelo financiero a 36 meses)
-            </p>
-          </div>
+                      </div>
           <span className="text-foreground/60 text-xs tabular-nums">
             {projection.rows.length} meses · {project.startDate} → {project.projectedEndDate}
           </span>
@@ -73,10 +70,7 @@ export default async function ForecastPage() {
           <h2 className="text-foreground text-base font-semibold">
             RETORNOS (4 figuras · disambiguadas por D28)
           </h2>
-          <p className="text-foreground/40 text-[10px] italic">
-            (Ratios y márgenes financieros del proyecto)
-          </p>
-        </div>
+                  </div>
         <p className="text-foreground/50 mt-1 text-xs">
           Por <code>feedback_literal_labels_when_multiple_values</code>, ninguna se
           etiqueta simplemente como &quot;ROI&quot; — cada una lleva su propio token literal
@@ -113,8 +107,7 @@ export default async function ForecastPage() {
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
         <div>
           <h2 className="text-foreground text-base font-semibold">TOTALES</h2>
-          <p className="text-foreground/40 text-[10px] italic">(Agregados del proyecto)</p>
-        </div>
+                  </div>
         <dl className="text-foreground mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
           <Stat label="Costo total (sin IVA)" value={formatUsd(projection.totals.totalCostSinIvaUsd)} />
           <Stat label="Ingresos totales (sin IVA)" value={formatUsd(projection.totals.totalRevenueSinIvaUsd)} />
@@ -128,8 +121,7 @@ export default async function ForecastPage() {
         <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
           <div>
             <h2 className="text-foreground text-base font-semibold">CRÉDITO BANCARIO</h2>
-            <p className="text-foreground/40 text-[10px] italic">(Detalles del crédito)</p>
-          </div>
+                      </div>
           <dl className="text-foreground mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
             <Stat label="Banco" value={creditFacility.lenderName} />
             <Stat label="Cupo inicial" value={formatUsd(creditFacility.initialCapUsd)} />
@@ -146,8 +138,7 @@ export default async function ForecastPage() {
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
         <div>
           <h2 className="text-foreground text-base font-semibold">PROYECCIÓN MENSUAL A 36 MESES</h2>
-          <p className="text-foreground/40 text-[10px] italic">(Costo / Ingresos / EBITDA por mes)</p>
-        </div>
+                  </div>
         <p className="text-foreground/50 mt-1 text-xs">
           Costo / Ingresos / EBITDA por mes, series acumuladas, y flujo del crédito.
           Solo lectura — la edición de celdas llega en Batch 16b.

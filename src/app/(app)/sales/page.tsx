@@ -41,10 +41,7 @@ export default async function SalesGridPage() {
         <div className="mt-2 flex flex-wrap items-baseline justify-between gap-3">
           <div>
             <h1 className="text-foreground text-2xl font-semibold tracking-tight">VENTAS</h1>
-            <p className="text-foreground/40 text-[10px] italic">
-              (Estado y pagos por unidad)
-            </p>
-          </div>
+                      </div>
           <span className="text-foreground/60 text-xs tabular-nums">
             {grid.rows.length} unidades
           </span>
@@ -58,8 +55,7 @@ export default async function SalesGridPage() {
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
         <div>
           <h2 className="text-foreground text-base font-semibold">RESUMEN GENERAL</h2>
-          <p className="text-foreground/40 text-[10px] italic">(Totales agregados de ventas)</p>
-        </div>
+                  </div>
         <dl className="text-foreground mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
           <Stat label="Total proyectado" value={formatUsd(totals.totalProjectedUsd)} />
           <Stat label="Total pagado" value={formatUsd(totals.totalPaidUsd)} />

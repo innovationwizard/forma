@@ -28,10 +28,7 @@ export function AuditTimeline({ events }: AuditTimelineProps) {
         <h2 id="audit-title" className="text-foreground text-base font-semibold">
           HISTORIAL ({events.length})
         </h2>
-        <p className="text-foreground/40 text-[10px] italic">
-          (Eventos de auditoría — solo lectura)
-        </p>
-      </div>
+              </div>
 
       {events.length === 0 ? (
         <p className="text-foreground/60 mt-3 text-sm">

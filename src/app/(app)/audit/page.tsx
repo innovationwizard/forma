@@ -61,10 +61,7 @@ export default async function AuditPage({ searchParams }: PageProps) {
           <h1 className="text-foreground text-2xl font-semibold tracking-tight">
             REGISTRO DE ACTIVIDAD
           </h1>
-          <p className="text-foreground/40 text-[10px] italic">
-            (Auditoría global del sistema)
-          </p>
-        </div>
+                  </div>
         <p className="text-foreground/60 mt-1 text-sm">
           Cada mutación en la aplicación escribe una de estas filas en la misma
           transacción Prisma que el cambio subyacente. Solo lectura por D8 (el
@@ -75,8 +72,7 @@ export default async function AuditPage({ searchParams }: PageProps) {
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
         <div>
           <h2 className="text-foreground text-base font-semibold">FILTROS</h2>
-          <p className="text-foreground/40 text-[10px] italic">(Reducir los eventos mostrados)</p>
-        </div>
+                  </div>
         <form action="/audit" method="GET" className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Field label="Usuario">
             <select name="user" defaultValue={filters.userId ?? ""} className={inputClass}>
@@ -165,8 +161,7 @@ export default async function AuditPage({ searchParams }: PageProps) {
             <h2 className="text-foreground text-base font-semibold">
               EVENTOS {snapshot.total > 0 ? `(${snapshot.total} coinciden)` : ""}
             </h2>
-            <p className="text-foreground/40 text-[10px] italic">(Filas de auditoría)</p>
-          </div>
+                      </div>
           <span className="text-foreground/50 text-xs tabular-nums">
             Página {snapshot.page} de {snapshot.totalPages}
           </span>

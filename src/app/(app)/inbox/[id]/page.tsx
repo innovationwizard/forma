@@ -47,10 +47,7 @@ export default async function InboxItemPage({ params }: PageProps) {
           <h1 className="text-foreground text-2xl font-semibold tracking-tight">
             CLASIFICAR TRANSACCIÓN BANCARIA
           </h1>
-          <p className="text-foreground/40 text-[10px] italic">
-            (Asignar movimiento a su categoría)
-          </p>
-        </div>
+                  </div>
       </header>
 
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">

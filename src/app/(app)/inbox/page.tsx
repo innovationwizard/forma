@@ -40,10 +40,7 @@ export default async function InboxPage() {
             <h1 className="text-foreground text-2xl font-semibold tracking-tight">
               BANDEJA DE CLASIFICACIÓN
             </h1>
-            <p className="text-foreground/40 text-[10px] italic">
-              (Transacciones bancarias por clasificar)
-            </p>
-          </div>
+                      </div>
           <p className="text-foreground/60 mt-1 text-sm">
             {inbox.unclassifiedCount} transacc{inbox.unclassifiedCount === 1 ? "ión" : "iones"} bancaria{inbox.unclassifiedCount === 1 ? "" : "s"} sin clasificar.
             Más recientes primero. Haz clic en una fila para clasificarla.

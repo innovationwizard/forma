@@ -71,10 +71,7 @@ export function TransactionsTable({
           <h2 id="transactions-title" className="text-foreground text-base font-semibold">
             TRANSACCIONES
           </h2>
-          <p className="text-foreground/40 text-[10px] italic">
-            (Gastos + aportaciones de la categoría)
-          </p>
-        </div>
+                  </div>
         <span className="text-foreground/50 text-xs tabular-nums">
           Mostrando {events.length} de {totalEventCount}
         </span>

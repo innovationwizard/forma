@@ -39,19 +39,9 @@ export function CategoryBars({ categories }: CategoryBarsProps) {
       aria-labelledby="category-bars-title"
       className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm"
     >
-      <div className="flex items-baseline justify-between">
-        <div>
-          <h2 id="category-bars-title" className="text-foreground text-base font-semibold">
-            CATEGORÍAS
-          </h2>
-          <p className="text-foreground/40 text-[10px] italic">
-            (Salud por categoría)
-          </p>
-        </div>
-        <span className="text-foreground/50 text-xs">
-          Orden canónico — anomalías resaltadas en su lugar
-        </span>
-      </div>
+      <h2 id="category-bars-title" className="text-foreground text-base font-semibold">
+        CATEGORÍAS
+      </h2>
 
       <ul role="list" className="mt-4 divide-y divide-zinc-100">
         {rows.map((c) => (

@@ -60,8 +60,7 @@ export function ClassifyWidget({ snapshot }: ClassifyWidgetProps) {
         <h2 id="classify-title" className="text-foreground text-base font-semibold">
           CLASIFICAR
         </h2>
-        <p className="text-foreground/40 text-[10px] italic">(Asignar el movimiento)</p>
-      </div>
+              </div>
 
       <nav className="border-foreground/10 mt-4 flex flex-wrap gap-1 border-b" aria-label="Ruta de clasificación">
         {tabs.filter((t) => t.visible).map((t) => (

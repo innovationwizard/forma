@@ -43,8 +43,7 @@ export function UploadForm() {
     >
       <div>
         <h2 className="text-foreground text-base font-semibold">CARGAR ESTADO</h2>
-        <p className="text-foreground/40 text-[10px] italic">(Subir archivo del banco)</p>
-      </div>
+              </div>
       <p className="text-foreground/60 mt-1 text-xs">
         Soportados: <code>.xls</code> + <code>.xlsx</code> de cualquier banco. El
         parser captura cada fila sin importar la variación; la clasificación se

@@ -48,10 +48,7 @@ export default async function TransactionDetailPage({ params }: PageProps) {
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
         <div>
           <h2 className="text-foreground text-base font-semibold">ACCIONES</h2>
-          <p className="text-foreground/40 text-[10px] italic">
-            (Operaciones disponibles sobre esta transacción)
-          </p>
-        </div>
+                  </div>
         <p className="text-foreground/50 mt-1 text-xs">
           {canMutate
             ? `Disponibles para tu rol (${role}).`

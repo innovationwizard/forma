@@ -5,7 +5,7 @@
  * Server component: composes `loadDashboardSnapshot` (single round-trip
  * fan-out) and renders three canonical blocks per D25/D27/D28:
  *
- *   Block 1 (cost summary)         — HealthHeader + StatusTiles + CategoryBars
+ *   Block 1 (cost summary)         — HealthHeader + CategoryBars
  *   Block 2 (revenue summary)      — RevenueBlock
  *   Block 3 (financial bottom)     — FinancialBottomLine
  *
@@ -27,7 +27,6 @@ import { HealthHeader } from "@/components/dashboard/HealthHeader";
 import { ModelNotes } from "@/components/dashboard/ModelNotes";
 import { ProjectionCard } from "@/components/dashboard/ProjectionCard";
 import { RevenueBlock } from "@/components/dashboard/RevenueBlock";
-import { StatusTiles } from "@/components/dashboard/StatusTiles";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/db";
 import { formatIsoDate } from "@/lib/format";
@@ -135,20 +134,13 @@ export default async function DashboardPage() {
         <AnomalyBadges anomalies={snapshot.anomalies} />
       </header>
 
-      {/* Block 1 — cost summary per D25 */}
+      {/* Block 1 — cost summary per D25. Per Jorge directive 2026-05-29 the
+          per-category list is the only block the CEO actually asked for on
+          the main view, so it spans full width here; the burn/projection
+          cards live below the bottom-line block as supporting context. */}
       <HealthHeader totalBudgetUsd={totalBudgetUsd} totalSpentUsd={totalSpentUsd} />
-      <StatusTiles categories={snapshot.budgetHealth} />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
-        <CategoryBars categories={snapshot.budgetHealth} />
-        <div className="flex flex-col gap-4">
-          <BurnRateCard burnRate={snapshot.burnRate} />
-          <ProjectionCard
-            burnRate={snapshot.burnRate}
-            totalBudgetUsd={totalBudgetUsd}
-          />
-        </div>
-      </div>
+      <CategoryBars categories={snapshot.budgetHealth} />
 
       {/* Block 2 — revenue summary per D27 */}
       <RevenueBlock revenue={snapshot.revenue} />
@@ -160,6 +152,17 @@ export default async function DashboardPage() {
         iva={snapshot.iva}
         isr={snapshot.isr}
       />
+
+      {/* Supporting projections — moved below the bottom-line block per
+          Jorge directive 2026-05-29 so the CEO's primary view is the
+          category list. */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <BurnRateCard burnRate={snapshot.burnRate} />
+        <ProjectionCard
+          burnRate={snapshot.burnRate}
+          totalBudgetUsd={totalBudgetUsd}
+        />
+      </div>
 
       <ModelNotes notes={snapshot.project.modelNotes} />
     </main>

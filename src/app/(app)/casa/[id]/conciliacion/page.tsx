@@ -96,8 +96,7 @@ export default async function CasaConciliacionPage({ params }: PageProps) {
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
         <div>
           <h2 className="text-foreground text-base font-semibold">RESUMEN</h2>
-          <p className="text-foreground/40 text-[10px] italic">(Conciliación de la unidad)</p>
-        </div>
+                  </div>
         <dl className="text-foreground mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
           <Stat label="Precio de venta" value={unit.salePriceSinIvaUsd != null ? formatUsd(unit.salePriceSinIvaUsd) : "—"} />
           <Stat label="Tasa de enganche" value={formatPct(unit.engancheRate)} />
@@ -142,10 +141,7 @@ export default async function CasaConciliacionPage({ params }: PageProps) {
           <h2 className="text-foreground text-base font-semibold">
             CONCILIACIÓN MENSUAL
           </h2>
-          <p className="text-foreground/40 text-[10px] italic">
-            (Plan vs. real por mes)
-          </p>
-        </div>
+                  </div>
         <p className="text-foreground/50 mt-1 text-xs">
           Mostrando {activeRows.length} mes{activeRows.length === 1 ? "" : "es"} activo{activeRows.length === 1 ? "" : "s"}.
           Las filas SIN ACTIVIDAD (plan = 0 y real = 0) están ocultas;{" "}

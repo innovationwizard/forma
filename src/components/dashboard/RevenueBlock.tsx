@@ -35,10 +35,7 @@ export function RevenueBlock({ revenue }: RevenueBlockProps) {
           <h2 id="revenue-title" className="text-foreground text-base font-semibold">
             INGRESOS
           </h2>
-          <p className="text-foreground/40 text-[10px] italic">
-            (Ingresos proyectados — ventas)
-          </p>
-        </div>
+                  </div>
         <span className="text-foreground/50 text-xs">USD, sin IVA</span>
       </div>
 

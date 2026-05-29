@@ -76,8 +76,7 @@ export default async function ImportDetailPage({ params, searchParams }: PagePro
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
         <div>
           <h2 className="text-foreground text-base font-semibold">RESUMEN</h2>
-          <p className="text-foreground/40 text-[10px] italic">(Conteos de la importación)</p>
-        </div>
+                  </div>
         <dl className="text-foreground mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
           <Stat label="Hojas" value={snapshot.sheets.length.toString()} />
           <Stat label="Filas bronce" value={snapshot.totals.rawRows.toString()} />
@@ -100,8 +99,7 @@ export default async function ImportDetailPage({ params, searchParams }: PagePro
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
         <div>
           <h2 className="text-foreground text-base font-semibold">HOJAS</h2>
-          <p className="text-foreground/40 text-[10px] italic">(Hojas del estado bancario)</p>
-        </div>
+                  </div>
         <p className="text-foreground/50 mt-1 text-xs">
           Cuando una importación contiene hojas gemelas para la misma cuenta, solo la
           canónica alimenta la capa plata. Usa <strong>Hacer canónica</strong> para
@@ -133,8 +131,7 @@ export default async function ImportDetailPage({ params, searchParams }: PagePro
             <h2 className="text-foreground text-base font-semibold">
               BANDERAS DE CALIDAD DE DATOS ({snapshot.flags.length})
             </h2>
-            <p className="text-foreground/40 text-[10px] italic">(Anomalías detectadas durante el ingreso)</p>
-          </div>
+                      </div>
           <p className="text-foreground/50 mt-1 text-xs">
             Por D31 el parser nunca se rompe — las filas raras aparecen aquí en su lugar.
             Resuelve desde la vista de calidad de datos.

@@ -190,8 +190,7 @@ export function NewExpenditureForm({
     >
       <div>
         <h2 className="text-foreground text-base font-semibold">NUEVA TRANSACCIÓN</h2>
-        <p className="text-foreground/40 text-[10px] italic">(Registrar gasto manualmente)</p>
-      </div>
+              </div>
       <p className="text-foreground/50 mt-1 text-xs">
         Origen = MANUAL · Estado = PENDIENTE (hasta que un analista la verifique).
       </p>

@@ -31,8 +31,7 @@ export function SubItemsList({ subItems }: SubItemsListProps) {
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
         <div>
           <h2 className="text-foreground text-base font-semibold">PARTIDAS INTERNAS</h2>
-          <p className="text-foreground/40 text-[10px] italic">(Sub-elementos de la categoría)</p>
-        </div>
+                  </div>
         <p className="text-foreground/60 mt-3 text-sm">
           Sin partidas internas registradas para esta categoría.
         </p>
@@ -54,10 +53,7 @@ export function SubItemsList({ subItems }: SubItemsListProps) {
           <h2 id="subitems-title" className="text-foreground text-base font-semibold">
             PARTIDAS INTERNAS ({subItems.length})
           </h2>
-          <p className="text-foreground/40 text-[10px] italic">
-            (Sub-elementos de la categoría)
-          </p>
-        </div>
+                  </div>
         <span className="text-foreground/50 text-xs tabular-nums">
           Total {formatUsd(total)}
         </span>

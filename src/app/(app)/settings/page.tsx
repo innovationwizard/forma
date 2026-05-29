@@ -52,10 +52,7 @@ export default async function SettingsIndexPage() {
           <h1 className="text-foreground text-2xl font-semibold tracking-tight">
             AJUSTES
           </h1>
-          <p className="text-foreground/40 text-[10px] italic">
-            (Configuración del proyecto)
-          </p>
-        </div>
+                  </div>
         <p className="text-foreground/60 mt-1 text-sm">
           Overrides de administrador para los parámetros del proyecto. La gestión
           de usuarios vive en el panel de Supabase hasta que una UI envoltura
