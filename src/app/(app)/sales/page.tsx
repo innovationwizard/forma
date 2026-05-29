@@ -17,9 +17,10 @@
 import Link from "next/link";
 
 import { HouseCard } from "@/components/sales/HouseCard";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/db";
-import { loadSalesGrid } from "@/lib/queries/sales";
+import { loadSalesGrid, type SalesGridRow } from "@/lib/queries/sales";
 import { formatUsd } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -46,10 +47,6 @@ export default async function SalesGridPage() {
             {grid.rows.length} unidades
           </span>
         </div>
-        <p className="text-foreground/60 mt-1 text-sm">
-          Estado por casa, vinculación con el comprador, y pagos recibidos a la fecha.
-          Haz clic en cualquier tarjeta para ver el ciclo y el calendario de pagos.
-        </p>
       </header>
 
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
@@ -66,15 +63,14 @@ export default async function SalesGridPage() {
               label="Datos incompletos"
               value={totals.unitsWithIncompleteData.toString()}
               accent="warning"
+              tooltip={<IncompleteDataTooltip rows={grid.rows.filter((r) => r.dataIncomplete)} />}
+              tooltipLabel="Detalle de datos incompletos por casa"
             />
           ) : null}
           {totals.unitCountOther > 0 ? (
             <Stat label="Otros estados" value={totals.unitCountOther.toString()} />
           ) : null}
         </dl>
-        <p className="text-foreground/40 mt-3 text-[10px]">
-          Total proyectado reconcilia con SDD §3.2.5 ($12,639,661.49).
-        </p>
       </section>
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -90,22 +86,76 @@ function Stat({
   label,
   value,
   accent = "neutral",
+  tooltip,
+  tooltipLabel,
 }: {
   label: string;
   value: string;
   accent?: "neutral" | "warning";
+  /// Optional InfoTooltip body. When supplied, an (i) icon renders to the
+  /// right of the value and opens a popover with this content on hover/focus.
+  tooltip?: React.ReactNode;
+  /// Accessible name for the (i) trigger button. Required when `tooltip` is set.
+  tooltipLabel?: string;
 }) {
   return (
     <div>
       <dt className="text-foreground/50 text-[10px] tracking-wide uppercase">{label}</dt>
       <dd
         className={
-          "mt-0.5 text-base font-semibold tabular-nums " +
+          "mt-0.5 flex items-center gap-1.5 text-base font-semibold tabular-nums " +
           (accent === "warning" ? "text-amber-700" : "text-foreground")
         }
       >
-        {value}
+        <span>{value}</span>
+        {tooltip != null && tooltipLabel != null ? (
+          <InfoTooltip label={tooltipLabel}>{tooltip}</InfoTooltip>
+        ) : null}
       </dd>
     </div>
   );
 }
+
+/// Itemized tooltip body: one block per house with the schema-field-name
+/// for each missing column. Field labels are deliberately schema-derived
+/// (e.g. `soldAt`, `reservedAt`) — these are not editorial copy, they are
+/// 1:1 with database column semantics.
+function IncompleteDataTooltip({ rows }: { rows: SalesGridRow[] }) {
+  if (rows.length === 0) {
+    return <p>Sin datos incompletos.</p>;
+  }
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="font-medium">
+        {rows.length} casa{rows.length === 1 ? "" : "s"} VENDIDA{rows.length === 1 ? "" : "S"} con datos incompletos
+      </p>
+      <ul className="flex flex-col gap-2">
+        {rows.map((r) => (
+          <li key={r.id} className="border-foreground/10 border-t pt-1.5">
+            <div className="text-foreground font-medium">{r.name}</div>
+            <ul className="text-foreground/70 mt-1 list-disc pl-4">
+              {r.missingFields.map((f) => (
+                <li key={f}>
+                  <code className="text-[10px]">{f}</code>
+                  {": "}
+                  {MISSING_FIELD_DESCRIPTION[f]}
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/// Plain-Spanish gloss for each schema field name surfaced in the tooltip.
+/// These are direct one-line descriptions of the DB column meaning — not
+/// marketing or editorial copy.
+const MISSING_FIELD_DESCRIPTION: Record<SalesGridRow["missingFields"][number], string> = {
+  buyer: "comprador vinculado (Partner). Vincúlalo desde /sales/[id].",
+  soldAt: "fecha en que la unidad se marcó como VENDIDA.",
+  reservedAt: "fecha en que se registró la reserva inicial.",
+  saleMonth: "mes del proyecto en que ocurrió la venta.",
+  deliveryMonth: "mes del proyecto en que se entrega la unidad.",
+};

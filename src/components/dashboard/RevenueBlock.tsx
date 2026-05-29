@@ -53,7 +53,6 @@ export function RevenueBlock({ revenue }: RevenueBlockProps) {
         <SummaryStat
           label="Vendidas / disponibles"
           value={`${revenue.unitCountSold} / ${revenue.unitCountAvailable}`}
-          sub="Bloque canónico vendido = {1, 2, 5, 6, 7, 11}"
         />
       </div>
 
@@ -113,14 +112,14 @@ export function RevenueBlock({ revenue }: RevenueBlockProps) {
   );
 }
 
-function SummaryStat({ label, value, sub }: { label: string; value: string; sub: string }) {
+function SummaryStat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="border-foreground/5 bg-background/50 rounded-xl border p-3">
       <div className="text-foreground/60 text-[10px] font-medium tracking-wide uppercase">
         {label}
       </div>
       <div className="text-foreground mt-1 text-xl font-semibold tabular-nums">{value}</div>
-      <div className="text-foreground/50 mt-0.5 text-xs">{sub}</div>
+      {sub != null ? <div className="text-foreground/50 mt-0.5 text-xs">{sub}</div> : null}
     </div>
   );
 }

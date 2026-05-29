@@ -43,7 +43,6 @@ export default async function InboxPage() {
                       </div>
           <p className="text-foreground/60 mt-1 text-sm">
             {inbox.unclassifiedCount} transacc{inbox.unclassifiedCount === 1 ? "ión" : "iones"} bancaria{inbox.unclassifiedCount === 1 ? "" : "s"} sin clasificar.
-            Más recientes primero. Haz clic en una fila para clasificarla.
           </p>
         </div>
         <Link

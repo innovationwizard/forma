@@ -74,11 +74,6 @@ export default async function NewExpenditurePage() {
             NUEVA TRANSACCIÓN
           </h1>
                   </div>
-        <p className="text-foreground/60 mt-1 text-sm">
-          Registra un gasto manual. Origen = MANUAL, Estado = PENDIENTE.
-          El tipo de cambio BANGUAT se resuelve automáticamente por fecha;
-          puedes sobrescribirlo dando un motivo obligatorio para la auditoría.
-        </p>
       </header>
 
       <NewExpenditureForm

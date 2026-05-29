@@ -100,11 +100,6 @@ export default async function ImportDetailPage({ params, searchParams }: PagePro
         <div>
           <h2 className="text-foreground text-base font-semibold">HOJAS</h2>
                   </div>
-        <p className="text-foreground/50 mt-1 text-xs">
-          Cuando una importación contiene hojas gemelas para la misma cuenta, solo la
-          canónica alimenta la capa plata. Usa <strong>Hacer canónica</strong> para
-          cambiar — la capa plata se vuelve a derivar automáticamente.
-        </p>
         <div className="mt-4 flex flex-col gap-3">
           {snapshot.sheets.map((s) => {
             const groupKey =
@@ -132,10 +127,6 @@ export default async function ImportDetailPage({ params, searchParams }: PagePro
               BANDERAS DE CALIDAD DE DATOS ({snapshot.flags.length})
             </h2>
                       </div>
-          <p className="text-foreground/50 mt-1 text-xs">
-            Por D31 el parser nunca se rompe — las filas raras aparecen aquí en su lugar.
-            Resuelve desde la vista de calidad de datos.
-          </p>
           <ul className="mt-4 space-y-2">
             {snapshot.flags.map((f) => (
               <li

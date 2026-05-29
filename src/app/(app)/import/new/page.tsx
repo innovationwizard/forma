@@ -33,12 +33,6 @@ export default async function NewImportPage() {
             IMPORTAR ESTADO BANCARIO
           </h1>
                   </div>
-        <p className="text-foreground/60 mt-1 text-sm">
-          Ingreso CONCILIACIÓN bronce: cada fila de cada hoja se captura verbatim.
-          La promoción a plata (deduplicada, montos firmados) sucede automáticamente
-          para la hoja canónica de cada cuenta detectada. Las decisiones de hojas gemelas
-          pueden invertirse desde la página de detalle de la importación.
-        </p>
       </header>
 
       {canCreate ? (

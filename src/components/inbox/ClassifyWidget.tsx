@@ -165,12 +165,6 @@ function ExpenditureForm({ snapshot }: { snapshot: InboxItemSnapshot }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <p className="text-foreground/60 text-xs">
-        Crea un <code>Gasto</code> vinculado a esta transacción bancaria.
-        Origen = <code>ESTADO BANCARIO</code>, Estado = <code>PENDIENTE</code>. La
-        transacción bancaria cambia a clasificación <code>GASTO</code>.
-      </p>
-
       <fieldset className="grid grid-cols-1 gap-4 sm:grid-cols-2" disabled={pending}>
         <Field label="Proveedor (texto crudo)">
           <input
@@ -341,12 +335,6 @@ function RvPaymentForm({ snapshot }: { snapshot: InboxItemSnapshot }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <p className="text-foreground/60 text-xs">
-        Crea un <code>Pago de casa</code> vinculando este ingreso con una casa
-        vendida. La conciliación contra el calendario planeado vive aparte
-        en cada página de conciliación de la casa.
-      </p>
-
       <fieldset className="grid grid-cols-1 gap-4 sm:grid-cols-2" disabled={pending}>
         <Field label="Casa (unidad vendida)">
           <select
@@ -434,12 +422,6 @@ function NonBusinessForm({ snapshot }: { snapshot: InboxItemSnapshot }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <p className="text-foreground/60 text-xs">
-        Para eventos que no pertenecen al seguimiento del presupuesto (transferencias
-        entre cuentas propias, cargos del banco, retenciones de ISR, etc.).
-        Cambia la clasificación de la transacción bancaria; no crea fila en el lado dorado.
-      </p>
-
       <fieldset className="grid grid-cols-1 gap-4 sm:grid-cols-2" disabled={pending}>
         <Field label="Tipo">
           <select
@@ -511,10 +493,6 @@ function SkipForm({ snapshot }: { snapshot: InboxItemSnapshot }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <p className="text-foreground/60 text-xs">
-        Mantiene esta transacción como <code>SIN CLASIFICAR</code> pero agrega una nota
-        para que un revisor posterior (o tú, en la próxima pasada) sepa por qué se omitió.
-      </p>
       <Field label="¿Por qué omitir? (obligatorio)">
         <input
           type="text"

@@ -53,11 +53,6 @@ export default async function SettingsIndexPage() {
             AJUSTES
           </h1>
                   </div>
-        <p className="text-foreground/60 mt-1 text-sm">
-          Overrides de administrador para los parámetros del proyecto. La gestión
-          de usuarios vive en el panel de Supabase hasta que una UI envoltura
-          aterrice.
-        </p>
       </header>
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

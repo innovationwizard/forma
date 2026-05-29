@@ -220,9 +220,6 @@ function IsrCard({ isr }: { isr: IsrSnapshot }) {
           </li>
         ))}
       </ul>
-      <p className="text-foreground/50 mt-3 text-[10px]">
-        Base de utilidad antes de impuestos: {formatUsd(isr.preTaxProfitBasisUsd)}
-      </p>
     </SubCard>
   );
 }

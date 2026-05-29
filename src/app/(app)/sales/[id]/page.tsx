@@ -65,11 +65,9 @@ export default async function SalesDetailPage({ params }: PageProps) {
             Ver conciliación →
           </Link>
         </div>
-        <p className="text-foreground/60 mt-1 text-sm">
-          {buyerLabel ?? (
-            <span className="italic">Comprador no vinculado todavía.</span>
-          )}
-        </p>
+        {buyerLabel != null ? (
+          <p className="text-foreground/60 mt-1 text-sm">{buyerLabel}</p>
+        ) : null}
       </header>
 
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
@@ -128,10 +126,6 @@ export default async function SalesDetailPage({ params }: PageProps) {
           <div>
             <h2 className="text-foreground text-base font-semibold">ACCIONES DE ESTADO</h2>
                       </div>
-          <p className="text-foreground/50 mt-1 text-xs">
-            Validado en el servidor. Solo se permiten transiciones desde{" "}
-            <strong>{salesStatusLabel(u.status)}</strong>.
-          </p>
           <div className="mt-3">
             <StatusActions id={u.id} currentStatus={u.status} canMutate={canMutateUnits} />
           </div>

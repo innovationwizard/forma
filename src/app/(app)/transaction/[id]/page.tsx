@@ -49,11 +49,6 @@ export default async function TransactionDetailPage({ params }: PageProps) {
         <div>
           <h2 className="text-foreground text-base font-semibold">ACCIONES</h2>
                   </div>
-        <p className="text-foreground/50 mt-1 text-xs">
-          {canMutate
-            ? `Disponibles para tu rol (${role}).`
-            : `Solo lectura para tu rol (${role}). El servidor lo aplica — los botones están ocultos, pero las solicitudes de mutación serían rechazadas con 403.`}
-        </p>
         <div className="mt-4">
           <StatusActions
             id={snapshot.id}

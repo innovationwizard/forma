@@ -62,11 +62,6 @@ export default async function AuditPage({ searchParams }: PageProps) {
             REGISTRO DE ACTIVIDAD
           </h1>
                   </div>
-        <p className="text-foreground/60 mt-1 text-sm">
-          Cada mutación en la aplicación escribe una de estas filas en la misma
-          transacción Prisma que el cambio subyacente. Solo lectura por D8 (el
-          registro es inmutable; la tabla no tiene <code>deletedAt</code>).
-        </p>
       </header>
 
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">

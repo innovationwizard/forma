@@ -143,9 +143,8 @@ export default async function CasaConciliacionPage({ params }: PageProps) {
           </h2>
                   </div>
         <p className="text-foreground/50 mt-1 text-xs">
-          Mostrando {activeRows.length} mes{activeRows.length === 1 ? "" : "es"} activo{activeRows.length === 1 ? "" : "s"}.
-          Las filas SIN ACTIVIDAD (plan = 0 y real = 0) están ocultas;{" "}
-          {report.counts.NO_ACTIVITY} en total. El proyecto inicia el {formatIsoDate(project.startDate)}.
+          {activeRows.length} mes{activeRows.length === 1 ? "" : "es"} activo{activeRows.length === 1 ? "" : "s"} ·{" "}
+          {report.counts.NO_ACTIVITY} sin actividad · inicio {formatIsoDate(project.startDate)}.
         </p>
 
         {activeRows.length === 0 ? (

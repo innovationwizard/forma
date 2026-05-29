@@ -85,10 +85,6 @@ export function EditForm({
           EDITAR
         </h2>
               </div>
-      <p className="text-foreground/50 mt-1 text-xs">
-        Solo proveedor y descripción. La recategorización vive en Ajustes.
-      </p>
-
       <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-4">
         <Field label="Proveedor (texto crudo)">
           <input

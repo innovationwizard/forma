@@ -56,39 +56,24 @@ export default async function ForecastPage() {
             {projection.rows.length} meses · {project.startDate} → {project.projectedEndDate}
           </span>
         </div>
-        <p className="text-foreground/60 mt-1 text-sm">
-          El modelo financiero a 36 meses del archivo xlsx canónico, con series acumuladas
-          derivadas + cuatro figuras de retorno disambiguadas por D28. Solo lectura
-          en esta versión; la edición de celdas + recálculo en cascada llegan en una entrega
-          posterior (Batch 16b — sujeto a la verificación Q9 de la fórmula de IRR).
-        </p>
       </header>
 
       {/* ── Returns card (per D28) ─────────────────────────────────────── */}
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
-        <div>
-          <h2 className="text-foreground text-base font-semibold">
-            RETORNOS (4 figuras · disambiguadas por D28)
-          </h2>
-                  </div>
-        <p className="text-foreground/50 mt-1 text-xs">
-          Por <code>feedback_literal_labels_when_multiple_values</code>, ninguna se
-          etiqueta simplemente como &quot;ROI&quot; — cada una lleva su propio token literal
-          para que las cuatro no se confundan.
-        </p>
+        <h2 className="text-foreground text-base font-semibold">
+          RETORNOS
+        </h2>
 
         <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
           <ReturnCard
             title="Ingresos ÷ Costo"
             value={`${Number(ret.revenueToCostRatio).toFixed(4)}×`}
             sub={`+${formatPct(ret.revenueToCostMarginPct)} sobre el costo`}
-            note="Razón (no margen). H47/H22 por D28 #1."
           />
           <ReturnCard
             title="Margen EBITDA"
             value={formatPct(ret.ebitdaMarginPct)}
             sub={`EBITDA / Costo total`}
-            note="H55/H22 por D28 #2."
           />
           <IrrCard
             irrAnnualizedFull={ret.irrAnnualizedFull}
@@ -98,7 +83,6 @@ export default async function ForecastPage() {
             title="Retorno sobre patrimonio pico"
             value={formatPct(ret.returnOnPeakEquity)}
             sub={`Patrimonio pico: ${formatUsd(ret.peakEquityUsd)}`}
-            note="EBITDA total / |min(EBITDA acum.)| por D28 #4."
           />
         </div>
       </section>
@@ -139,10 +123,6 @@ export default async function ForecastPage() {
         <div>
           <h2 className="text-foreground text-base font-semibold">PROYECCIÓN MENSUAL A 36 MESES</h2>
                   </div>
-        <p className="text-foreground/50 mt-1 text-xs">
-          Costo / Ingresos / EBITDA por mes, series acumuladas, y flujo del crédito.
-          Solo lectura — la edición de celdas llega en Batch 16b.
-        </p>
         <div className="mt-4 overflow-x-auto">
           <table className="text-foreground/80 w-full text-xs">
             <thead>
@@ -220,13 +200,11 @@ function ReturnCard({
   title,
   value,
   sub,
-  note,
   accent = "neutral",
 }: {
   title: string;
   value: string;
   sub: string;
-  note: string;
   accent?: "neutral" | "discrepancy";
 }) {
   return (
@@ -239,7 +217,6 @@ function ReturnCard({
       <h3 className="text-foreground/60 text-[10px] font-medium tracking-wider uppercase">{title}</h3>
       <div className="text-foreground mt-1 text-2xl font-semibold tabular-nums">{value}</div>
       <p className="text-foreground/70 mt-2 text-xs">{sub}</p>
-      <p className="text-foreground/40 mt-3 text-[10px]">{note}</p>
     </div>
   );
 }
@@ -343,9 +320,6 @@ function IrrCard({
         ) : (
           <span>xlsx 30 meses: cambio de signo insuficiente</span>
         )}
-      </p>
-      <p className="text-foreground/40 mt-3 text-[10px]">
-        IRR(EBITDA mensual, 0) × 12 por D28 #3. Q-TIRI-WINDOW: el xlsx I97 trunca en M30.
       </p>
     </div>
   );

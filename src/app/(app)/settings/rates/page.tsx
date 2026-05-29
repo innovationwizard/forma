@@ -52,21 +52,12 @@ export default async function RatesSettingsPage() {
             TASAS Y TIPOS DE CAMBIO
           </h1>
                   </div>
-        <p className="text-foreground/60 mt-1 text-sm">
-          TC anclado del proyecto, IVA, y tasas de obligaciones de ISR. Base de todos
-          los cálculos — los cambios requieren un motivo y se auditan.
-        </p>
       </header>
 
       <section className="border-foreground/10 bg-card text-card-foreground rounded-2xl border p-6 shadow-sm">
         <div>
           <h2 className="text-foreground text-base font-semibold">TASAS DEL PROYECTO</h2>
                   </div>
-        <p className="text-foreground/50 mt-1 text-xs">
-          El TC anclado es el respaldo cuando el TC por transacción no es extractable
-          (Detalle egresos finding #11). La tasa de IVA impulsa todas las conversiones
-          sin-IVA ↔ con-IVA en la aplicación.
-        </p>
         <div className="mt-4">
           <ProjectRatesForm
             initialLockedExchangeRate={decimalString(project.lockedExchangeRate)}
@@ -80,12 +71,6 @@ export default async function RatesSettingsPage() {
         <div>
           <h2 className="text-foreground text-base font-semibold">OBLIGACIONES DE ISR</h2>
                   </div>
-        <p className="text-foreground/50 mt-1 text-xs">
-          Por D34: las etiquetas son <strong>literales</strong> (<code>&quot;ISR 18&quot;</code>{" "}
-          / <code>&quot;ISR 25&quot;</code>) — nunca abreviadas a
-          &quot;efectiva&quot;/&quot;nominal&quot;. Cada tasa se guarda como decimal
-          fraccionario (ej. <code>0.18</code> = 18%).
-        </p>
         <div className="mt-4 flex flex-col gap-3">
           {isrObligations.map((o) => (
             <div

@@ -81,10 +81,7 @@ export default async function AnomaliesPage({ searchParams }: PageProps) {
                   </div>
         <p className="text-foreground/60 mt-1 text-sm">
           {snapshot.totalActive} bandera{snapshot.totalActive === 1 ? "" : "s"} activa
-          {snapshot.totalActive === 1 ? "" : "s"} en total. Cada bandera describe una
-          contradicción o valor sospechoso capturado por el parser per D31 —
-          el archivo se carga verbatim y las anomalías aparecen aquí en vez
-          de detener el ingreso.
+          {snapshot.totalActive === 1 ? "" : "s"} en total.
         </p>
       </header>
 

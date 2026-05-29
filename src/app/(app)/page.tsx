@@ -24,7 +24,6 @@ import { BurnRateCard } from "@/components/dashboard/BurnRateCard";
 import { CategoryBars } from "@/components/dashboard/CategoryBars";
 import { FinancialBottomLine } from "@/components/dashboard/FinancialBottomLine";
 import { HealthHeader } from "@/components/dashboard/HealthHeader";
-import { ModelNotes } from "@/components/dashboard/ModelNotes";
 import { ProjectionCard } from "@/components/dashboard/ProjectionCard";
 import { RevenueBlock } from "@/components/dashboard/RevenueBlock";
 import { requireRole } from "@/lib/dal";
@@ -163,8 +162,6 @@ export default async function DashboardPage() {
           totalBudgetUsd={totalBudgetUsd}
         />
       </div>
-
-      <ModelNotes notes={snapshot.project.modelNotes} />
     </main>
   );
 }

@@ -191,10 +191,6 @@ export function NewExpenditureForm({
       <div>
         <h2 className="text-foreground text-base font-semibold">NUEVA TRANSACCIÓN</h2>
               </div>
-      <p className="text-foreground/50 mt-1 text-xs">
-        Origen = MANUAL · Estado = PENDIENTE (hasta que un analista la verifique).
-      </p>
-
       <fieldset className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2" disabled={pending}>
         <Field label="Fecha">
           <input

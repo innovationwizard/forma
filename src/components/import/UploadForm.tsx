@@ -44,12 +44,6 @@ export function UploadForm() {
       <div>
         <h2 className="text-foreground text-base font-semibold">CARGAR ESTADO</h2>
               </div>
-      <p className="text-foreground/60 mt-1 text-xs">
-        Soportados: <code>.xls</code> + <code>.xlsx</code> de cualquier banco. El
-        parser captura cada fila sin importar la variación; la clasificación se
-        hace después en la bandeja.
-      </p>
-
       <div className="mt-5 flex flex-col gap-3">
         <label className="border-foreground/15 hover:border-foreground/30 flex cursor-pointer flex-col items-start gap-1 rounded-lg border border-dashed bg-background/50 p-4">
           <span className="text-foreground/70 text-xs font-medium tracking-wide uppercase">
@@ -85,10 +79,6 @@ export function UploadForm() {
         </div>
       </div>
 
-      <p className="text-foreground/50 mt-4 text-[10px]">
-        Por D31 el parser nunca falla ni descarta datos. Si algo del archivo
-        luce raro, verás una bandera en la página de detalle — no un error.
-      </p>
     </form>
   );
 }

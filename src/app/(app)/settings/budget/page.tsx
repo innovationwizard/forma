@@ -55,11 +55,6 @@ export default async function BudgetSettingsPage() {
         <p className="text-foreground/60 mt-1 text-sm">
           {categories.length} categorías · presupuesto total{" "}
           <strong className="text-foreground tabular-nums">{formatUsd(total)}</strong>.
-          Cada edición requiere un motivo y crea una fila de auditoría visible en{" "}
-          <Link href="/audit" className="underline">
-            /audit
-          </Link>
-          .
         </p>
         {!canEdit ? (
           <p className="bg-zinc-50 text-foreground/70 mt-3 rounded-md px-3 py-2 text-xs ring-1 ring-zinc-200 ring-inset">

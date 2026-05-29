@@ -32,9 +32,13 @@ export interface SalesGridRow {
   buyer: { id: string; name: string } | null;
   /// Sum of RvPayment.amountUsd for this unit (not soft-deleted).
   totalPaidUsd: string;
-  /// True when the unit is SOLD but has no buyer linked — the UI surfaces
-  /// this as a data-incomplete badge.
+  /// True when the unit is SOLD but has one or more required fields missing
+  /// (buyer link, soldAt, reservedAt). Surface this as a data-incomplete badge.
   dataIncomplete: boolean;
+  /// Per-row breakdown of missing fields when the row is SOLD. Used by the
+  /// dashboard tooltip to itemize what's missing per house. Empty for
+  /// non-SOLD rows or fully-complete SOLD rows.
+  missingFields: Array<"buyer" | "soldAt" | "reservedAt" | "saleMonth" | "deliveryMonth">;
 }
 
 export interface SalesGridSnapshot {
@@ -81,6 +85,16 @@ export async function loadSalesGrid(prisma: PrismaClient): Promise<SalesGridSnap
       (acc, p) => acc + Number(decimalString(p.amountUsd)),
       0,
     );
+    // For SOLD units, every one of these fields is required to consider the
+    // record complete. Empty array for non-SOLD or fully-complete SOLD rows.
+    const missingFields: SalesGridRow["missingFields"] = [];
+    if (u.status === "SOLD") {
+      if (u.buyer == null) missingFields.push("buyer");
+      if (u.soldAt == null) missingFields.push("soldAt");
+      if (u.reservedAt == null) missingFields.push("reservedAt");
+      if (u.saleMonth == null) missingFields.push("saleMonth");
+      if (u.deliveryMonth == null) missingFields.push("deliveryMonth");
+    }
     return {
       id: u.id,
       name: u.name,
@@ -90,7 +104,8 @@ export async function loadSalesGrid(prisma: PrismaClient): Promise<SalesGridSnap
       deliveryMonth: u.deliveryMonth,
       buyer: u.buyer,
       totalPaidUsd: totalPaid.toFixed(2),
-      dataIncomplete: u.status === "SOLD" && u.buyer == null,
+      dataIncomplete: missingFields.length > 0,
+      missingFields,
     };
   });
 
