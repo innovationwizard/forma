@@ -1,8 +1,8 @@
 # FORMA — Santa Elena
 
-Budget tracker for Condominio Santa Elena (FORMA Capital Inmobiliario, Antigua Guatemala).
+Budget tracker for the **Santa Elena** project (legal entity *Condominio Antigua Panorama, S.A.*, Antigua Guatemala).
 
-Pilot project for FORMA's holding-wide data normalization initiative. See [SDD_FORMA_SANTA_ELENA.md](SDD_FORMA_SANTA_ELENA.md) for the product spec, [PLAN.md](PLAN.md) for the batched implementation plan, and [PROGRESS.md](PROGRESS.md) for the live tracker.
+Pilot project for FORMA's holding-wide data normalization initiative. See [ABOUT.md](ABOUT.md) for a short overview, [SDD_FORMA_SANTA_ELENA.md](SDD_FORMA_SANTA_ELENA.md) for the product spec, [PLAN.md](PLAN.md) for the batched implementation plan, and [PROGRESS.md](PROGRESS.md) for the live tracker.
 
 ## Requirements
 

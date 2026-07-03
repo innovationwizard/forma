@@ -55,3 +55,8 @@ yarn-error.log*
 
 # Local tooling scratchpads (e.g., /tmp/forma_inspect.py output)
 *.local
+
+# Spreadsheets — real source data (PII / financials / bank statements). Never commit.
+*.xlsx
+*.xls
+*.xlsm

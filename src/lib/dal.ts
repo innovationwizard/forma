@@ -4,6 +4,7 @@ import type { User } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 
+import { prisma } from "@/lib/db";
 import { roleSchema, type Role } from "@/lib/rbac/types";
 import { createClient } from "@/lib/supabase/server";
 
@@ -49,18 +50,29 @@ export const verifySession = cache(async (): Promise<User> => {
 });
 
 /**
- * Resolves the role of the current user from Supabase Auth's `app_metadata`.
- * `app_metadata` is server-controlled (only Supabase service role can write
- * it), which makes it the right place to store authorization claims.
+ * Resolves the role of the current user from forma's own `users` table
+ * (schema `forma`, keyed by `auth.users.id`), NOT from the JWT `app_metadata`.
  *
- * Returns `null` if there's no user OR the user has no role / an unknown
- * role. Callers should treat `null` as "deny everything" (closed by default,
- * consistent with `can()` in the matrix).
+ * Why: forma's Supabase Auth is now the shared "orion" auth pool, whose
+ * `app_metadata.role` carries orion's own role vocabulary (lowercase
+ * `master`/`ventas`/…). forma has its own role vocabulary (`MASTER`/`CEO`/
+ * `ANALISTA`/`AUXILIAR`), so it must derive authorization from its own schema
+ * — the same self-contained pattern the other consolidated apps use. The role
+ * row is server-only and written by trusted paths, so it's a sound authz claim.
+ *
+ * Returns `null` if there's no user OR no forma.users row / an unknown role.
+ * Callers treat `null` as "deny everything" (closed by default, consistent
+ * with `can()` in the matrix).
  */
 export const getRole = cache(async (): Promise<Role | null> => {
   const user = await getUser();
   if (!user) return null;
-  const parsed = roleSchema.safeParse(user.app_metadata?.["role"]);
+  const row = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { role: true },
+  });
+  if (!row) return null;
+  const parsed = roleSchema.safeParse(row.role);
   return parsed.success ? parsed.data : null;
 });
 
